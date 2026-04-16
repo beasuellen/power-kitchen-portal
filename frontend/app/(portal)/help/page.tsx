@@ -1,0 +1,138 @@
+"use client";
+
+import { useState } from "react";
+import { Card, CardBody, CardHeader } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { MessageCircle, ChevronDown, ChevronUp, Mail, Phone, ExternalLink } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+const faqs = [
+  {
+    id: "faq_1",
+    q: "How do I skip my next order?",
+    a: "Go to My Orders and click on the upcoming order. You'll see a 'Skip Order' button at the top. You can also skip directly from the Dashboard with the 'Skip' button in the welcome banner.",
+  },
+  {
+    id: "faq_2",
+    q: "Can I change my delivery day?",
+    a: "Yes! Go to My Plan → Delivery Preferences and select a new delivery day. Changes take effect from your next billing cycle.",
+  },
+  {
+    id: "faq_3",
+    q: "How do I apply a gift card or store credit?",
+    a: "Go to Rewards → Credits & Gift Cards. You can enter your gift card code there. Store credits are automatically applied to your next order during checkout.",
+  },
+  {
+    id: "faq_4",
+    q: "What happens if I miss the customization deadline?",
+    a: "If you miss the cutoff date, your order will be fulfilled with our chef's selection for your plan type. You can still rate those meals after delivery!",
+  },
+  {
+    id: "faq_5",
+    q: "How does the streak work?",
+    a: "Your streak counts consecutive weeks where you received a delivery without skipping or pausing. Reaching streak milestones (4, 8, 12, 26, 52 weeks) earns you bonus rewards!",
+  },
+  {
+    id: "faq_6",
+    q: "Can I pause my subscription?",
+    a: "Yes! Go to My Plan and select 'Pause Subscription'. Note that pausing resets your streak. We recommend skipping specific weeks instead if you just need a short break.",
+  },
+  {
+    id: "faq_7",
+    q: "How do I update my dietary restrictions?",
+    a: "Go to My Plan → Dietary Restrictions. Toggle on the restrictions that apply to you, and your meal recommendations will automatically adjust.",
+  },
+];
+
+export default function HelpPage() {
+  const [openFaq, setOpenFaq] = useState<string | null>(null);
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900">Help & Support</h1>
+        <p className="text-sm text-gray-500 mt-1">Find answers or contact our team</p>
+      </div>
+
+      {/* Quick contact */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <Card hover>
+          <CardBody className="py-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#D8F3DC] flex items-center justify-center">
+                <MessageCircle className="w-5 h-5 text-[#2D6A4F]" />
+              </div>
+              <div>
+                <p className="font-semibold text-gray-900 text-sm">Live Chat</p>
+                <p className="text-xs text-gray-500">Mon–Fri, 9am–5pm EST</p>
+              </div>
+            </div>
+            <Button className="w-full mt-3" size="sm">
+              Start Chat
+            </Button>
+          </CardBody>
+        </Card>
+        <Card hover>
+          <CardBody className="py-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
+                <Mail className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <p className="font-semibold text-gray-900 text-sm">Email Support</p>
+                <p className="text-xs text-gray-500">hello@powerkitchen.ca</p>
+              </div>
+            </div>
+            <Button variant="secondary" className="w-full mt-3" size="sm">
+              Send Email
+            </Button>
+          </CardBody>
+        </Card>
+      </div>
+
+      {/* FAQ */}
+      <Card>
+        <CardHeader>
+          <h2 className="font-semibold text-gray-900">Frequently Asked Questions</h2>
+        </CardHeader>
+        <CardBody className="pt-0 space-y-1">
+          {faqs.map((faq) => {
+            const isOpen = openFaq === faq.id;
+            return (
+              <div key={faq.id} className="border border-gray-100 rounded-xl overflow-hidden">
+                <button
+                  onClick={() => setOpenFaq(isOpen ? null : faq.id)}
+                  className="w-full flex items-center justify-between px-4 py-3.5 text-left hover:bg-gray-50 transition-colors"
+                >
+                  <span className="text-sm font-medium text-gray-900 pr-4">{faq.q}</span>
+                  {isOpen ? (
+                    <ChevronUp className="w-4 h-4 text-gray-400 shrink-0" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-gray-400 shrink-0" />
+                  )}
+                </button>
+                {isOpen && (
+                  <div className="px-4 pb-4 text-sm text-gray-600 border-t border-gray-50 pt-3">
+                    {faq.a}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </CardBody>
+      </Card>
+
+      {/* External links */}
+      <div className="text-center space-y-2">
+        <a
+          href="https://powerkitchen.ca"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 text-sm text-[#2D6A4F] hover:underline"
+        >
+          Visit our website <ExternalLink className="w-3.5 h-3.5" />
+        </a>
+      </div>
+    </div>
+  );
+}
