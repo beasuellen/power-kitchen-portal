@@ -2,7 +2,6 @@ import {
   mockCustomer,
   mockSubscription,
   mockOrders,
-  mockMeals,
   mockChallenges,
   mockRecentActivity,
   tierColors,
@@ -11,13 +10,12 @@ import { formatDate, formatShortDate, daysUntil, formatCurrency } from "@/lib/ut
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { DietaryPills } from "@/components/ui/DietaryPills";
 import { RatingPopup } from "@/components/dashboard/RatingPopup";
+import { ProductSuggestions } from "@/components/dashboard/ProductSuggestions";
 import Link from "next/link";
 import Image from "next/image";
 import {
   ArrowRight,
-  Plus,
   SkipForward,
   Trophy,
   Flame,
@@ -36,8 +34,6 @@ export default function DashboardPage() {
   const deliveredOrder = mockOrders.find((o) => o.status === "delivered");
   const daysLeft = nextOrder ? daysUntil(nextOrder.deliveryDate) : 0;
 
-  // Breakfast + new meals for suggestions — show in horizontal carousel
-  const suggestions = mockMeals.filter((m) => m.category === "breakfast" || m.isNew).slice(0, 6);
   const topChallenge = mockChallenges[0];
   const challengePct = Math.round((topChallenge.current / topChallenge.target) * 100);
 
@@ -232,56 +228,8 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* ─── Smart Suggestions — horizontal scroll carousel ─── */}
-      <section>
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <h2 className="font-semibold text-[#004945]">Have you tried our Breakfast options?</h2>
-            <p className="text-xs text-gray-400 mt-0.5">Tap to quick-add to your next order</p>
-          </div>
-          <Link href="/orders" className="text-sm text-[#004945] font-medium flex items-center gap-1 hover:underline shrink-0">
-            See all meals <ChevronRight className="w-4 h-4" />
-          </Link>
-        </div>
-
-        {/* Carousel — shows 4.33 cards to suggest scrollability */}
-        <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4 lg:mx-0 lg:px-0">
-          {suggestions.map((meal) => (
-            <div
-              key={meal.id}
-              className="shrink-0 w-44 bg-white rounded-2xl border border-[#E8E4DC] overflow-hidden"
-              style={{ minWidth: "176px" }}
-            >
-              <div className="relative h-32">
-                <Image
-                  src={meal.imageUrl}
-                  alt={meal.name}
-                  fill
-                  className="object-cover"
-                  sizes="176px"
-                />
-                {meal.isNew && (
-                  <div className="absolute top-2 left-2">
-                    <span className="bg-[#7ED22A] text-[#004945] text-[10px] font-bold px-2 py-0.5 rounded-full">New</span>
-                  </div>
-                )}
-              </div>
-              <div className="p-3">
-                <p className="text-sm font-medium text-[#004945] leading-tight line-clamp-2">{meal.name}</p>
-                <DietaryPills tags={meal.dietaryTags} className="mt-1.5" />
-                <div className="flex items-center justify-between mt-2">
-                  <span className="text-sm font-bold text-[#004945]">{formatCurrency(meal.price)}</span>
-                  <button className="w-7 h-7 rounded-full bg-[#004945] flex items-center justify-center hover:bg-[#003835] transition-colors">
-                    <Plus className="w-3.5 h-3.5 text-white" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-          {/* Half-card reveal to signal scroll */}
-          <div className="shrink-0 w-10" aria-hidden />
-        </div>
-      </section>
+      {/* ─── Product Suggestions ─── */}
+      <ProductSuggestions />
 
       {/* ─── Recent Activity (repositioned below suggestions) ─── */}
       <Card>

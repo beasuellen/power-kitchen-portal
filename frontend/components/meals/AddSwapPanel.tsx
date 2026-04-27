@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 interface AddSwapPanelProps {
   mode: "add" | "swap";
   currentMeal?: Meal;
+  defaultCategory?: MealCategory | "all";
   onAdd: (meals: Meal[]) => void;
   onSwap: (meal: Meal) => void;
   onClose: () => void;
@@ -35,8 +36,8 @@ const dietaryFilters: { id: DietaryTag; label: string }[] = [
   { id: "V", label: "Vegan" },
 ];
 
-export function AddSwapPanel({ mode, currentMeal, onAdd, onSwap, onClose }: AddSwapPanelProps) {
-  const [category, setCategory] = useState<MealCategory | "all">("all");
+export function AddSwapPanel({ mode, currentMeal, defaultCategory, onAdd, onSwap, onClose }: AddSwapPanelProps) {
+  const [category, setCategory] = useState<MealCategory | "all">(defaultCategory ?? "all");
   const [selectedFilters, setSelectedFilters] = useState<DietaryTag[]>([]);
   const [search, setSearch] = useState("");
   const [selectedMeals, setSelectedMeals] = useState<Meal[]>([]);
