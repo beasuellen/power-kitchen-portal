@@ -290,7 +290,7 @@ export function OrderDetailClient({ order }: { order: Order }) {
 
         {/* Order summary sidebar */}
         <div>
-          <div className="sticky top-20">
+          <div className="sticky top-4 max-h-[calc(100vh-2rem)] overflow-y-auto">
             <Card>
               <CardHeader>
                 <div className="flex items-center gap-2">
@@ -300,7 +300,7 @@ export function OrderDetailClient({ order }: { order: Order }) {
               </CardHeader>
               <CardBody className="pt-0 space-y-3">
                 {/* Line items */}
-                <div className="space-y-2 max-h-60 overflow-y-auto">
+                <div className="space-y-2">
                   {draftItems.map((item) => (
                     <div key={item.id} className="flex justify-between items-start gap-2">
                       <span className="text-sm text-[#6B6B6B] line-clamp-1 flex-1">

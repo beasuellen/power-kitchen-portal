@@ -147,7 +147,8 @@ export default function DashboardPage() {
         )}
 
         {/* ── Progress sidebar (spans 2 cols) ── */}
-        <div className="lg:col-span-2 space-y-4">
+        <div className="lg:col-span-2">
+          <div className="sticky top-4 space-y-4">
           {/* Streak */}
           <Card>
             <CardBody className="py-4">
@@ -227,6 +228,7 @@ export default function DashboardPage() {
               </Link>
             </CardBody>
           </Card>
+          </div>
         </div>
       </div>
 
