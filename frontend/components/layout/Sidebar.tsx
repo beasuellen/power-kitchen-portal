@@ -29,7 +29,7 @@ export function Sidebar() {
   const { streak, storeCredit, tier } = mockSubscription;
 
   return (
-    <aside className="hidden lg:flex flex-col w-60 min-h-screen sticky top-0 bg-[#004945]">
+    <aside className="hidden lg:flex flex-col w-60 h-screen shrink-0 bg-[#004945] overflow-y-auto">
       {/* Logo */}
       <Link href="/dashboard" className="flex items-center px-5 py-5 shrink-0">
         <Image
