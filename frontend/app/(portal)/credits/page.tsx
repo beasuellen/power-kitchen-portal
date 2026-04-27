@@ -31,19 +31,19 @@ export default function CreditsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Store Credits & Gift Cards</h1>
-        <p className="text-sm text-gray-500 mt-1">Apply gift cards and track your credit balance</p>
+        <h1 className="text-2xl font-bold text-[#004945]">Store Credits & Gift Cards</h1>
+        <p className="text-sm text-[#6B6B6B] mt-0.5">Apply gift cards and track your credit balance</p>
       </div>
 
-      {/* Balance */}
-      <Card className="bg-gradient-to-br from-[#2D6A4F] to-[#40916C] text-white border-0">
+      {/* Balance card — dark green gradient */}
+      <Card className="bg-gradient-to-br from-[#004945] to-[#006B5E] text-white border-0">
         <CardBody className="py-6">
           <div className="flex items-center gap-3 mb-4">
-            <Wallet className="w-6 h-6 text-green-200" />
-            <h2 className="font-semibold text-green-100">Store Credit Balance</h2>
+            <Wallet className="w-6 h-6 text-[#B9EA91]" />
+            <h2 className="font-semibold text-[#B9EA91]">Store Credit Balance</h2>
           </div>
           <p className="text-5xl font-bold mb-1">{formatCurrency(storeCredit)}</p>
-          <p className="text-green-200 text-sm">
+          <p className="text-white/60 text-sm">
             {formatCurrency(totalEarned)} earned since joining
           </p>
           <div className="grid grid-cols-3 gap-2 mt-4 text-center">
@@ -52,9 +52,9 @@ export default function CreditsPage() {
               { label: "From Rewards", value: formatCurrency(20) },
               { label: "Gift Cards", value: formatCurrency(0) },
             ].map(({ label, value }) => (
-              <div key={label} className="bg-white/20 rounded-xl p-2.5">
+              <div key={label} className="bg-white/15 rounded-xl p-2.5">
                 <p className="font-bold text-white">{value}</p>
-                <p className="text-[10px] text-green-200">{label}</p>
+                <p className="text-[10px] text-white/60">{label}</p>
               </div>
             ))}
           </div>
@@ -65,12 +65,12 @@ export default function CreditsPage() {
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
-            <Gift className="w-5 h-5 text-[#2D6A4F]" />
-            <h2 className="font-semibold text-gray-900">Apply Gift Card</h2>
+            <Gift className="w-5 h-5 text-[#004945]" />
+            <h2 className="font-semibold text-[#004945]">Apply Gift Card</h2>
           </div>
         </CardHeader>
         <CardBody className="pt-0">
-          <p className="text-sm text-gray-500 mb-3">
+          <p className="text-sm text-[#6B6B6B] mb-3">
             Enter your gift card code to add funds to your credit balance.
           </p>
           <div className="flex gap-2">
@@ -79,7 +79,7 @@ export default function CreditsPage() {
               placeholder="Enter gift card code"
               value={giftCode}
               onChange={(e) => { setGiftCode(e.target.value); setApplyStatus("idle"); }}
-              className="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-[#2D6A4F] focus:border-transparent"
+              className="flex-1 px-3 py-2 rounded-lg border border-[#E8E4DC] text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-[#7ED22A] focus:border-transparent bg-[#FDFBF7]"
             />
             <Button onClick={handleApply} disabled={!giftCode.trim()}>
               Apply
@@ -87,7 +87,7 @@ export default function CreditsPage() {
           </div>
 
           {applyStatus === "success" && (
-            <div className="flex items-center gap-2 mt-3 text-[#2D6A4F] text-sm">
+            <div className="flex items-center gap-2 mt-3 text-[#004945] text-sm">
               <Check className="w-4 h-4" />
               <span>Gift card applied! Credit added to your balance.</span>
             </div>
@@ -99,7 +99,7 @@ export default function CreditsPage() {
             </div>
           )}
 
-          <p className="text-xs text-gray-400 mt-3">
+          <p className="text-xs text-[#9E9E9E] mt-3">
             Gift card balances are applied as discounts on your next billing cycle.
           </p>
         </CardBody>
@@ -108,20 +108,20 @@ export default function CreditsPage() {
       {/* Credit History */}
       <Card>
         <CardHeader>
-          <h2 className="font-semibold text-gray-900">Credit History</h2>
+          <h2 className="font-semibold text-[#004945]">Credit History</h2>
         </CardHeader>
         <CardBody className="pt-0">
-          <div className="divide-y divide-gray-50">
+          <div className="divide-y divide-[#F0EBE0]">
             {creditHistory.map((item) => (
               <div key={item.id} className="flex items-center justify-between py-3">
                 <div>
-                  <p className="text-sm font-medium text-gray-900">{item.description}</p>
+                  <p className="text-sm font-medium text-[#1A1A1A]">{item.description}</p>
                   <div className="flex items-center gap-2 mt-0.5">
                     <Badge variant={item.type === "Referral" ? "green" : "blue"} size="sm">{item.type}</Badge>
-                    <span className="text-xs text-gray-400">{formatShortDate(item.date)}</span>
+                    <span className="text-xs text-[#9E9E9E]">{formatShortDate(item.date)}</span>
                   </div>
                 </div>
-                <span className="font-semibold text-[#2D6A4F]">+{formatCurrency(item.amount)}</span>
+                <span className="font-semibold text-[#004945]">+{formatCurrency(item.amount)}</span>
               </div>
             ))}
           </div>

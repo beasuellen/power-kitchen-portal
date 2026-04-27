@@ -1,184 +1,363 @@
-import { mockSubscription, mockCustomer } from "@/lib/mock-data";
+"use client";
+
+import { useState } from "react";
+import { mockSubscription } from "@/lib/mock-data";
 import { formatDate, formatCurrency } from "@/lib/utils";
-import { Card, CardBody, CardHeader } from "@/components/ui/Card";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import Link from "next/link";
 import {
-  Package,
-  Truck,
-  UtensilsCrossed,
-  AlertTriangle,
-  ExternalLink,
-  ChevronRight,
-  Calendar,
-  CreditCard,
-  MapPin,
+  Package, Truck, UtensilsCrossed, CreditCard, MapPin,
+  Edit3, Check, ChevronDown, AlertTriangle, Leaf,
+  Wheat, Flame, Nut, Syringe, Info,
 } from "lucide-react";
 
+// ─── Dietary toggles ───────────────────────────────────────────────
+const dietaryOptions = [
+  { id: "dairy_free",  label: "Dairy Free",  icon: "🥛", desc: "No milk, cheese, butter" },
+  { id: "gluten_free", label: "Gluten Free",  icon: "🌾", desc: "No wheat, barley, rye" },
+  { id: "halal",       label: "Halal",        icon: "☪️",  desc: "Halal-certified only" },
+  { id: "nut_free",    label: "Nut Free",     icon: "🥜", desc: "No tree nuts or peanuts" },
+  { id: "soy_free",    label: "Soy Free",     icon: "🫘", desc: "No soy-derived ingredients" },
+  { id: "spice_free",  label: "Spice Free",   icon: "🌶️", desc: "Mild preparations only" },
+];
+
+// ─── Address form fields ───────────────────────────────────────────
+const addressFields = [
+  { key: "street",       label: "Street",       placeholder: "120 Bloor St E" },
+  { key: "unit",         label: "Unit / Apt",   placeholder: "Apt 802" },
+  { key: "city",         label: "City",         placeholder: "Toronto" },
+  { key: "province",     label: "Province",     placeholder: "ON" },
+  { key: "postal",       label: "Postal Code",  placeholder: "M4W 1B8" },
+  { key: "buzzer",       label: "Buzzer Code",  placeholder: "802" },
+  { key: "instructions", label: "Delivery note",placeholder: "Leave at door" },
+];
+
+const deliveryDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+
 export default function PlanPage() {
-  const {
-    planName,
-    planType,
-    mealsPerWeek,
-    weeklyTotal,
-    status,
-    startDate,
-    nextBillingDate,
-    deliveryDay,
-    streak,
-  } = mockSubscription;
-  const { firstName, lastName } = mockCustomer;
+  const { planName, mealsPerWeek, weeklyTotal, status, startDate, nextBillingDate, deliveryDay, streak } = mockSubscription;
+
+  // Dietary state
+  const [dietary, setDietary] = useState<string[]>(["dairy_free", "gluten_free"]);
+  const [dietarySaved, setDietarySaved] = useState(false);
+  const toggleDietary = (id: string) => { setDietary((p) => p.includes(id) ? p.filter((x) => x !== id) : [...p, id]); setDietarySaved(false); };
+  const saveDietary = async () => { await new Promise((r) => setTimeout(r, 600)); setDietarySaved(true); };
+
+  // Address state
+  const [address, setAddress] = useState({ street: "120 Bloor St East", unit: "Apt 802", city: "Toronto", province: "ON", postal: "M4W 1B8", buzzer: "802", instructions: "Leave at door" });
+  const [editingAddress, setEditingAddress] = useState(false);
+  const [addressSaved, setAddressSaved] = useState(false);
+  const saveAddress = async () => { await new Promise((r) => setTimeout(r, 600)); setEditingAddress(false); setAddressSaved(true); setTimeout(() => setAddressSaved(false), 3000); };
+
+  // Delivery day state
+  const [selectedDay, setSelectedDay] = useState(deliveryDay);
+  const [showDayPicker, setShowDayPicker] = useState(false);
+
+  // Cancel confirm
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
   return (
     <div className="space-y-6">
+      {/* Page heading */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">My Plan</h1>
-        <p className="text-sm text-gray-500 mt-1">Manage your subscription settings</p>
+        <h1 className="text-2xl font-bold text-[#004945]">My Plan</h1>
+        <p className="text-sm text-[#6B6B6B] mt-0.5">Manage your subscription, preferences and delivery</p>
       </div>
 
-      {/* Plan Overview */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
+      {/* ── Row 1: Plan Overview + Delivery Day (side by side) ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+        {/* Plan Overview */}
+        <div className="bg-white rounded-2xl border border-[#E8E4DC] p-5">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <Package className="w-5 h-5 text-[#2D6A4F]" />
-              <h2 className="font-semibold text-gray-900">Plan Overview</h2>
+              <Package className="w-4 h-4 text-[#004945]" />
+              <h2 className="font-semibold text-[#004945] text-sm">Plan Overview</h2>
             </div>
             <Badge variant="green">Active</Badge>
           </div>
-        </CardHeader>
-        <CardBody className="pt-0">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="space-y-3">
             {[
               { label: "Plan", value: planName },
-              { label: "Meals/week", value: mealsPerWeek.toString() },
+              { label: "Meals / week", value: mealsPerWeek.toString() },
               { label: "Weekly total", value: formatCurrency(weeklyTotal) },
+              { label: "Active since", value: formatDate(startDate, { month: "short", year: "numeric", day: "numeric" }) },
+              { label: "Next billing", value: formatDate(nextBillingDate, { month: "short", day: "numeric" }) },
               { label: "Streak", value: `🔥 ${streak} weeks` },
             ].map(({ label, value }) => (
-              <div key={label} className="text-center p-3 bg-gray-50 rounded-xl">
-                <p className="text-xs text-gray-500 mb-1">{label}</p>
-                <p className="font-bold text-gray-900">{value}</p>
+              <div key={label} className="flex justify-between items-center">
+                <span className="text-xs text-[#9E9E9E]">{label}</span>
+                <span className="text-sm font-medium text-[#1A1A1A]">{value}</span>
               </div>
             ))}
           </div>
-          <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-            <div className="flex items-center gap-2 text-gray-600">
-              <Calendar className="w-3.5 h-3.5 text-gray-400" />
-              <span>Started: <strong>{formatDate(startDate, { month: "long", day: "numeric", year: "numeric" })}</strong></span>
-            </div>
-            <div className="flex items-center gap-2 text-gray-600">
-              <CreditCard className="w-3.5 h-3.5 text-gray-400" />
-              <span>Next billing: <strong>{formatDate(nextBillingDate, { month: "long", day: "numeric" })}</strong></span>
-            </div>
-          </div>
-        </CardBody>
-      </Card>
+          <button className="mt-4 w-full py-2 rounded-xl border border-[#E8E4DC] text-xs font-medium text-[#004945] hover:bg-[#EAF7D9] transition-colors">
+            Change Plan
+          </button>
+        </div>
 
-      {/* Delivery Preferences */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <Truck className="w-5 h-5 text-[#2D6A4F]" />
-            <h2 className="font-semibold text-gray-900">Delivery Preferences</h2>
+        {/* Delivery Preferences */}
+        <div className="bg-white rounded-2xl border border-[#E8E4DC] p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <Truck className="w-4 h-4 text-[#004945]" />
+            <h2 className="font-semibold text-[#004945] text-sm">Delivery Preferences</h2>
           </div>
-        </CardHeader>
-        <CardBody className="pt-0 space-y-3">
-          <div className="flex items-center justify-between py-2 border-b border-gray-50">
-            <span className="text-sm text-gray-600">Delivery day</span>
-            <span className="font-medium text-sm text-gray-900">{deliveryDay}</span>
-          </div>
-          <div className="flex items-start justify-between py-2 border-b border-gray-50">
-            <span className="text-sm text-gray-600">Delivery instructions</span>
-            <span className="text-sm text-gray-500 italic text-right max-w-[60%]">Leave at door</span>
-          </div>
-          <Link
-            href="/plan/address"
-            className="flex items-center justify-between py-2 text-sm text-[#2D6A4F] hover:text-[#245a41] font-medium"
-          >
-            <span className="flex items-center gap-1.5">
-              <MapPin className="w-3.5 h-3.5" /> Manage delivery address
-            </span>
-            <ChevronRight className="w-4 h-4" />
-          </Link>
-        </CardBody>
-      </Card>
 
-      {/* Meal Preferences */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <UtensilsCrossed className="w-5 h-5 text-[#2D6A4F]" />
-            <h2 className="font-semibold text-gray-900">Meal Preferences</h2>
-          </div>
-        </CardHeader>
-        <CardBody className="pt-0 space-y-2">
-          <Link
-            href="/plan/dietary"
-            className="flex items-center justify-between py-3 hover:bg-gray-50 rounded-lg px-1 transition-colors"
-          >
-            <div>
-              <p className="text-sm font-medium text-gray-900">Dietary Restrictions</p>
-              <p className="text-xs text-gray-500">Gluten Free, Dairy Free</p>
-            </div>
-            <ChevronRight className="w-4 h-4 text-gray-400" />
-          </Link>
-          <div className="flex items-center justify-between py-3 px-1">
-            <div>
-              <p className="text-sm font-medium text-gray-700">Avoid List</p>
-              <p className="text-xs text-[#2D6A4F] font-medium">Coming Soon</p>
+          {/* Delivery day picker */}
+          <div className="mb-3">
+            <p className="text-xs text-[#9E9E9E] mb-1">Delivery day</p>
+            <div className="relative">
+              <button
+                onClick={() => setShowDayPicker((v) => !v)}
+                className="w-full flex items-center justify-between px-3 py-2 rounded-xl border border-[#E8E4DC] text-sm text-[#004945] font-medium hover:bg-[#FDFBF7] transition-colors"
+              >
+                {selectedDay}
+                <ChevronDown className="w-4 h-4 text-[#9E9E9E]" />
+              </button>
+              {showDayPicker && (
+                <div className="absolute top-full mt-1 left-0 right-0 bg-white border border-[#E8E4DC] rounded-xl shadow-lg z-10 overflow-hidden">
+                  {deliveryDays.map((day) => (
+                    <button
+                      key={day}
+                      onClick={() => { setSelectedDay(day); setShowDayPicker(false); }}
+                      className={cn(
+                        "w-full text-left px-3 py-2 text-sm transition-colors",
+                        day === selectedDay
+                          ? "bg-[#EAF7D9] text-[#004945] font-semibold"
+                          : "text-gray-700 hover:bg-[#FDFBF7]"
+                      )}
+                    >
+                      {day}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
-        </CardBody>
-      </Card>
 
-      {/* Payment quick link */}
-      <Card>
-        <CardBody className="py-4">
-          <Link
-            href="/plan/payment"
-            className="flex items-center justify-between"
-          >
-            <div className="flex items-center gap-3">
-              <CreditCard className="w-5 h-5 text-gray-400" />
-              <div>
-                <p className="text-sm font-medium text-gray-900">Payment Method</p>
-                <p className="text-xs text-gray-500">Visa ending in 4242</p>
+          {/* Delivery type */}
+          <div className="mb-3">
+            <p className="text-xs text-[#9E9E9E] mb-1">Delivery type</p>
+            <div className="grid grid-cols-2 gap-2">
+              {["Local Delivery", "Pickup"].map((type) => (
+                <button
+                  key={type}
+                  className={cn(
+                    "py-2 rounded-xl text-xs font-medium border transition-all",
+                    type === "Local Delivery"
+                      ? "bg-[#EAF7D9] border-[#B9EA91] text-[#004945]"
+                      : "border-[#E8E4DC] text-[#9E9E9E] hover:border-[#004945] hover:text-[#004945]"
+                  )}
+                >
+                  {type}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Delivery note */}
+          <div>
+            <p className="text-xs text-[#9E9E9E] mb-1">Delivery instructions</p>
+            <input
+              type="text"
+              defaultValue="Leave at door"
+              className="w-full px-3 py-2 rounded-xl border border-[#E8E4DC] text-sm focus:outline-none focus:ring-2 focus:ring-[#7ED22A] bg-[#FDFBF7]"
+              placeholder="e.g. Leave at door"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* ── Row 2: Address + Payment (side by side) ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+        {/* Address — inline edit */}
+        <div className="bg-white rounded-2xl border border-[#E8E4DC] p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-[#004945]" />
+              <h2 className="font-semibold text-[#004945] text-sm">Delivery Address</h2>
+            </div>
+            {!editingAddress && (
+              <button
+                onClick={() => setEditingAddress(true)}
+                className="flex items-center gap-1 text-xs text-[#004945] hover:text-[#7ED22A] transition-colors font-medium"
+              >
+                <Edit3 className="w-3 h-3" /> Edit
+              </button>
+            )}
+          </div>
+
+          {!editingAddress ? (
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-[#1A1A1A]">{address.street}</p>
+              {address.unit && <p className="text-sm text-[#6B6B6B]">{address.unit}</p>}
+              <p className="text-sm text-[#6B6B6B]">{address.city}, {address.province} {address.postal}</p>
+              {address.buzzer && <p className="text-xs text-[#9E9E9E]">Buzzer: {address.buzzer}</p>}
+              {address.instructions && <p className="text-xs text-[#9E9E9E] italic">{address.instructions}</p>}
+              {addressSaved && (
+                <p className="text-xs text-[#7ED22A] font-medium flex items-center gap-1 mt-1">
+                  <Check className="w-3 h-3" /> Address saved
+                </p>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-2.5">
+              {addressFields.map(({ key, label, placeholder }) => (
+                <div key={key}>
+                  <label className="block text-[10px] font-medium text-[#9E9E9E] mb-0.5 uppercase tracking-wide">{label}</label>
+                  <input
+                    type="text"
+                    value={address[key as keyof typeof address]}
+                    onChange={(e) => setAddress((a) => ({ ...a, [key]: e.target.value }))}
+                    placeholder={placeholder}
+                    className="w-full px-3 py-2 rounded-xl border border-[#E8E4DC] text-sm focus:outline-none focus:ring-2 focus:ring-[#7ED22A] bg-[#FDFBF7]"
+                  />
+                </div>
+              ))}
+              <div className="flex gap-2 pt-1">
+                <Button size="sm" className="flex-1" onClick={saveAddress}>Save Address</Button>
+                <Button size="sm" variant="secondary" className="flex-1" onClick={() => setEditingAddress(false)}>Cancel</Button>
               </div>
             </div>
-            <ChevronRight className="w-4 h-4 text-gray-400" />
-          </Link>
-        </CardBody>
-      </Card>
+          )}
+        </div>
 
-      {/* Plan Management */}
-      <Card className="border-red-100">
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 text-red-400" />
-            <h2 className="font-semibold text-gray-700">Plan Management</h2>
+        {/* Payment — inline, no redirect */}
+        <div className="bg-white rounded-2xl border border-[#E8E4DC] p-5 flex flex-col">
+          <div className="flex items-center gap-2 mb-4">
+            <CreditCard className="w-4 h-4 text-[#004945]" />
+            <h2 className="font-semibold text-[#004945] text-sm">Payment Method</h2>
           </div>
-        </CardHeader>
-        <CardBody className="pt-0 space-y-2">
-          <Button variant="secondary" className="w-full justify-start" size="sm">
-            Change Plan
-          </Button>
-          <Button variant="destructive" className="w-full justify-start" size="sm">
-            Pause Subscription
-          </Button>
-          <Button variant="destructive" className="w-full justify-start" size="sm">
-            Cancel Subscription
-          </Button>
-        </CardBody>
-      </Card>
 
-      {/* Classic portal toggle */}
-      <div className="text-center">
-        <p className="text-xs text-gray-400">
-          Prefer the old interface?{" "}
-          <a href="#" className="text-[#2D6A4F] hover:underline">Switch to Classic Portal</a>
-        </p>
+          <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[#FDFBF7] border border-[#E8E4DC] mb-4">
+            <div className="w-10 h-7 bg-blue-600 rounded-md flex items-center justify-center text-white text-[9px] font-bold tracking-widest shrink-0">
+              VISA
+            </div>
+            <div>
+              <p className="text-sm font-medium text-[#1A1A1A]">Visa ending in 4242</p>
+              <p className="text-xs text-[#9E9E9E]">Expires 08/27</p>
+            </div>
+          </div>
+
+          <Button size="sm" variant="outline" className="w-full mb-2">
+            Update Payment Method
+          </Button>
+          <p className="text-[10px] text-[#9E9E9E] text-center flex items-center justify-center gap-1">
+            <Info className="w-3 h-3" /> Secured by Shopify Payments
+          </p>
+        </div>
       </div>
+
+      {/* ── Dietary Restrictions — full width, icon toggles ── */}
+      <div className="bg-white rounded-2xl border border-[#E8E4DC] p-5">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <UtensilsCrossed className="w-4 h-4 text-[#004945]" />
+            <h2 className="font-semibold text-[#004945] text-sm">Dietary Restrictions</h2>
+          </div>
+          <Button
+            size="sm"
+            variant={dietarySaved ? "secondary" : "primary"}
+            onClick={saveDietary}
+          >
+            {dietarySaved ? <><Check className="w-3.5 h-3.5" /> Saved</> : "Save"}
+          </Button>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {dietaryOptions.map((opt) => {
+            const active = dietary.includes(opt.id);
+            return (
+              <button
+                key={opt.id}
+                onClick={() => toggleDietary(opt.id)}
+                className={cn(
+                  "flex items-center gap-3 p-3 rounded-xl border text-left transition-all",
+                  active
+                    ? "bg-[#EAF7D9] border-[#B9EA91]"
+                    : "bg-[#FDFBF7] border-[#E8E4DC] hover:border-[#B9EA91]"
+                )}
+              >
+                <span className="text-xl shrink-0">{opt.icon}</span>
+                <div>
+                  <p className={cn("text-xs font-semibold", active ? "text-[#004945]" : "text-[#1A1A1A]")}>
+                    {opt.label}
+                  </p>
+                  <p className="text-[10px] text-[#9E9E9E] mt-0.5">{opt.desc}</p>
+                </div>
+                <div className={cn(
+                  "ml-auto w-4 h-4 rounded-full border-2 shrink-0 flex items-center justify-center",
+                  active ? "bg-[#7ED22A] border-[#7ED22A]" : "border-[#D4CFC5]"
+                )}>
+                  {active && <Check className="w-2.5 h-2.5 text-white" />}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Avoid list teaser */}
+        <div className="mt-4 px-3 py-2.5 rounded-xl bg-[#F0EBE0] border border-[#E8E4DC] flex items-center justify-between">
+          <div>
+            <p className="text-xs font-semibold text-[#004945]">Avoid List</p>
+            <p className="text-[10px] text-[#9E9E9E] mt-0.5">Block specific ingredients from your recommendations</p>
+          </div>
+          <span className="text-[10px] font-semibold text-[#004945] bg-[#B9EA91] px-2 py-0.5 rounded-full">
+            Coming Soon
+          </span>
+        </div>
+      </div>
+
+      {/* ── Danger zone — subtle ── */}
+      <div className="bg-white rounded-2xl border border-[#E8E4DC] p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <AlertTriangle className="w-4 h-4 text-[#9E9E9E]" />
+          <h2 className="text-sm font-semibold text-[#9E9E9E]">Subscription Management</h2>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button className="text-xs text-[#6B6B6B] border border-[#E8E4DC] rounded-xl px-4 py-2 hover:bg-[#FDFBF7] transition-colors">
+            Pause Subscription
+          </button>
+          <button
+            onClick={() => setShowCancelConfirm(true)}
+            className="text-xs text-red-500 border border-red-200 rounded-xl px-4 py-2 hover:bg-red-50 transition-colors"
+          >
+            Cancel Subscription
+          </button>
+        </div>
+      </div>
+
+      {/* Classic portal link */}
+      <p className="text-center text-xs text-[#9E9E9E]">
+        Prefer the old interface?{" "}
+        <a href="#" className="text-[#004945] hover:underline font-medium">Switch to Classic Portal</a>
+      </p>
+
+      {/* Cancel confirmation modal */}
+      {showCancelConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl border border-[#E8E4DC]">
+            <h3 className="font-bold text-lg text-[#004945] mb-1">Cancel your subscription?</h3>
+            <p className="text-sm text-[#6B6B6B] mb-2">
+              You&apos;ll lose your <span className="font-semibold text-orange-500">🔥 {mockSubscription.streak}-week streak</span> and{" "}
+              <span className="font-semibold">${mockSubscription.storeCredit.toFixed(2)} in store credits</span>.
+            </p>
+            <p className="text-sm text-[#6B6B6B] mb-5">
+              Before you go — would a free delivery on your next order change your mind?
+            </p>
+            <div className="space-y-2">
+              <Button className="w-full" onClick={() => setShowCancelConfirm(false)}>
+                Keep My Subscription
+              </Button>
+              <Button variant="destructive" className="w-full" onClick={() => setShowCancelConfirm(false)}>
+                Cancel Anyway
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

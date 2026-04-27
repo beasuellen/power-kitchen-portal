@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { MessageCircle, ChevronDown, ChevronUp, Mail, Phone, ExternalLink } from "lucide-react";
+import { MessageCircle, ChevronDown, ChevronUp, Mail, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const faqs = [
@@ -50,8 +50,8 @@ export default function HelpPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Help & Support</h1>
-        <p className="text-sm text-gray-500 mt-1">Find answers or contact our team</p>
+        <h1 className="text-2xl font-bold text-[#004945]">Help & Support</h1>
+        <p className="text-sm text-[#6B6B6B] mt-0.5">Find answers or contact our team</p>
       </div>
 
       {/* Quick contact */}
@@ -59,12 +59,12 @@ export default function HelpPage() {
         <Card hover>
           <CardBody className="py-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#D8F3DC] flex items-center justify-center">
-                <MessageCircle className="w-5 h-5 text-[#2D6A4F]" />
+              <div className="w-10 h-10 rounded-xl bg-[#EAF7D9] flex items-center justify-center">
+                <MessageCircle className="w-5 h-5 text-[#004945]" />
               </div>
               <div>
-                <p className="font-semibold text-gray-900 text-sm">Live Chat</p>
-                <p className="text-xs text-gray-500">Mon–Fri, 9am–5pm EST</p>
+                <p className="font-semibold text-[#1A1A1A] text-sm">Live Chat</p>
+                <p className="text-xs text-[#9E9E9E]">Mon–Fri, 9am–5pm EST</p>
               </div>
             </div>
             <Button className="w-full mt-3" size="sm">
@@ -75,12 +75,12 @@ export default function HelpPage() {
         <Card hover>
           <CardBody className="py-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
                 <Mail className="w-5 h-5 text-blue-600" />
               </div>
               <div>
-                <p className="font-semibold text-gray-900 text-sm">Email Support</p>
-                <p className="text-xs text-gray-500">hello@powerkitchen.ca</p>
+                <p className="font-semibold text-[#1A1A1A] text-sm">Email Support</p>
+                <p className="text-xs text-[#9E9E9E]">hello@powerkitchen.ca</p>
               </div>
             </div>
             <Button variant="secondary" className="w-full mt-3" size="sm">
@@ -93,26 +93,26 @@ export default function HelpPage() {
       {/* FAQ */}
       <Card>
         <CardHeader>
-          <h2 className="font-semibold text-gray-900">Frequently Asked Questions</h2>
+          <h2 className="font-semibold text-[#004945]">Frequently Asked Questions</h2>
         </CardHeader>
         <CardBody className="pt-0 space-y-1">
           {faqs.map((faq) => {
             const isOpen = openFaq === faq.id;
             return (
-              <div key={faq.id} className="border border-gray-100 rounded-xl overflow-hidden">
+              <div key={faq.id} className="border border-[#F0EBE0] rounded-xl overflow-hidden">
                 <button
                   onClick={() => setOpenFaq(isOpen ? null : faq.id)}
-                  className="w-full flex items-center justify-between px-4 py-3.5 text-left hover:bg-gray-50 transition-colors"
+                  className="w-full flex items-center justify-between px-4 py-3.5 text-left hover:bg-[#FDFBF7] transition-colors"
                 >
-                  <span className="text-sm font-medium text-gray-900 pr-4">{faq.q}</span>
+                  <span className="text-sm font-medium text-[#1A1A1A] pr-4">{faq.q}</span>
                   {isOpen ? (
-                    <ChevronUp className="w-4 h-4 text-gray-400 shrink-0" />
+                    <ChevronUp className="w-4 h-4 text-[#9E9E9E] shrink-0" />
                   ) : (
-                    <ChevronDown className="w-4 h-4 text-gray-400 shrink-0" />
+                    <ChevronDown className="w-4 h-4 text-[#9E9E9E] shrink-0" />
                   )}
                 </button>
                 {isOpen && (
-                  <div className="px-4 pb-4 text-sm text-gray-600 border-t border-gray-50 pt-3">
+                  <div className="px-4 pb-4 text-sm text-[#6B6B6B] border-t border-[#F0EBE0] pt-3">
                     {faq.a}
                   </div>
                 )}
@@ -122,13 +122,13 @@ export default function HelpPage() {
         </CardBody>
       </Card>
 
-      {/* External links */}
+      {/* External link */}
       <div className="text-center space-y-2">
         <a
           href="https://powerkitchen.ca"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 text-sm text-[#2D6A4F] hover:underline"
+          className="inline-flex items-center gap-1.5 text-sm text-[#004945] hover:underline"
         >
           Visit our website <ExternalLink className="w-3.5 h-3.5" />
         </a>

@@ -2,7 +2,6 @@
 
 import { useState, useCallback } from "react";
 import type { Order, OrderItem, Meal } from "@/lib/mock-data";
-import { mockMeals } from "@/lib/mock-data";
 import { formatDate, formatShortDate, formatCurrency } from "@/lib/utils";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -20,7 +19,6 @@ import {
   Minus,
   AlertCircle,
   Check,
-  X,
   Info,
   ShoppingCart,
 } from "lucide-react";
@@ -33,7 +31,7 @@ interface DraftChange {
 }
 
 interface DraftItem extends OrderItem {
-  swappingWith?: string; // mealId being swapped
+  swappingWith?: string;
 }
 
 export function OrderDetailClient({ order }: { order: Order }) {
@@ -111,7 +109,7 @@ export function OrderDetailClient({ order }: { order: Order }) {
 
   const handleSave = async () => {
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 2000)); // simulate API
+    await new Promise((r) => setTimeout(r, 2000));
     setSaving(false);
     setSaved(true);
     setChanges([]);
@@ -127,12 +125,12 @@ export function OrderDetailClient({ order }: { order: Order }) {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-start gap-3">
-        <Link href="/orders" className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors mt-0.5">
-          <ArrowLeft className="w-5 h-5 text-gray-500" />
+        <Link href="/orders" className="p-1.5 rounded-lg hover:bg-[#F0EBE0] transition-colors mt-0.5">
+          <ArrowLeft className="w-5 h-5 text-[#6B6B6B]" />
         </Link>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-xl font-bold text-gray-900">
+            <h1 className="text-xl font-bold text-[#004945]">
               {formatDate(order.deliveryDate, { weekday: "long", month: "long", day: "numeric" })}
             </h1>
             {order.status === "customizable" ? (
@@ -143,7 +141,7 @@ export function OrderDetailClient({ order }: { order: Order }) {
               <Badge variant="gray">Delivered</Badge>
             )}
           </div>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <p className="text-sm text-[#9E9E9E] mt-0.5">
             Billed {formatShortDate(order.billingDate)} · Cutoff {formatShortDate(order.cutoffDate)}
           </p>
         </div>
@@ -174,9 +172,9 @@ export function OrderDetailClient({ order }: { order: Order }) {
         {/* Meals grid */}
         <div className="lg:col-span-2 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="font-semibold text-gray-700">
+            <h2 className="font-semibold text-[#004945]">
               Your Meals
-              <span className="ml-2 text-sm font-normal text-gray-400">
+              <span className="ml-2 text-sm font-normal text-[#9E9E9E]">
                 ({draftItems.reduce((s, i) => s + i.quantity, 0)} items)
               </span>
             </h2>
@@ -192,7 +190,7 @@ export function OrderDetailClient({ order }: { order: Order }) {
               <Card key={item.id} className={cn("relative", removeConfirm === item.id && "ring-2 ring-red-300")}>
                 <div className="flex gap-3 p-4">
                   {/* Image */}
-                  <div className="relative w-20 h-20 rounded-lg overflow-hidden bg-gray-100 shrink-0">
+                  <div className="relative w-20 h-20 rounded-lg overflow-hidden bg-[#F0EBE0] shrink-0">
                     <Image
                       src={item.meal.imageUrl}
                       alt={item.meal.name}
@@ -203,7 +201,7 @@ export function OrderDetailClient({ order }: { order: Order }) {
                   </div>
                   {/* Info */}
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm text-gray-900 line-clamp-2">{item.meal.name}</p>
+                    <p className="font-medium text-sm text-[#1A1A1A] line-clamp-2">{item.meal.name}</p>
                     <Badge variant="gray" size="sm" className="mt-0.5">{item.meal.planType}</Badge>
                     <DietaryPills tags={item.meal.dietaryTags} className="mt-1.5" />
 
@@ -211,11 +209,11 @@ export function OrderDetailClient({ order }: { order: Order }) {
                     <div className="mt-2">
                       {item.quantity > 1 ? (
                         <>
-                          <span className="font-bold text-gray-900">{formatCurrency(item.quantity * item.unitPrice)}</span>
-                          <span className="text-xs text-gray-400 ml-1">{formatCurrency(item.unitPrice)}/each</span>
+                          <span className="font-bold text-[#1A1A1A]">{formatCurrency(item.quantity * item.unitPrice)}</span>
+                          <span className="text-xs text-[#9E9E9E] ml-1">{formatCurrency(item.unitPrice)}/each</span>
                         </>
                       ) : (
-                        <span className="font-semibold text-gray-900">{formatCurrency(item.unitPrice)}</span>
+                        <span className="font-semibold text-[#1A1A1A]">{formatCurrency(item.unitPrice)}</span>
                       )}
                     </div>
                   </div>
@@ -223,28 +221,28 @@ export function OrderDetailClient({ order }: { order: Order }) {
 
                 {/* Actions */}
                 {isEditable && (
-                  <div className="flex items-center justify-between px-4 pb-3 pt-0 border-t border-gray-50">
+                  <div className="flex items-center justify-between px-4 pb-3 pt-0 border-t border-[#F0EBE0]">
                     {/* Quantity */}
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => handleQuantityChange(item.id, -1)}
-                        className="w-7 h-7 rounded-full border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors"
+                        className="w-7 h-7 rounded-full border border-[#E8E4DC] flex items-center justify-center hover:bg-[#F0EBE0] transition-colors"
                       >
-                        <Minus className="w-3 h-3 text-gray-600" />
+                        <Minus className="w-3 h-3 text-[#6B6B6B]" />
                       </button>
-                      <span className="text-sm font-semibold w-5 text-center">{item.quantity}</span>
+                      <span className="text-sm font-semibold w-5 text-center text-[#1A1A1A]">{item.quantity}</span>
                       <button
                         onClick={() => handleQuantityChange(item.id, 1)}
-                        className="w-7 h-7 rounded-full border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors"
+                        className="w-7 h-7 rounded-full border border-[#E8E4DC] flex items-center justify-center hover:bg-[#F0EBE0] transition-colors"
                       >
-                        <Plus className="w-3 h-3 text-gray-600" />
+                        <Plus className="w-3 h-3 text-[#6B6B6B]" />
                       </button>
                     </div>
                     {/* Swap & Remove */}
                     <div className="flex items-center gap-1">
                       <button
                         onClick={() => { setSwappingItem(item); setShowAddPanel(true); }}
-                        className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs text-gray-500 hover:bg-gray-100 transition-colors"
+                        className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs text-[#6B6B6B] hover:bg-[#EAF7D9] hover:text-[#004945] transition-colors"
                       >
                         <RefreshCw className="w-3 h-3" /> Swap
                       </button>
@@ -253,7 +251,7 @@ export function OrderDetailClient({ order }: { order: Order }) {
                         <div className="flex items-center gap-1">
                           <button
                             onClick={() => setRemoveConfirm(null)}
-                            className="px-2 py-1 rounded-lg text-xs text-gray-500 hover:bg-gray-100"
+                            className="px-2 py-1 rounded-lg text-xs text-[#6B6B6B] hover:bg-[#F0EBE0]"
                           >
                             Keep
                           </button>
@@ -267,7 +265,7 @@ export function OrderDetailClient({ order }: { order: Order }) {
                       ) : (
                         <button
                           onClick={() => handleRemove(item)}
-                          className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                          className="p-1.5 rounded-lg text-[#9E9E9E] hover:text-red-500 hover:bg-red-50 transition-colors"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -283,7 +281,7 @@ export function OrderDetailClient({ order }: { order: Order }) {
           {isEditable && (
             <button
               onClick={() => { setSwappingItem(null); setShowAddPanel(true); }}
-              className="w-full border-2 border-dashed border-gray-200 rounded-xl py-6 text-sm text-gray-400 hover:border-[#2D6A4F] hover:text-[#2D6A4F] hover:bg-[#D8F3DC]/30 transition-all flex items-center justify-center gap-2"
+              className="w-full border-2 border-dashed border-[#E8E4DC] rounded-xl py-6 text-sm text-[#9E9E9E] hover:border-[#7ED22A] hover:text-[#004945] hover:bg-[#EAF7D9]/40 transition-all flex items-center justify-center gap-2"
             >
               <Plus className="w-4 h-4" /> Add Meal to This Order
             </button>
@@ -296,8 +294,8 @@ export function OrderDetailClient({ order }: { order: Order }) {
             <Card>
               <CardHeader>
                 <div className="flex items-center gap-2">
-                  <ShoppingCart className="w-4 h-4 text-gray-500" />
-                  <h3 className="font-semibold text-gray-900">Order Summary</h3>
+                  <ShoppingCart className="w-4 h-4 text-[#6B6B6B]" />
+                  <h3 className="font-semibold text-[#004945]">Order Summary</h3>
                 </div>
               </CardHeader>
               <CardBody className="pt-0 space-y-3">
@@ -305,11 +303,11 @@ export function OrderDetailClient({ order }: { order: Order }) {
                 <div className="space-y-2 max-h-60 overflow-y-auto">
                   {draftItems.map((item) => (
                     <div key={item.id} className="flex justify-between items-start gap-2">
-                      <span className="text-sm text-gray-600 line-clamp-1 flex-1">
+                      <span className="text-sm text-[#6B6B6B] line-clamp-1 flex-1">
                         {item.quantity > 1 && <span className="font-medium">{item.quantity}× </span>}
                         {item.meal.name}
                       </span>
-                      <span className="text-sm font-medium text-gray-900 shrink-0">
+                      <span className="text-sm font-medium text-[#1A1A1A] shrink-0">
                         {formatCurrency(item.unitPrice * item.quantity)}
                       </span>
                     </div>
@@ -317,17 +315,17 @@ export function OrderDetailClient({ order }: { order: Order }) {
                 </div>
 
                 {/* Store credit */}
-                <div className="border-t border-gray-100 pt-2">
-                  <div className="flex justify-between text-sm text-gray-500">
+                <div className="border-t border-[#F0EBE0] pt-2">
+                  <div className="flex justify-between text-sm text-[#6B6B6B]">
                     <span>Store Credit</span>
-                    <span className="text-[#2D6A4F]">−$12.50</span>
+                    <span className="text-[#004945] font-medium">−$12.50</span>
                   </div>
                 </div>
 
                 {/* Total */}
-                <div className="border-t border-gray-100 pt-2 flex justify-between">
-                  <span className="font-bold text-gray-900">Total</span>
-                  <span className="font-bold text-gray-900">{formatCurrency(Math.max(0, draftTotal - 12.5))}</span>
+                <div className="border-t border-[#F0EBE0] pt-2 flex justify-between">
+                  <span className="font-bold text-[#004945]">Total</span>
+                  <span className="font-bold text-[#004945]">{formatCurrency(Math.max(0, draftTotal - 12.5))}</span>
                 </div>
 
                 {/* Changes summary */}
@@ -351,7 +349,7 @@ export function OrderDetailClient({ order }: { order: Order }) {
                 {isEditable && (
                   <div className="space-y-2 pt-1">
                     {saved ? (
-                      <div className="flex items-center justify-center gap-2 py-2 text-[#2D6A4F]">
+                      <div className="flex items-center justify-center gap-2 py-2 text-[#004945]">
                         <Check className="w-4 h-4" />
                         <span className="text-sm font-medium">All changes saved!</span>
                       </div>
@@ -368,7 +366,7 @@ export function OrderDetailClient({ order }: { order: Order }) {
                     {hasChanges && !saving && (
                       <button
                         onClick={handleDiscard}
-                        className="w-full text-center text-xs text-gray-400 hover:text-gray-600 transition-colors py-1"
+                        className="w-full text-center text-xs text-[#9E9E9E] hover:text-[#6B6B6B] transition-colors py-1"
                       >
                         Discard Changes
                       </button>
@@ -383,10 +381,10 @@ export function OrderDetailClient({ order }: { order: Order }) {
 
       {/* Floating draft save bar (mobile) */}
       {hasChanges && isEditable && (
-        <div className="fixed bottom-20 lg:hidden left-4 right-4 bg-gray-900 text-white rounded-xl px-4 py-3 flex items-center justify-between shadow-xl z-20">
+        <div className="fixed bottom-20 lg:hidden left-4 right-4 bg-[#004945] text-white rounded-xl px-4 py-3 flex items-center justify-between shadow-xl z-20">
           <span className="text-sm">{changes.length} unsaved change{changes.length !== 1 ? "s" : ""}</span>
           <div className="flex gap-2">
-            <button onClick={handleDiscard} className="text-sm text-gray-400 px-2">
+            <button onClick={handleDiscard} className="text-sm text-white/60 px-2">
               Discard
             </button>
             <Button size="sm" onClick={handleSave} loading={saving}>
@@ -411,8 +409,8 @@ export function OrderDetailClient({ order }: { order: Order }) {
       {skipConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl">
-            <h3 className="font-bold text-lg text-gray-900 mb-2">Skip this order?</h3>
-            <p className="text-sm text-gray-600 mb-4">
+            <h3 className="font-bold text-lg text-[#004945] mb-2">Skip this order?</h3>
+            <p className="text-sm text-[#6B6B6B] mb-4">
               You'll miss your curated meal lineup for{" "}
               <strong>{formatDate(order.deliveryDate, { month: "long", day: "numeric" })}</strong>.
               Your meals are prepared just for you!

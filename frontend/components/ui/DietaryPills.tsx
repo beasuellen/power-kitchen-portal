@@ -7,13 +7,8 @@ interface DietaryPillsProps {
 }
 
 const fullLabels: Record<DietaryTag, string> = {
-  GF: "Gluten Free",
-  DF: "Dairy Free",
-  NF: "Nut Free",
-  SF: "Soy Free",
-  H: "Halal",
-  SpF: "Spice Free",
-  V: "Vegan",
+  GF: "Gluten Free", DF: "Dairy Free", NF: "Nut Free",
+  SF: "Soy Free", H: "Halal", SpF: "Spice Free", V: "Vegan",
 };
 
 export function DietaryPills({ tags, className }: DietaryPillsProps) {
@@ -24,12 +19,11 @@ export function DietaryPills({ tags, className }: DietaryPillsProps) {
         return (
           <span
             key={tag}
-            className={cn(
-              "inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold",
-              style.bg,
-              style.text
-            )}
             title={fullLabels[tag]}
+            className={cn(
+              "inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-semibold",
+              style.bg, style.text
+            )}
           >
             {style.label}
           </span>

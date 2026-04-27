@@ -1,111 +1,96 @@
 import { mockOrders } from "@/lib/mock-data";
 import { formatDate, formatShortDate, formatCurrency } from "@/lib/utils";
-import { Card, CardBody } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
+import { cn } from "@/lib/utils";
 import Link from "next/link";
 import Image from "next/image";
-import {
-  CalendarDays,
-  Lock,
-  SkipForward,
-  CheckCircle2,
-  RotateCcw,
-  ArrowRight,
-  Info,
-  Loader2,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
+import { ArrowRight, Lock, SkipForward, CheckCircle2, RotateCcw, Info, Loader2, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
 
 const statusConfig = {
   customizable: {
-    border: "border-[#2D6A4F]",
-    bg: "",
+    ring: "border-[#7ED22A]",
     badge: <Badge variant="green">Ready to customize</Badge>,
-    icon: <CalendarDays className="w-4 h-4 text-[#2D6A4F]" />,
     dim: false,
   },
   locked: {
-    border: "border-gray-200",
-    bg: "",
-    badge: <Badge variant="gray"><Lock className="w-2.5 h-2.5 mr-1" />Locked</Badge>,
-    icon: <Lock className="w-4 h-4 text-gray-400" />,
+    ring: "border-[#E8E4DC]",
+    badge: <Badge variant="gray"><Lock className="w-2.5 h-2.5 mr-1 inline" />Locked</Badge>,
     dim: true,
   },
   skipped: {
-    border: "border-gray-200",
-    bg: "bg-gray-50",
+    ring: "border-[#E8E4DC]",
     badge: <Badge variant="gray">Skipped</Badge>,
-    icon: <SkipForward className="w-4 h-4 text-gray-400" />,
     dim: false,
   },
   processing: {
-    border: "border-blue-200",
-    bg: "",
+    ring: "border-blue-300",
     badge: <Badge variant="blue">Processing</Badge>,
-    icon: <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />,
     dim: false,
   },
   delivered: {
-    border: "border-gray-100",
-    bg: "bg-gray-50",
+    ring: "border-[#F0EBE0]",
     badge: <Badge variant="gray">Delivered</Badge>,
-    icon: <CheckCircle2 className="w-4 h-4 text-gray-400" />,
     dim: true,
   },
 };
 
 export default function OrdersPage() {
-  const upcoming = mockOrders.filter((o) => o.status !== "delivered").sort(
-    (a, b) => new Date(a.deliveryDate).getTime() - new Date(b.deliveryDate).getTime()
-  );
+  const upcoming = mockOrders
+    .filter((o) => o.status !== "delivered")
+    .sort((a, b) => new Date(a.deliveryDate).getTime() - new Date(b.deliveryDate).getTime());
   const past = mockOrders.filter((o) => o.status === "delivered");
 
   return (
     <div className="space-y-6">
-      {/* Page header */}
+      {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">My Orders</h1>
-        <p className="text-sm text-gray-500 mt-1">Manage your upcoming deliveries</p>
+        <h1 className="text-2xl font-bold text-[#004945]">My Orders</h1>
+        <p className="text-sm text-[#6B6B6B] mt-0.5">Manage your upcoming deliveries</p>
       </div>
 
-      {/* Upcoming orders */}
-      <section className="space-y-4">
-        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Upcoming</h2>
+      {/* Upcoming */}
+      <section className="space-y-3">
+        <p className="text-xs font-semibold text-[#9E9E9E] uppercase tracking-wider">Upcoming</p>
+
         {upcoming.map((order) => {
-          const config = statusConfig[order.status];
+          const cfg = statusConfig[order.status];
+          const mealCount = order.items.reduce((s, i) => s + i.quantity, 0);
+
           return (
-            <Card
+            <div
               key={order.id}
-              className={cn("border-2 transition-all", config.border, config.bg)}
+              className={cn(
+                "bg-white rounded-2xl border-2 transition-all",
+                cfg.ring,
+                cfg.dim && "opacity-60"
+              )}
             >
-              <CardBody className={cn("py-4", config.dim && "opacity-70")}>
+              <div className="p-4">
                 <div className="flex items-start gap-4">
-                  {/* Left: date column */}
-                  <div className="shrink-0 w-14 text-center">
-                    <div className="text-xs font-semibold text-gray-400 uppercase">
+                  {/* Date column */}
+                  <div className="shrink-0 w-12 text-center">
+                    <p className="text-[10px] font-bold text-[#9E9E9E] uppercase">
                       {new Date(order.deliveryDate + "T12:00:00").toLocaleDateString("en-CA", { month: "short" })}
-                    </div>
-                    <div className="text-2xl font-bold text-gray-900 leading-tight">
+                    </p>
+                    <p className="text-2xl font-bold text-[#004945] leading-tight">
                       {new Date(order.deliveryDate + "T12:00:00").getDate()}
-                    </div>
-                    <div className="text-[10px] text-gray-400">
+                    </p>
+                    <p className="text-[10px] text-[#9E9E9E]">
                       {new Date(order.deliveryDate + "T12:00:00").toLocaleDateString("en-CA", { weekday: "short" })}
-                    </div>
+                    </p>
                   </div>
 
                   {/* Divider */}
-                  <div className="w-px self-stretch bg-gray-200 shrink-0" />
+                  <div className="w-px self-stretch bg-[#F0EBE0] shrink-0" />
 
-                  {/* Center: content */}
+                  {/* Content */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-2 flex-wrap">
-                      {config.badge}
-                      <span className="text-sm text-gray-500">
-                        {order.status === "skipped"
-                          ? "This order is skipped"
-                          : `${order.items.reduce((s, i) => s + i.quantity, 0)} meals`}
-                      </span>
+                    <div className="flex items-center gap-2 flex-wrap mb-2">
+                      {cfg.badge}
+                      {order.status !== "skipped" && (
+                        <span className="text-xs text-[#9E9E9E]">{mealCount} meals</span>
+                      )}
                     </div>
 
                     {/* Meal thumbnails */}
@@ -114,17 +99,15 @@ export default function OrdersPage() {
                         {order.items.slice(0, 5).map((item, idx) => (
                           <div
                             key={item.id}
-                            className="relative w-10 h-10 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 shrink-0"
+                            className="relative w-9 h-9 rounded-lg overflow-hidden bg-[#F0EBE0] shrink-0 border border-[#E8E4DC]"
                           >
                             <Image
                               src={item.meal.imageUrl}
                               alt={item.meal.name}
-                              fill
-                              className="object-cover"
-                              sizes="40px"
+                              fill className="object-cover" sizes="36px"
                             />
                             {idx === 4 && order.items.length > 5 && (
-                              <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white text-[10px] font-bold">
+                              <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white text-[9px] font-bold">
                                 +{order.items.length - 5}
                               </div>
                             )}
@@ -135,32 +118,35 @@ export default function OrdersPage() {
 
                     {/* Locked info */}
                     {order.status === "locked" && (
-                      <div className="flex items-center gap-1.5 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 mb-2">
-                        <Info className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                        <p className="text-xs text-amber-800">
-                          Customization opens {formatShortDate(order.cutoffDate)}
+                      <div className="flex items-center gap-1.5 rounded-xl bg-amber-50 border border-amber-100 px-3 py-1.5 mb-2">
+                        <Info className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                        <p className="text-xs text-amber-700">
+                          Opens for editing on {formatShortDate(order.cutoffDate)}
                         </p>
                       </div>
                     )}
 
+                    {/* Footer */}
                     <div className="flex items-center justify-between">
-                      <span className="font-semibold text-gray-900">
+                      <span className="font-semibold text-[#004945] text-sm">
                         {order.status !== "skipped" ? formatCurrency(order.total) : "—"}
                       </span>
                       <div className="flex gap-2">
                         {order.status === "skipped" && (
                           <Button size="sm" variant="outline">
-                            <RotateCcw className="w-3.5 h-3.5" /> Reactivate
+                            <RotateCcw className="w-3 h-3" /> Reactivate
                           </Button>
                         )}
                         {(order.status === "customizable" || order.status === "locked") && (
                           <Link href={`/orders/${order.id}`}>
-                            <Button size="sm" variant={order.status === "customizable" ? "primary" : "secondary"}>
-                              {order.status === "customizable" ? (
-                                <>View & Edit <ArrowRight className="w-3.5 h-3.5" /></>
-                              ) : (
-                                "View Details"
-                              )}
+                            <Button
+                              size="sm"
+                              variant={order.status === "customizable" ? "primary" : "secondary"}
+                            >
+                              {order.status === "customizable"
+                                ? <><span>View & Edit</span><ArrowRight className="w-3.5 h-3.5" /></>
+                                : "View Details"
+                              }
                             </Button>
                           </Link>
                         )}
@@ -168,44 +154,37 @@ export default function OrdersPage() {
                     </div>
                   </div>
                 </div>
-              </CardBody>
-            </Card>
+              </div>
+            </div>
           );
         })}
       </section>
 
-      {/* Past orders */}
+      {/* Past */}
       {past.length > 0 && (
-        <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Recent Deliveries</h2>
-          {past.map((order) => {
-            const config = statusConfig[order.status];
-            return (
-              <Card key={order.id} className="border border-gray-100 opacity-60">
-                <CardBody className="py-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      {config.icon}
-                      <div>
-                        <p className="text-sm font-medium text-gray-700">
-                          {formatDate(order.deliveryDate, { month: "long", day: "numeric" })}
-                        </p>
-                        <p className="text-xs text-gray-400">
-                          {order.items.reduce((s, i) => s + i.quantity, 0)} meals · {formatCurrency(order.total)}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {config.badge}
-                      <Link href={`/orders/${order.id}`} className="text-xs text-[#2D6A4F] hover:underline">
-                        View
-                      </Link>
-                    </div>
+        <section className="space-y-2">
+          <p className="text-xs font-semibold text-[#9E9E9E] uppercase tracking-wider">Recent Deliveries</p>
+          {past.map((order) => (
+            <Link key={order.id} href={`/orders/${order.id}`}>
+              <div className="bg-white rounded-2xl border border-[#F0EBE0] p-3 flex items-center justify-between hover:border-[#E8E4DC] transition-colors opacity-60 hover:opacity-80">
+                <div className="flex items-center gap-3">
+                  <CheckCircle2 className="w-4 h-4 text-[#B9EA91]" />
+                  <div>
+                    <p className="text-sm font-medium text-[#1A1A1A]">
+                      {formatDate(order.deliveryDate, { month: "long", day: "numeric" })}
+                    </p>
+                    <p className="text-xs text-[#9E9E9E]">
+                      {order.items.reduce((s, i) => s + i.quantity, 0)} meals · {formatCurrency(order.total)}
+                    </p>
                   </div>
-                </CardBody>
-              </Card>
-            );
-          })}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant="gray">Delivered</Badge>
+                  <ChevronRight className="w-4 h-4 text-[#9E9E9E]" />
+                </div>
+              </div>
+            </Link>
+          ))}
         </section>
       )}
     </div>
