@@ -240,14 +240,17 @@ export function AddSwapPanel({ mode, currentMeal, defaultCategory, onAdd, onSwap
                           </div>
                         )}
 
-                        {/* Selected overlay */}
-                        {issel && (
-                          <div className="absolute inset-0 bg-[#004945]/15 flex items-center justify-center">
-                            <div className="w-7 h-7 bg-[#7ED22A] rounded-full flex items-center justify-center shadow">
-                              <Check className="w-4 h-4 text-[#004945]" />
-                            </div>
+                        {/* Radio circle — top left, always visible */}
+                        <div className="absolute top-2 left-2">
+                          <div className={cn(
+                            "w-5 h-5 rounded-full border-2 flex items-center justify-center shadow-sm transition-all",
+                            issel
+                              ? "bg-[#7ED22A] border-[#7ED22A]"
+                              : "bg-white/80 border-white/60"
+                          )}>
+                            {issel && <Check className="w-3 h-3 text-[#004945]" />}
                           </div>
-                        )}
+                        </div>
                       </div>
 
                       {/* Info */}
@@ -256,7 +259,7 @@ export function AddSwapPanel({ mode, currentMeal, defaultCategory, onAdd, onSwap
                           {meal.name}
                         </p>
                         <Badge variant="gray" size="sm" className="mt-1 text-[10px]">{meal.planType}</Badge>
-                        <DietaryPills tags={meal.dietaryTags} className="mt-1" compact />
+                        <DietaryPills tags={meal.dietaryTags} className="mt-1" />
                         <div className="flex items-center justify-between mt-1.5">
                           <span className="text-xs font-bold text-[#004945]">{formatCurrency(meal.price)}</span>
                           <span className="text-[10px] text-[#9E9E9E]">{meal.calories} cal</span>
