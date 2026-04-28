@@ -8,6 +8,7 @@ interface OrderStore {
   draftItems: DraftItem[];
   addMeals: (meals: Meal[]) => void;
   removeItem: (itemId: string) => void;
+  syncItems: (items: DraftItem[]) => void;
   reset: () => void;
 }
 
@@ -32,6 +33,8 @@ export const useOrderStore = create<OrderStore>((set) => ({
     set((state) => ({
       draftItems: state.draftItems.filter((i) => i.id !== itemId),
     })),
+
+  syncItems: (items) => set({ draftItems: items }),
 
   reset: () => set({ draftItems: initialItems }),
 }));

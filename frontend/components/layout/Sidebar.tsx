@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   CalendarDays,
-  SlidersHorizontal,
+  ClipboardList,
   Trophy,
   MessageCircle,
   ChevronRight,
@@ -19,7 +19,7 @@ import { mockSubscription } from "@/lib/mock-data";
 const navItems = [
   { href: "/dashboard", label: "Dashboard",  icon: LayoutDashboard },
   { href: "/orders",    label: "My Orders",   icon: CalendarDays },
-  { href: "/plan",      label: "My Plan",     icon: SlidersHorizontal },
+  { href: "/plan",      label: "My Plan",     icon: ClipboardList },
   { href: "/rewards",   label: "Rewards",     icon: Trophy },
   { href: "/help",      label: "Help",        icon: MessageCircle },
 ];

@@ -8,8 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import {
   Package, Truck, UtensilsCrossed, CreditCard, MapPin,
-  Edit3, Check, ChevronDown, AlertTriangle, Leaf,
-  Wheat, Flame, Nut, Syringe, Info,
+  Edit3, Check, ChevronDown, AlertTriangle, Info, X, ArrowRight, ChevronRight,
 } from "lucide-react";
 
 // ─── Dietary toggles ───────────────────────────────────────────────
@@ -56,6 +55,23 @@ export default function PlanPage() {
 
   // Cancel confirm
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+
+  // Change plan modal
+  const [showChangePlan, setShowChangePlan] = useState(false);
+  const [changePlanStep, setChangePlanStep] = useState<1 | 2 | 3>(1);
+  const [selectedNewPlan, setSelectedNewPlan] = useState<typeof mockSubscriptionPlans[0] | null>(null);
+  const [currentPlan, setCurrentPlan] = useState(mockSubscriptionPlans.find((p) => p.name === planName) ?? mockSubscriptionPlans[1]);
+
+  // Active meal plan type
+  const [activeMealPlan, setActiveMealPlan] = useState(mockMealPlanTypes.find((m) => m.id === "pro_athlete") ?? mockMealPlanTypes[0]);
+  const [showMealPlanPicker, setShowMealPlanPicker] = useState(false);
+
+  const openChangePlan = () => { setChangePlanStep(1); setSelectedNewPlan(null); setShowChangePlan(true); };
+  const closePlanModal = () => { setShowChangePlan(false); setSelectedNewPlan(null); setChangePlanStep(1); };
+  const confirmPlanChange = () => {
+    if (selectedNewPlan) { setCurrentPlan(selectedNewPlan); }
+    setChangePlanStep(3);
+  };
 
   return (
     <div className="space-y-6">
@@ -250,85 +266,237 @@ export default function PlanPage() {
         </div>
       </div>
 
-      {/* ── Subscription Options ── */}
-      <div className="bg-white rounded-2xl border border-[#E8E4DC] p-5">
-        <div className="flex items-center gap-2 mb-4">
-          <Package className="w-4 h-4 text-[#004945]" />
-          <h2 className="font-semibold text-[#004945] text-sm">Subscription Options</h2>
+      {/* ── Subscription + Meal Plan (2 columns) ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+        {/* Current Subscription */}
+        <div className="bg-white rounded-2xl border border-[#E8E4DC] p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Package className="w-4 h-4 text-[#004945]" />
+              <h2 className="font-semibold text-[#004945] text-sm">Subscription Plan</h2>
+            </div>
+            <span className="text-[10px] font-semibold text-[#7ED22A] bg-[#EAF7D9] px-2 py-0.5 rounded-full flex items-center gap-0.5">
+              <Check className="w-2.5 h-2.5" /> Active
+            </span>
+          </div>
+
+          <div className="bg-[#EAF7D9] border border-[#B9EA91] rounded-xl p-3.5 mb-3">
+            <p className="font-bold text-[#004945]">{currentPlan.name}</p>
+            <p className="text-xs text-[#6B6B6B] mt-0.5">{currentPlan.tagline}</p>
+            <ul className="mt-2 space-y-1">
+              {currentPlan.perks.map((perk) => (
+                <li key={perk} className="flex items-center gap-1.5 text-[11px] text-[#6B6B6B]">
+                  <Check className="w-3 h-3 text-[#7ED22A] shrink-0" /> {perk}
+                </li>
+              ))}
+            </ul>
+            <p className="mt-2.5 text-sm font-bold text-[#004945]">
+              ${currentPlan.pricePerMeal.toFixed(2)}<span className="text-xs font-normal text-[#9E9E9E]">/meal</span>
+            </p>
+          </div>
+
+          <button
+            onClick={openChangePlan}
+            className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl border border-[#E8E4DC] text-xs font-medium text-[#6B6B6B] hover:border-[#004945] hover:text-[#004945] transition-colors"
+          >
+            Change subscription plan <ChevronRight className="w-3 h-3" />
+          </button>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {mockSubscriptionPlans.map((plan) => {
-            const isCurrent = plan.name === planName;
-            return (
-              <div
-                key={plan.id}
-                className={cn(
-                  "relative rounded-2xl border-2 p-4 transition-all",
-                  isCurrent
-                    ? "border-[#7ED22A] bg-[#EAF7D9]"
-                    : "border-[#E8E4DC] bg-[#FDFBF7] hover:border-[#B9EA91]"
-                )}
-              >
-                {plan.popular && !isCurrent && (
-                  <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
-                    <span className="bg-[#004945] text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full">Most Popular</span>
-                  </div>
-                )}
-                {isCurrent && (
-                  <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
-                    <span className="bg-[#7ED22A] text-[#004945] text-[10px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-0.5"><Check className="w-2.5 h-2.5" /> Current Plan</span>
-                  </div>
-                )}
-                <p className="font-bold text-[#004945] text-sm mt-1">{plan.name}</p>
-                <p className="text-[10px] text-[#9E9E9E] mb-3">{plan.tagline}</p>
-                <ul className="space-y-1.5 mb-3">
-                  {plan.perks.map((perk) => (
-                    <li key={perk} className="flex items-start gap-1.5 text-[11px] text-[#6B6B6B]">
-                      <Check className="w-3 h-3 text-[#7ED22A] mt-0.5 shrink-0" />
-                      {perk}
-                    </li>
-                  ))}
-                </ul>
-                <p className="text-xs font-bold text-[#004945]">${plan.pricePerMeal.toFixed(2)}<span className="font-normal text-[#9E9E9E]">/meal</span></p>
-                {!isCurrent && (
-                  <button className="mt-3 w-full py-1.5 rounded-xl border border-[#004945] text-xs font-semibold text-[#004945] hover:bg-[#EAF7D9] transition-colors">
-                    Switch to this plan
-                  </button>
-                )}
+
+        {/* Current Meal Plan */}
+        <div className="bg-white rounded-2xl border border-[#E8E4DC] p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <UtensilsCrossed className="w-4 h-4 text-[#004945]" />
+              <h2 className="font-semibold text-[#004945] text-sm">Meal Plan Type</h2>
+            </div>
+            <button
+              onClick={() => setShowMealPlanPicker(true)}
+              className="text-[10px] font-medium text-[#004945] hover:underline"
+            >
+              Change
+            </button>
+          </div>
+
+          <div className="bg-[#EAF7D9] border border-[#B9EA91] rounded-xl p-3.5">
+            <div className="flex items-center gap-3">
+              <span className="text-3xl">{activeMealPlan.emoji}</span>
+              <div>
+                <p className="font-bold text-[#004945]">{activeMealPlan.name}</p>
+                <p className="text-xs text-[#6B6B6B] mt-0.5 leading-snug">{activeMealPlan.description}</p>
               </div>
-            );
-          })}
+            </div>
+          </div>
+
+          <p className="text-[10px] text-[#9E9E9E] mt-3 leading-relaxed">
+            Your weekly meals are curated based on this plan. You can change it at any time and it will apply from your next order.
+          </p>
         </div>
       </div>
 
-      {/* ── Meal Plan Types ── */}
-      <div className="bg-white rounded-2xl border border-[#E8E4DC] p-5">
-        <div className="flex items-center gap-2 mb-1">
-          <UtensilsCrossed className="w-4 h-4 text-[#004945]" />
-          <h2 className="font-semibold text-[#004945] text-sm">Our Meal Plans</h2>
-        </div>
-        <p className="text-xs text-[#9E9E9E] mb-4">Your meals are curated based on your selected plan type</p>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {mockMealPlanTypes.map((mp) => {
-            const isActive = mp.name === "Pro Athlete" || mp.name === "Lean Muscle" || mp.name === "Power";
-            return (
-              <div
-                key={mp.id}
-                className={cn(
-                  "p-3 rounded-xl border text-left transition-all cursor-pointer hover:border-[#B9EA91]",
-                  isActive
-                    ? "border-[#B9EA91] bg-[#EAF7D9]"
-                    : "border-[#E8E4DC] bg-[#FDFBF7]"
-                )}
-              >
-                <span className="text-xl">{mp.emoji}</span>
-                <p className="text-xs font-semibold text-[#004945] mt-1">{mp.name}</p>
-                <p className="text-[10px] text-[#9E9E9E] mt-0.5 leading-tight">{mp.description}</p>
+      {/* ── Change Plan Modal ── */}
+      {showChangePlan && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+          <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl border border-[#E8E4DC] overflow-hidden">
+
+            {/* Modal header */}
+            <div className="px-6 py-4 border-b border-[#F0EBE0] flex items-center justify-between">
+              <div>
+                <p className="text-[10px] font-semibold text-[#7ED22A] uppercase tracking-wide">
+                  {changePlanStep === 1 ? "Step 1 of 2 — Choose plan" : changePlanStep === 2 ? "Step 2 of 2 — Confirm" : "Done"}
+                </p>
+                <h3 className="font-bold text-[#004945] mt-0.5">
+                  {changePlanStep === 1 ? "Change Subscription Plan" : changePlanStep === 2 ? "Confirm Your Change" : "Plan Updated!"}
+                </h3>
               </div>
-            );
-          })}
+              <button onClick={closePlanModal} className="p-2 rounded-lg hover:bg-[#F0EBE0] transition-colors">
+                <X className="w-4 h-4 text-[#6B6B6B]" />
+              </button>
+            </div>
+
+            <div className="px-6 py-5">
+              {/* Step 1 — Pick a plan */}
+              {changePlanStep === 1 && (
+                <div className="space-y-3">
+                  {mockSubscriptionPlans.map((plan) => {
+                    const isCurrent = plan.id === currentPlan.id;
+                    const isSelected = selectedNewPlan?.id === plan.id;
+                    return (
+                      <button
+                        key={plan.id}
+                        disabled={isCurrent}
+                        onClick={() => setSelectedNewPlan(plan)}
+                        className={cn(
+                          "w-full text-left rounded-xl border-2 p-4 transition-all",
+                          isCurrent ? "border-[#E8E4DC] opacity-50 cursor-not-allowed bg-[#FDFBF7]"
+                          : isSelected ? "border-[#7ED22A] bg-[#EAF7D9]"
+                          : "border-[#E8E4DC] hover:border-[#B9EA91]"
+                        )}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <p className="font-bold text-[#004945] text-sm">{plan.name}</p>
+                            <p className="text-[11px] text-[#9E9E9E]">{plan.tagline}</p>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <p className="text-sm font-bold text-[#004945]">${plan.pricePerMeal.toFixed(2)}<span className="text-[10px] font-normal text-[#9E9E9E]">/meal</span></p>
+                            {isCurrent && <span className="text-[10px] text-[#7ED22A] font-semibold">Current</span>}
+                            {isSelected && <Check className="w-4 h-4 text-[#7ED22A] ml-auto mt-0.5" />}
+                          </div>
+                        </div>
+                        <ul className="mt-2 space-y-1">
+                          {plan.perks.map((perk) => (
+                            <li key={perk} className="flex items-center gap-1.5 text-[11px] text-[#6B6B6B]">
+                              <Check className="w-2.5 h-2.5 text-[#7ED22A] shrink-0" /> {perk}
+                            </li>
+                          ))}
+                        </ul>
+                      </button>
+                    );
+                  })}
+                  <Button
+                    className="w-full mt-2"
+                    disabled={!selectedNewPlan}
+                    onClick={() => setChangePlanStep(2)}
+                  >
+                    Continue <ArrowRight className="w-4 h-4" />
+                  </Button>
+                </div>
+              )}
+
+              {/* Step 2 — Confirm */}
+              {changePlanStep === 2 && selectedNewPlan && (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3 p-3 bg-[#FDFBF7] rounded-xl border border-[#E8E4DC]">
+                    <div className="flex-1 text-center">
+                      <p className="text-[10px] text-[#9E9E9E] mb-0.5">Current</p>
+                      <p className="text-sm font-bold text-[#004945]">{currentPlan.name}</p>
+                      <p className="text-xs text-[#9E9E9E]">${currentPlan.pricePerMeal.toFixed(2)}/meal</p>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-[#9E9E9E] shrink-0" />
+                    <div className="flex-1 text-center">
+                      <p className="text-[10px] text-[#9E9E9E] mb-0.5">New</p>
+                      <p className="text-sm font-bold text-[#7ED22A]">{selectedNewPlan.name}</p>
+                      <p className="text-xs text-[#9E9E9E]">${selectedNewPlan.pricePerMeal.toFixed(2)}/meal</p>
+                    </div>
+                  </div>
+
+                  <div className="bg-[#FDFBF7] rounded-xl border border-[#E8E4DC] p-4 space-y-2.5">
+                    <p className="text-xs font-semibold text-[#004945]">Payment & Billing</p>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-7 bg-blue-600 rounded-md flex items-center justify-center text-white text-[9px] font-bold tracking-widest shrink-0">VISA</div>
+                      <div>
+                        <p className="text-sm font-medium text-[#1A1A1A]">Visa ending in 4242</p>
+                        <p className="text-xs text-[#9E9E9E]">Expires 08/27 · Next charge on {formatDate(mockSubscription.nextBillingDate, { month: "short", day: "numeric" })}</p>
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center pt-1 border-t border-[#F0EBE0]">
+                      <span className="text-xs text-[#6B6B6B]">New weekly total ({mealsPerWeek} meals)</span>
+                      <span className="text-sm font-bold text-[#004945]">{formatCurrency(selectedNewPlan.pricePerMeal * mealsPerWeek)}</span>
+                    </div>
+                  </div>
+
+                  <p className="text-[11px] text-[#9E9E9E] text-center">
+                    Your plan change takes effect on your next billing date. You can cancel or change again at any time.
+                  </p>
+
+                  <div className="flex gap-2">
+                    <Button variant="ghost" className="flex-1" onClick={() => setChangePlanStep(1)}>Back</Button>
+                    <Button className="flex-1" onClick={confirmPlanChange}>Confirm Change</Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 3 — Success */}
+              {changePlanStep === 3 && (
+                <div className="text-center py-4 space-y-3">
+                  <div className="w-14 h-14 bg-[#EAF7D9] rounded-full flex items-center justify-center mx-auto">
+                    <Check className="w-7 h-7 text-[#7ED22A]" />
+                  </div>
+                  <p className="font-bold text-[#004945]">Plan updated to {currentPlan.name}!</p>
+                  <p className="text-sm text-[#6B6B6B]">Your new plan takes effect on your next billing date. All future orders will reflect the updated pricing.</p>
+                  <Button className="w-full" onClick={closePlanModal}>Done</Button>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* ── Meal Plan Picker Modal ── */}
+      {showMealPlanPicker && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl border border-[#E8E4DC] overflow-hidden">
+            <div className="px-6 py-4 border-b border-[#F0EBE0] flex items-center justify-between">
+              <h3 className="font-bold text-[#004945]">Choose your Meal Plan</h3>
+              <button onClick={() => setShowMealPlanPicker(false)} className="p-2 rounded-lg hover:bg-[#F0EBE0] transition-colors">
+                <X className="w-4 h-4 text-[#6B6B6B]" />
+              </button>
+            </div>
+            <div className="px-6 py-4 grid grid-cols-2 gap-2 max-h-[70vh] overflow-y-auto">
+              {mockMealPlanTypes.map((mp) => {
+                const isActive = mp.id === activeMealPlan.id;
+                return (
+                  <button
+                    key={mp.id}
+                    onClick={() => { setActiveMealPlan(mp); setShowMealPlanPicker(false); }}
+                    className={cn(
+                      "p-3 rounded-xl border-2 text-left transition-all",
+                      isActive ? "border-[#7ED22A] bg-[#EAF7D9]" : "border-[#E8E4DC] hover:border-[#B9EA91]"
+                    )}
+                  >
+                    <span className="text-2xl">{mp.emoji}</span>
+                    <p className="text-xs font-bold text-[#004945] mt-1">{mp.name}</p>
+                    <p className="text-[10px] text-[#9E9E9E] mt-0.5 leading-tight">{mp.description}</p>
+                    {isActive && <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-[#7ED22A] mt-1"><Check className="w-2.5 h-2.5" /> Selected</span>}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Dietary Restrictions — full width, icon toggles ── */}
       <div className="bg-white rounded-2xl border border-[#E8E4DC] p-5">

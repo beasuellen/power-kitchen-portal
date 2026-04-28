@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { AddSwapPanel } from "@/components/meals/AddSwapPanel";
 import { cn } from "@/lib/utils";
+import { useOrderStore } from "@/lib/useOrderStore";
 
 interface DraftChange {
   type: "add" | "remove" | "quantity" | "swap";
@@ -36,6 +37,7 @@ interface DraftItem extends OrderItem {
 
 export function OrderDetailClient({ order }: { order: Order }) {
   const isEditable = order.status === "customizable";
+  const { syncItems } = useOrderStore();
 
   const [draftItems, setDraftItems] = useState<DraftItem[]>(order.items.map((i) => ({ ...i })));
   const [changes, setChanges] = useState<DraftChange[]>([]);
@@ -113,6 +115,8 @@ export function OrderDetailClient({ order }: { order: Order }) {
     setSaving(false);
     setSaved(true);
     setChanges([]);
+    // Sync to global store so dashboard reflects the saved state
+    if (isEditable) syncItems(draftItems);
   };
 
   const handleDiscard = () => {
