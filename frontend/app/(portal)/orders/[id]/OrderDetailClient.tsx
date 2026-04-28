@@ -12,6 +12,7 @@ import Link from "next/link";
 import {
   ArrowLeft, Lock, SkipForward, Plus, Trash2,
   RefreshCw, Minus, AlertCircle, Check, Info, ShoppingCart, X, AlertTriangle, CalendarDays,
+  Tag, Wallet, Gift, ChevronDown, ChevronUp,
 } from "lucide-react";
 import { AddSwapPanel } from "@/components/meals/AddSwapPanel";
 import { cn } from "@/lib/utils";
@@ -19,6 +20,7 @@ import { useOrderStore } from "@/lib/useOrderStore";
 
 interface DraftChange { type: "add" | "remove" | "quantity" | "swap"; description: string; }
 interface DraftItem extends OrderItem { }
+type PromoTab = "discount" | "credit" | "gift";
 
 export function OrderDetailClient({ order }: { order: Order }) {
   const isEditable = order.status === "customizable";
@@ -43,6 +45,49 @@ export function OrderDetailClient({ order }: { order: Order }) {
 
   const hasChanges = changes.length > 0;
   const draftTotal = draftItems.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
+
+  // ── Promo / credits ──────────────────────────────────────────────
+  const [activePromoTab, setActivePromoTab] = useState<PromoTab | null>(null);
+  const [discountInput, setDiscountInput] = useState("");
+  const [giftInput, setGiftInput] = useState("");
+  const [appliedPromos, setAppliedPromos] = useState<{ id: string; label: string; amount: number }[]>([]);
+  const MOCK_STORE_CREDIT = 12.50;
+  const creditAlreadyApplied = appliedPromos.some((p) => p.id === "credit");
+
+  const promoDiscount = appliedPromos.reduce((s, p) => s + p.amount, 0);
+  const orderTotal = Math.max(0, draftTotal - promoDiscount);
+
+  const applyDiscountCode = () => {
+    const code = discountInput.trim().toUpperCase();
+    if (!code) return;
+    if (appliedPromos.some((p) => p.id === `code_${code}`)) return;
+    const discount = code === "POWER10" ? draftTotal * 0.1
+      : code === "WELCOME5" ? 5
+      : null;
+    if (discount === null) { alert("Invalid code. Try POWER10 or WELCOME5."); return; }
+    setAppliedPromos((prev) => [...prev, { id: `code_${code}`, label: `Code "${code}"`, amount: discount }]);
+    setDiscountInput("");
+    setActivePromoTab(null);
+  };
+
+  const applyStoreCredit = () => {
+    if (creditAlreadyApplied) return;
+    setAppliedPromos((prev) => [...prev, { id: "credit", label: "Store Credit", amount: Math.min(MOCK_STORE_CREDIT, draftTotal) }]);
+    setActivePromoTab(null);
+  };
+
+  const applyGiftCard = () => {
+    const code = giftInput.trim().toUpperCase();
+    if (!code) return;
+    if (appliedPromos.some((p) => p.id === `gift_${code}`)) return;
+    const amount = code === "GIFT25" ? 25 : code === "GIFT50" ? 50 : null;
+    if (amount === null) { alert("Invalid gift card. Try GIFT25 or GIFT50."); return; }
+    setAppliedPromos((prev) => [...prev, { id: `gift_${code}`, label: `Gift Card (${code})`, amount }]);
+    setGiftInput("");
+    setActivePromoTab(null);
+  };
+
+  const removePromo = (id: string) => setAppliedPromos((prev) => prev.filter((p) => p.id !== id));
 
   const addChange = useCallback((change: DraftChange) => {
     setChanges((prev) => [...prev, change]);
@@ -295,16 +340,113 @@ export function OrderDetailClient({ order }: { order: Order }) {
                   ))}
                 </div>
 
-                <div className="border-t border-[#F0EBE0] pt-2">
-                  <div className="flex justify-between text-sm text-[#6B6B6B]">
-                    <span>Store Credit</span>
-                    <span className="text-[#004945] font-medium">−$12.50</span>
+                {/* ── Applied promos ── */}
+                {appliedPromos.length > 0 && (
+                  <div className="space-y-1">
+                    {appliedPromos.map((p) => (
+                      <div key={p.id} className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs text-[#004945]">−{formatCurrency(p.amount)}</span>
+                          <span className="text-xs text-[#6B6B6B]">{p.label}</span>
+                        </div>
+                        <button onClick={() => removePromo(p.id)} className="text-[#9E9E9E] hover:text-red-400 transition-colors">
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
                   </div>
+                )}
+
+                {/* ── Promo tabs ── */}
+                <div className="border-t border-[#F0EBE0] pt-3 space-y-2">
+                  {/* Tab buttons */}
+                  <div className="flex gap-1.5">
+                    {([
+                      { id: "discount" as PromoTab, icon: <Tag className="w-3 h-3" />, label: "Discount" },
+                      { id: "credit"   as PromoTab, icon: <Wallet className="w-3 h-3" />, label: "Credit" },
+                      { id: "gift"     as PromoTab, icon: <Gift className="w-3 h-3" />, label: "Gift Card" },
+                    ]).map(({ id, icon, label }) => (
+                      <button
+                        key={id}
+                        onClick={() => setActivePromoTab(activePromoTab === id ? null : id)}
+                        className={cn(
+                          "flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-[10px] font-medium border transition-colors",
+                          activePromoTab === id
+                            ? "bg-[#004945] text-white border-[#004945]"
+                            : "bg-white text-[#6B6B6B] border-[#E8E4DC] hover:border-[#B9EA91] hover:text-[#004945]"
+                        )}
+                      >
+                        {icon}{label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Discount code input */}
+                  {activePromoTab === "discount" && (
+                    <div className="flex gap-1.5">
+                      <input
+                        type="text"
+                        placeholder="Enter code…"
+                        value={discountInput}
+                        onChange={(e) => setDiscountInput(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && applyDiscountCode()}
+                        className="flex-1 text-xs px-2.5 py-2 border border-[#E8E4DC] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7ED22A] bg-[#FDFBF7]"
+                      />
+                      <button
+                        onClick={applyDiscountCode}
+                        className="px-3 py-2 bg-[#004945] text-white text-xs font-semibold rounded-lg hover:bg-[#003835] transition-colors"
+                      >
+                        Apply
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Store credit */}
+                  {activePromoTab === "credit" && (
+                    <div className="bg-[#FDFBF7] border border-[#F0EBE0] rounded-lg p-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-[#6B6B6B]">Available balance</span>
+                        <span className="text-sm font-bold text-[#004945]">{formatCurrency(MOCK_STORE_CREDIT)}</span>
+                      </div>
+                      <button
+                        onClick={applyStoreCredit}
+                        disabled={creditAlreadyApplied}
+                        className={cn(
+                          "w-full py-1.5 rounded-lg text-xs font-semibold transition-colors",
+                          creditAlreadyApplied
+                            ? "bg-[#F0EBE0] text-[#9E9E9E] cursor-not-allowed"
+                            : "bg-[#004945] text-white hover:bg-[#003835]"
+                        )}
+                      >
+                        {creditAlreadyApplied ? "Already applied" : `Apply ${formatCurrency(MOCK_STORE_CREDIT)}`}
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Gift card input */}
+                  {activePromoTab === "gift" && (
+                    <div className="flex gap-1.5">
+                      <input
+                        type="text"
+                        placeholder="Gift card number…"
+                        value={giftInput}
+                        onChange={(e) => setGiftInput(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && applyGiftCard()}
+                        className="flex-1 text-xs px-2.5 py-2 border border-[#E8E4DC] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7ED22A] bg-[#FDFBF7]"
+                      />
+                      <button
+                        onClick={applyGiftCard}
+                        className="px-3 py-2 bg-[#004945] text-white text-xs font-semibold rounded-lg hover:bg-[#003835] transition-colors"
+                      >
+                        Apply
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 <div className="border-t border-[#F0EBE0] pt-2 flex justify-between">
                   <span className="font-bold text-[#004945]">Total</span>
-                  <span className="font-bold text-[#004945]">{formatCurrency(Math.max(0, draftTotal - 12.5))}</span>
+                  <span className="font-bold text-[#004945]">{formatCurrency(orderTotal)}</span>
                 </div>
 
                 {/* Unsaved changes notice */}
