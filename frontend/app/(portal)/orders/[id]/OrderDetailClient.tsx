@@ -330,79 +330,96 @@ export function OrderDetailClient({ order }: { order: Order }) {
                   ))}
                 </div>
 
-                {/* ── Applied promos ── */}
-                {appliedPromos.length > 0 && (
-                  <div className="space-y-1">
-                    {appliedPromos.map((p) => (
-                      <div key={p.id} className="flex items-center justify-between">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-xs text-[#004945]">−{formatCurrency(p.amount)}</span>
-                          <span className="text-xs text-[#6B6B6B]">{p.label}</span>
-                        </div>
-                        <button onClick={() => removePromo(p.id)} className="text-[#9E9E9E] hover:text-red-400 transition-colors">
-                          <X className="w-3 h-3" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                {/* ── Savings & Credits section ── */}
+                <div className="border-t border-[#F0EBE0] pt-4 space-y-3">
 
-                {/* ── Promo tabs ── */}
-                <div className="border-t border-[#F0EBE0] pt-3 space-y-2">
-                  {/* Tab buttons */}
-                  <div className="flex gap-1.5">
+                  {/* Applied promos */}
+                  {appliedPromos.length > 0 && (
+                    <div className="space-y-1.5">
+                      {appliedPromos.map((p) => (
+                        <div key={p.id} className="flex items-center justify-between bg-[#EAF7D9] rounded-lg px-3 py-1.5">
+                          <div className="flex items-center gap-1.5">
+                            <Check className="w-3 h-3 text-[#004945]" />
+                            <span className="text-xs font-medium text-[#004945]">{p.label}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-[#004945]">−{formatCurrency(p.amount)}</span>
+                            <button onClick={() => removePromo(p.id)} className="text-[#9E9E9E] hover:text-red-400 transition-colors">
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Section header */}
+                  <div>
+                    <p className="text-xs font-semibold text-[#1A1A1A]">Savings & Credits</p>
+                    <p className="text-[10px] text-[#9E9E9E] mt-0.5">Apply a discount code, store credit, or gift card to this order</p>
+                  </div>
+
+                  {/* Option buttons */}
+                  <div className="flex gap-2">
                     {([
-                      { id: "discount" as PromoTab, icon: <Tag className="w-3 h-3" />, label: "Discount" },
-                      { id: "credit"   as PromoTab, icon: <Wallet className="w-3 h-3" />, label: "Credit" },
-                      { id: "gift"     as PromoTab, icon: <Gift className="w-3 h-3" />, label: "Gift Card" },
+                      { id: "discount" as PromoTab, icon: <Tag className="w-3.5 h-3.5" />, label: "Discount Code" },
+                      { id: "credit"   as PromoTab, icon: <Wallet className="w-3.5 h-3.5" />, label: "Store Credit" },
+                      { id: "gift"     as PromoTab, icon: <Gift className="w-3.5 h-3.5" />, label: "Gift Card" },
                     ]).map(({ id, icon, label }) => (
                       <button
                         key={id}
                         onClick={() => setActivePromoTab(activePromoTab === id ? null : id)}
                         className={cn(
-                          "flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-[10px] font-medium border transition-colors",
+                          "flex-1 flex flex-col items-center gap-1 py-2.5 px-1 rounded-xl text-[10px] font-medium border-2 transition-all",
                           activePromoTab === id
-                            ? "bg-[#004945] text-white border-[#004945]"
+                            ? "bg-[#EAF7D9] text-[#004945] border-[#7ED22A]"
                             : "bg-white text-[#6B6B6B] border-[#E8E4DC] hover:border-[#B9EA91] hover:text-[#004945]"
                         )}
                       >
-                        {icon}{label}
+                        <span className={cn("transition-colors", activePromoTab === id ? "text-[#004945]" : "text-[#9E9E9E]")}>{icon}</span>
+                        {label}
                       </button>
                     ))}
                   </div>
 
                   {/* Discount code input */}
                   {activePromoTab === "discount" && (
-                    <div className="flex gap-1.5">
-                      <input
-                        type="text"
-                        placeholder="Enter code…"
-                        value={discountInput}
-                        onChange={(e) => setDiscountInput(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && applyDiscountCode()}
-                        className="flex-1 text-xs px-2.5 py-2 border border-[#E8E4DC] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7ED22A] bg-[#FDFBF7]"
-                      />
-                      <button
-                        onClick={applyDiscountCode}
-                        className="px-3 py-2 bg-[#004945] text-white text-xs font-semibold rounded-lg hover:bg-[#003835] transition-colors"
-                      >
-                        Apply
-                      </button>
+                    <div className="space-y-1.5">
+                      <p className="text-[10px] text-[#9E9E9E]">Enter your promo or discount code below</p>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          placeholder="e.g. POWER10"
+                          value={discountInput}
+                          onChange={(e) => setDiscountInput(e.target.value)}
+                          onKeyDown={(e) => e.key === "Enter" && applyDiscountCode()}
+                          className="flex-1 text-sm px-3 py-2.5 border border-[#E8E4DC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7ED22A] bg-[#FDFBF7]"
+                        />
+                        <button
+                          onClick={applyDiscountCode}
+                          className="px-4 py-2.5 bg-[#004945] text-white text-xs font-semibold rounded-xl hover:bg-[#003835] transition-colors"
+                        >
+                          Apply
+                        </button>
+                      </div>
                     </div>
                   )}
 
                   {/* Store credit */}
                   {activePromoTab === "credit" && (
-                    <div className="bg-[#FDFBF7] border border-[#F0EBE0] rounded-lg p-3 space-y-2">
+                    <div className="bg-[#FDFBF7] border border-[#F0EBE0] rounded-xl p-4 space-y-3">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-[#6B6B6B]">Available balance</span>
-                        <span className="text-sm font-bold text-[#004945]">{formatCurrency(MOCK_STORE_CREDIT)}</span>
+                        <div>
+                          <p className="text-xs font-semibold text-[#1A1A1A]">Your store credit</p>
+                          <p className="text-[10px] text-[#9E9E9E] mt-0.5">Earned from referrals & returns</p>
+                        </div>
+                        <span className="text-lg font-bold text-[#004945]">{formatCurrency(MOCK_STORE_CREDIT)}</span>
                       </div>
                       <button
                         onClick={applyStoreCredit}
                         disabled={creditAlreadyApplied}
                         className={cn(
-                          "w-full py-1.5 rounded-lg text-xs font-semibold transition-colors",
+                          "w-full py-2 rounded-xl text-xs font-semibold transition-colors",
                           creditAlreadyApplied
                             ? "bg-[#F0EBE0] text-[#9E9E9E] cursor-not-allowed"
                             : "bg-[#004945] text-white hover:bg-[#003835]"
@@ -415,21 +432,23 @@ export function OrderDetailClient({ order }: { order: Order }) {
 
                   {/* Gift card input */}
                   {activePromoTab === "gift" && (
-                    <div className="flex gap-1.5">
-                      <input
-                        type="text"
-                        placeholder="Gift card number…"
-                        value={giftInput}
-                        onChange={(e) => setGiftInput(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && applyGiftCard()}
-                        className="flex-1 text-xs px-2.5 py-2 border border-[#E8E4DC] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7ED22A] bg-[#FDFBF7]"
-                      />
-                      <button
-                        onClick={applyGiftCard}
-                        className="px-3 py-2 bg-[#004945] text-white text-xs font-semibold rounded-lg hover:bg-[#003835] transition-colors"
-                      >
-                        Apply
-                      </button>
+                    <div className="space-y-1.5">
+                      <p className="text-[10px] text-[#9E9E9E]">Enter the code printed on your gift card</p>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          placeholder="e.g. GIFT25"
+                          value={giftInput}
+                          onChange={(e) => setGiftInput(e.target.value)}
+                          onKeyDown={(e) => e.key === "Enter" && applyGiftCard()}
+                          className="flex-1 text-sm px-3 py-2.5 border border-[#E8E4DC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7ED22A] bg-[#FDFBF7]"
+                        />
+                        <button
+                          onClick={applyGiftCard}
+                          className="px-4 py-2.5 bg-[#004945] text-white text-xs font-semibold rounded-xl hover:bg-[#003835] transition-colors"
+                        >
+                          Apply
+                        </button>
                     </div>
                   )}
                 </div>
