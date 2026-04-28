@@ -40,8 +40,8 @@ export function OrderDetailClient({ order }: { order: Order }) {
   const [swappingItem, setSwappingItem] = useState<DraftItem | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [removeConfirm, setRemoveConfirm] = useState<string | null>(null);
   const [showSkipModal, setShowSkipModal] = useState(false);
+  const [removeTarget, setRemoveTarget] = useState<DraftItem | null>(null);
 
   const hasChanges = changes.length > 0;
   const draftTotal = draftItems.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
@@ -105,13 +105,9 @@ export function OrderDetailClient({ order }: { order: Order }) {
   };
 
   const handleRemove = (item: DraftItem) => {
-    if (removeConfirm === item.id) {
-      setDraftItems((prev) => prev.filter((i) => i.id !== item.id));
-      setRemoveConfirm(null);
-      addChange({ type: "remove", description: `Removed ${item.meal.name}` });
-    } else {
-      setRemoveConfirm(item.id);
-    }
+    setDraftItems((prev) => prev.filter((i) => i.id !== item.id));
+    addChange({ type: "remove", description: `Removed ${item.meal.name}` });
+    setRemoveTarget(null);
   };
 
   const handleAddMeals = (meals: Meal[]) => {
@@ -249,19 +245,17 @@ export function OrderDetailClient({ order }: { order: Order }) {
             )}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
             {draftItems.map((item) => (
-              <Card key={item.id} className={cn("relative", removeConfirm === item.id && "ring-2 ring-red-300")}>
-                {/* Card top: image + info */}
-                <div className="flex gap-4 p-5">
+              <Card key={item.id} className="flex flex-col">
+                {/* Top: image + info — grows to fill available space */}
+                <div className="flex gap-4 p-5 flex-1">
                   <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-[#F0EBE0] shrink-0">
                     <Image src={item.meal.imageUrl} alt={item.meal.name} fill className="object-cover" sizes="80px" />
                   </div>
-                  <div className="flex-1 min-w-0 flex flex-col justify-between">
-                    <div>
-                      <p className="font-semibold text-sm text-[#1A1A1A] line-clamp-2 leading-snug">{item.meal.name}</p>
-                      <DietaryPills tags={item.meal.dietaryTags} className="mt-2" />
-                    </div>
+                  <div className="flex-1 min-w-0 flex flex-col">
+                    <p className="font-semibold text-sm text-[#1A1A1A] leading-snug">{item.meal.name}</p>
+                    <DietaryPills tags={item.meal.dietaryTags} className="mt-2 flex-1" />
                     <div className="mt-3">
                       {item.quantity > 1 ? (
                         <div className="flex items-baseline gap-1.5">
@@ -275,47 +269,25 @@ export function OrderDetailClient({ order }: { order: Order }) {
                   </div>
                 </div>
 
-                {/* Card bottom: actions */}
+                {/* Bottom: actions — always pinned to bottom */}
                 {isEditable && (
                   <div className="flex items-center justify-between px-5 py-4 border-t border-[#F0EBE0] bg-[#FDFBF7] rounded-b-xl">
-                    {/* Qty stepper */}
                     <div className="flex items-center gap-3">
-                      <button
-                        onClick={() => handleQuantityChange(item.id, -1)}
-                        className="w-8 h-8 rounded-full border border-[#E8E4DC] flex items-center justify-center hover:bg-[#F0EBE0] transition-colors"
-                      >
+                      <button onClick={() => handleQuantityChange(item.id, -1)} className="w-8 h-8 rounded-full border border-[#E8E4DC] flex items-center justify-center hover:bg-[#F0EBE0] transition-colors">
                         <Minus className="w-3.5 h-3.5 text-[#6B6B6B]" />
                       </button>
                       <span className="text-sm font-semibold w-4 text-center text-[#1A1A1A]">{item.quantity}</span>
-                      <button
-                        onClick={() => handleQuantityChange(item.id, 1)}
-                        className="w-8 h-8 rounded-full border border-[#E8E4DC] flex items-center justify-center hover:bg-[#F0EBE0] transition-colors"
-                      >
+                      <button onClick={() => handleQuantityChange(item.id, 1)} className="w-8 h-8 rounded-full border border-[#E8E4DC] flex items-center justify-center hover:bg-[#F0EBE0] transition-colors">
                         <Plus className="w-3.5 h-3.5 text-[#6B6B6B]" />
                       </button>
                     </div>
-
-                    {/* Swap + Remove */}
                     <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => { setSwappingItem(item); setShowAddPanel(true); }}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-[#6B6B6B] hover:bg-[#EAF7D9] hover:text-[#004945] transition-colors border border-[#E8E4DC]"
-                      >
+                      <button onClick={() => { setSwappingItem(item); setShowAddPanel(true); }} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-[#6B6B6B] hover:bg-[#EAF7D9] hover:text-[#004945] transition-colors border border-[#E8E4DC]">
                         <RefreshCw className="w-3 h-3" /> Swap
                       </button>
-                      {removeConfirm === item.id ? (
-                        <div className="flex items-center gap-1">
-                          <button onClick={() => setRemoveConfirm(null)} className="px-2.5 py-1.5 rounded-lg text-xs text-[#6B6B6B] hover:bg-[#F0EBE0] border border-[#E8E4DC]">Keep</button>
-                          <button onClick={() => handleRemove(item)} className="px-2.5 py-1.5 rounded-lg text-xs text-red-600 hover:bg-red-50 font-medium border border-red-200">Remove</button>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => handleRemove(item)}
-                          className="w-8 h-8 rounded-lg flex items-center justify-center text-[#9E9E9E] hover:text-red-500 hover:bg-red-50 transition-colors border border-[#E8E4DC]"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      )}
+                      <button onClick={() => setRemoveTarget(item)} className="w-8 h-8 rounded-lg flex items-center justify-center text-[#9E9E9E] hover:text-red-500 hover:bg-red-50 transition-colors border border-[#E8E4DC]">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                   </div>
                 )}
@@ -529,6 +501,48 @@ export function OrderDetailClient({ order }: { order: Order }) {
           onSwap={handleSwap}
           onClose={() => { setShowAddPanel(false); setSwappingItem(null); }}
         />
+      )}
+
+      {/* ── Remove meal confirmation modal ── */}
+      {removeTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+          <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl border border-[#E8E4DC] overflow-hidden">
+            <div className="px-6 pt-6 pb-4 flex items-start justify-between gap-3">
+              <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center shrink-0">
+                <Trash2 className="w-5 h-5 text-red-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-[#004945]">Remove this meal?</h3>
+                <p className="text-xs text-[#9E9E9E] mt-0.5 line-clamp-2">{removeTarget.meal.name}</p>
+              </div>
+              <button onClick={() => setRemoveTarget(null)} className="p-1 rounded-lg hover:bg-[#F0EBE0] transition-colors shrink-0">
+                <X className="w-4 h-4 text-[#9E9E9E]" />
+              </button>
+            </div>
+            <div className="px-6 pb-2">
+              <div className="flex items-center gap-3 bg-[#FDFBF7] border border-[#F0EBE0] rounded-xl p-3">
+                <div className="relative w-12 h-12 rounded-lg overflow-hidden shrink-0">
+                  <Image src={removeTarget.meal.imageUrl} alt={removeTarget.meal.name} fill className="object-cover" sizes="48px" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-[#1A1A1A] truncate">{removeTarget.meal.name}</p>
+                  <p className="text-xs text-[#9E9E9E]">{removeTarget.quantity > 1 ? `${removeTarget.quantity}× ` : ""}{formatCurrency(removeTarget.unitPrice * removeTarget.quantity)}</p>
+                </div>
+              </div>
+              <p className="text-xs text-[#9E9E9E] mt-3 leading-relaxed">
+                This meal will be removed from your order. You can add it back anytime before the cutoff date.
+              </p>
+            </div>
+            <div className="px-6 pb-6 pt-4 flex flex-col gap-2">
+              <Button variant="destructive" className="w-full" onClick={() => handleRemove(removeTarget)}>
+                Yes, remove it
+              </Button>
+              <Button variant="ghost" className="w-full" onClick={() => setRemoveTarget(null)}>
+                Keep in my order
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Skip modal */}
