@@ -449,6 +449,7 @@ export function OrderDetailClient({ order }: { order: Order }) {
                         >
                           Apply
                         </button>
+                      </div>
                     </div>
                   )}
                 </div>
