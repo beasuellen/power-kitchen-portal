@@ -9,11 +9,73 @@ export const mockCustomer = {
   memberSince: "2023-10-01",
 };
 
+// ─── Subscription plan options ────────────────────────────────────
+export const mockSubscriptionPlans = [
+  {
+    id: "plan_chefs_sample",
+    name: "Chef's Sample",
+    tagline: "Bundle with 5 meals",
+    description: "Test our menu with no commitment. Get 5 hand-picked meals to experience the Power Kitchen difference.",
+    mealsIncluded: 5,
+    perks: [
+      "Bundle with 5 meals",
+      "Test our menu with no commitment",
+      "See exactly what you'll receive",
+    ],
+    pricePerMeal: 17.99,
+    weeklyTotal: 89.95,
+    popular: false,
+  },
+  {
+    id: "plan_custom",
+    name: "Custom Meal Plan",
+    tagline: "Choose your meals",
+    description: "Full control over your selections. Personalize every order to match your goals and preferences.",
+    mealsIncluded: 10,
+    perks: [
+      "Personalize your meals as you please",
+      "Set dietary restrictions and preferences",
+      "Smart Ordering to save time",
+      "Full control over your selections",
+    ],
+    pricePerMeal: 14.99,
+    weeklyTotal: 149.90,
+    popular: true,
+  },
+  {
+    id: "plan_1month_trial",
+    name: "1 Month Trial",
+    tagline: "Get 20 meals",
+    description: "Experience our full menu rotation for a full month. Includes free delivery and a free breakfast every week.",
+    mealsIncluded: 20,
+    perks: [
+      "Get 5 meals per week for 1 month",
+      "Free delivery & Free breakfast",
+      "Experience our menu rotation",
+    ],
+    pricePerMeal: 13.99,
+    weeklyTotal: 279.80,
+    popular: false,
+  },
+];
+
+// ─── Meal plan types (as shown on powerkitchen.ca) ─────────────────
+export const mockMealPlanTypes = [
+  { id: "power",        name: "Power",         description: "Balanced meals for people who just want to eat right", emoji: "⚡" },
+  { id: "pro_athlete",  name: "Pro Athlete",    description: "High protein meals for performance and recovery", emoji: "🏃" },
+  { id: "lean_muscle",  name: "Lean Muscle",    description: "Athletes' choice for gaining muscle and losing fat", emoji: "💪" },
+  { id: "low_carb",     name: "Low Carb",       description: "Low-calorie meals to help you on your journey", emoji: "🥗" },
+  { id: "clean_bulk",   name: "Clean Bulking",  description: "High-protein, high-carb meals to help you build muscle", emoji: "🏋️" },
+  { id: "vegan",        name: "Vegan",          description: "Wholesome and delicious plant-based meals", emoji: "🌱" },
+  { id: "keto",         name: "Keto",           description: "Low-carb, high-fat meals that help you stay in ketosis", emoji: "🥑" },
+  { id: "glp1",         name: "GLP-1 Support",  description: "Meals specially crafted for those on GLP-1 medications", emoji: "💊" },
+];
+
 export const mockSubscription = {
   id: "sub_001",
   customerId: "cust_001",
-  planName: "Performance Plan",
-  planType: "performance",
+  planName: "Custom Meal Plan",
+  planType: "custom",
   mealsPerWeek: 10,
   weeklyTotal: 149.90,
   status: "active" as const,
@@ -84,7 +146,7 @@ export const mockMeals: Meal[] = [
   {
     id: "meal_001",
     name: "Teriyaki Chicken Bowl",
-    planType: "Performance",
+    planType: "Pro Athlete",
     category: "meals",
     price: 14.99,
     calories: 520,
@@ -98,7 +160,7 @@ export const mockMeals: Meal[] = [
   {
     id: "meal_002",
     name: "Grass-Fed Beef Stir Fry",
-    planType: "Classic",
+    planType: "Lean Muscle",
     category: "meals",
     price: 16.99,
     calories: 580,
@@ -127,7 +189,7 @@ export const mockMeals: Meal[] = [
   {
     id: "meal_004",
     name: "Turkey Meatballs & Zoodles",
-    planType: "GLP-1",
+    planType: "GLP-1 Support",
     category: "meals",
     price: 13.99,
     calories: 380,
@@ -141,7 +203,7 @@ export const mockMeals: Meal[] = [
   {
     id: "meal_005",
     name: "Overnight Oats Supreme",
-    planType: "Classic",
+    planType: "Power",
     category: "breakfast",
     price: 9.99,
     calories: 340,
@@ -155,7 +217,7 @@ export const mockMeals: Meal[] = [
   {
     id: "meal_006",
     name: "Egg White Frittata",
-    planType: "Performance",
+    planType: "Lean Muscle",
     category: "breakfast",
     price: 10.99,
     calories: 280,
@@ -170,7 +232,7 @@ export const mockMeals: Meal[] = [
   {
     id: "meal_007",
     name: "Chocolate Protein Shake",
-    planType: "Performance",
+    planType: "Pro Athlete",
     category: "shakes",
     price: 8.99,
     calories: 220,
@@ -184,7 +246,7 @@ export const mockMeals: Meal[] = [
   {
     id: "meal_008",
     name: "Mixed Nut & Date Bar",
-    planType: "Classic",
+    planType: "Power",
     category: "snacks",
     price: 4.99,
     calories: 180,

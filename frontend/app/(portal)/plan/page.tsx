@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { mockSubscription } from "@/lib/mock-data";
+import { mockSubscription, mockSubscriptionPlans, mockMealPlanTypes } from "@/lib/mock-data";
 import { formatDate, formatCurrency } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
@@ -247,6 +247,86 @@ export default function PlanPage() {
           <p className="text-[10px] text-[#9E9E9E] text-center flex items-center justify-center gap-1">
             <Info className="w-3 h-3" /> Secured by Shopify Payments
           </p>
+        </div>
+      </div>
+
+      {/* ── Subscription Options ── */}
+      <div className="bg-white rounded-2xl border border-[#E8E4DC] p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <Package className="w-4 h-4 text-[#004945]" />
+          <h2 className="font-semibold text-[#004945] text-sm">Subscription Options</h2>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {mockSubscriptionPlans.map((plan) => {
+            const isCurrent = plan.name === planName;
+            return (
+              <div
+                key={plan.id}
+                className={cn(
+                  "relative rounded-2xl border-2 p-4 transition-all",
+                  isCurrent
+                    ? "border-[#7ED22A] bg-[#EAF7D9]"
+                    : "border-[#E8E4DC] bg-[#FDFBF7] hover:border-[#B9EA91]"
+                )}
+              >
+                {plan.popular && !isCurrent && (
+                  <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
+                    <span className="bg-[#004945] text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full">Most Popular</span>
+                  </div>
+                )}
+                {isCurrent && (
+                  <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
+                    <span className="bg-[#7ED22A] text-[#004945] text-[10px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-0.5"><Check className="w-2.5 h-2.5" /> Current Plan</span>
+                  </div>
+                )}
+                <p className="font-bold text-[#004945] text-sm mt-1">{plan.name}</p>
+                <p className="text-[10px] text-[#9E9E9E] mb-3">{plan.tagline}</p>
+                <ul className="space-y-1.5 mb-3">
+                  {plan.perks.map((perk) => (
+                    <li key={perk} className="flex items-start gap-1.5 text-[11px] text-[#6B6B6B]">
+                      <Check className="w-3 h-3 text-[#7ED22A] mt-0.5 shrink-0" />
+                      {perk}
+                    </li>
+                  ))}
+                </ul>
+                <p className="text-xs font-bold text-[#004945]">${plan.pricePerMeal.toFixed(2)}<span className="font-normal text-[#9E9E9E]">/meal</span></p>
+                {!isCurrent && (
+                  <button className="mt-3 w-full py-1.5 rounded-xl border border-[#004945] text-xs font-semibold text-[#004945] hover:bg-[#EAF7D9] transition-colors">
+                    Switch to this plan
+                  </button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── Meal Plan Types ── */}
+      <div className="bg-white rounded-2xl border border-[#E8E4DC] p-5">
+        <div className="flex items-center gap-2 mb-1">
+          <UtensilsCrossed className="w-4 h-4 text-[#004945]" />
+          <h2 className="font-semibold text-[#004945] text-sm">Our Meal Plans</h2>
+        </div>
+        <p className="text-xs text-[#9E9E9E] mb-4">Your meals are curated based on your selected plan type</p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {mockMealPlanTypes.map((mp) => {
+            const isActive = mp.name === "Pro Athlete" || mp.name === "Lean Muscle" || mp.name === "Power";
+            return (
+              <div
+                key={mp.id}
+                className={cn(
+                  "p-3 rounded-xl border text-left transition-all cursor-pointer hover:border-[#B9EA91]",
+                  isActive
+                    ? "border-[#B9EA91] bg-[#EAF7D9]"
+                    : "border-[#E8E4DC] bg-[#FDFBF7]"
+                )}
+              >
+                <span className="text-xl">{mp.emoji}</span>
+                <p className="text-xs font-semibold text-[#004945] mt-1">{mp.name}</p>
+                <p className="text-[10px] text-[#9E9E9E] mt-0.5 leading-tight">{mp.description}</p>
+              </div>
+            );
+          })}
         </div>
       </div>
 

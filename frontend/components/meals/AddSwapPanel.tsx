@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { DietaryPills } from "@/components/ui/DietaryPills";
 import Image from "next/image";
-import { X, Check, Search, SlidersHorizontal, ChevronRight } from "lucide-react";
+import { X, Check, Search, ChevronRight, Minus, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useOrderStore } from "@/lib/useOrderStore";
 
 interface AddSwapPanelProps {
   mode: "add" | "swap";
@@ -19,29 +20,37 @@ interface AddSwapPanelProps {
   onClose: () => void;
 }
 
+interface SelectedEntry {
+  meal: Meal;
+  qty: number;
+}
+
 const categories: { id: MealCategory | "all"; label: string }[] = [
-  { id: "all", label: "All Meals" },
-  { id: "meals", label: "Meals" },
+  { id: "all",       label: "All Meals" },
+  { id: "meals",     label: "Meals" },
   { id: "breakfast", label: "Breakfast" },
-  { id: "shakes", label: "Shakes" },
-  { id: "snacks", label: "Snacks" },
+  { id: "shakes",    label: "Shakes" },
+  { id: "snacks",    label: "Snacks" },
 ];
 
 const dietaryFilters: { id: DietaryTag; label: string }[] = [
   { id: "GF", label: "Gluten Free" },
   { id: "DF", label: "Dairy Free" },
-  { id: "H", label: "Halal" },
+  { id: "H",  label: "Halal" },
   { id: "NF", label: "Nut Free" },
   { id: "SF", label: "Soy Free" },
-  { id: "V", label: "Vegan" },
+  { id: "V",  label: "Vegan" },
 ];
 
 export function AddSwapPanel({ mode, currentMeal, defaultCategory, onAdd, onSwap, onClose }: AddSwapPanelProps) {
   const [category, setCategory] = useState<MealCategory | "all">(defaultCategory ?? "all");
   const [selectedFilters, setSelectedFilters] = useState<DietaryTag[]>([]);
   const [search, setSearch] = useState("");
-  const [selectedMeals, setSelectedMeals] = useState<Meal[]>([]);
+  const [selected, setSelected] = useState<SelectedEntry[]>([]);
   const [expandedMeal, setExpandedMeal] = useState<string | null>(null);
+
+  // Read current order items to show "already in cart" badges
+  const { draftItems } = useOrderStore();
 
   const toggleFilter = (tag: DietaryTag) => {
     setSelectedFilters((prev) =>
@@ -57,19 +66,42 @@ export function AddSwapPanel({ mode, currentMeal, defaultCategory, onAdd, onSwap
     return true;
   });
 
-  const toggleSelect = (meal: Meal) => {
-    if (mode === "swap") {
-      onSwap(meal);
-      return;
-    }
-    setSelectedMeals((prev) =>
-      prev.find((m) => m.id === meal.id)
-        ? prev.filter((m) => m.id !== meal.id)
-        : [...prev, meal]
+  // How many of this meal are already in the draft order
+  const inCartQty = (mealId: string) =>
+    draftItems.filter((i) => i.meal.id === mealId).reduce((s, i) => s + i.quantity, 0);
+
+  // How many selected in THIS panel session
+  const selectedEntry = (mealId: string) => selected.find((e) => e.meal.id === mealId);
+  const selectedQty = (mealId: string) => selectedEntry(mealId)?.qty ?? 0;
+  const isSelected = (mealId: string) => selectedQty(mealId) > 0;
+
+  const handleToggle = (meal: Meal) => {
+    if (mode === "swap") { onSwap(meal); return; }
+    setSelected((prev) => {
+      const exists = prev.find((e) => e.meal.id === meal.id);
+      if (exists) return prev.filter((e) => e.meal.id !== meal.id); // deselect
+      return [...prev, { meal, qty: 1 }];
+    });
+  };
+
+  const changeQty = (mealId: string, delta: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelected((prev) =>
+      prev
+        .map((entry) =>
+          entry.meal.id === mealId ? { ...entry, qty: Math.max(0, entry.qty + delta) } : entry
+        )
+        .filter((entry) => entry.qty > 0)
     );
   };
 
-  const isSelected = (meal: Meal) => selectedMeals.some((m) => m.id === meal.id);
+  const totalSelected = selected.reduce((s, e) => s + e.qty, 0);
+
+  const handleAdd = () => {
+    // Expand each entry into an array of repeated meals by qty
+    const meals: Meal[] = selected.flatMap((e) => Array(e.qty).fill(e.meal));
+    onAdd(meals);
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex">
@@ -78,8 +110,9 @@ export function AddSwapPanel({ mode, currentMeal, defaultCategory, onAdd, onSwap
 
       {/* Panel */}
       <div className="w-full max-w-xl bg-white flex flex-col h-full shadow-2xl">
+
         {/* Header */}
-        <div className="px-5 py-4 border-b border-[#F0EBE0] flex items-center justify-between">
+        <div className="px-5 py-4 border-b border-[#F0EBE0] flex items-center justify-between shrink-0">
           <div>
             <h2 className="font-bold text-[#004945]">
               {mode === "swap" ? `Swap ${currentMeal?.name ?? "Meal"}` : "Add Meals to Your Order"}
@@ -92,16 +125,13 @@ export function AddSwapPanel({ mode, currentMeal, defaultCategory, onAdd, onSwap
               </p>
             )}
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-lg hover:bg-[#F0EBE0] transition-colors"
-          >
+          <button onClick={onClose} className="p-2 rounded-lg hover:bg-[#F0EBE0] transition-colors">
             <X className="w-5 h-5 text-[#6B6B6B]" />
           </button>
         </div>
 
         {/* Search */}
-        <div className="px-5 py-3 border-b border-[#F0EBE0]">
+        <div className="px-5 py-3 border-b border-[#F0EBE0] shrink-0">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9E9E9E]" />
             <input
@@ -115,7 +145,7 @@ export function AddSwapPanel({ mode, currentMeal, defaultCategory, onAdd, onSwap
         </div>
 
         {/* Category tabs */}
-        <div className="px-5 py-2 border-b border-[#F0EBE0] flex gap-1 overflow-x-auto scrollbar-hide">
+        <div className="px-5 py-2 border-b border-[#F0EBE0] flex gap-1 overflow-x-auto scrollbar-hide shrink-0">
           {categories.map(({ id, label }) => {
             const count = id === "all" ? mockMeals.length : mockMeals.filter((m) => m.category === id).length;
             return (
@@ -137,8 +167,8 @@ export function AddSwapPanel({ mode, currentMeal, defaultCategory, onAdd, onSwap
         </div>
 
         {/* Dietary filters */}
-        <div className="px-5 py-2 border-b border-[#F0EBE0] flex items-center gap-2 overflow-x-auto scrollbar-hide">
-          <SlidersHorizontal className="w-3.5 h-3.5 text-[#9E9E9E] shrink-0" />
+        <div className="px-5 py-2 border-b border-[#F0EBE0] flex items-center gap-2 overflow-x-auto scrollbar-hide shrink-0">
+          <span className="text-xs font-medium text-[#9E9E9E] shrink-0">Filtro</span>
           {dietaryFilters.map(({ id, label }) => (
             <button
               key={id}
@@ -155,10 +185,7 @@ export function AddSwapPanel({ mode, currentMeal, defaultCategory, onAdd, onSwap
             </button>
           ))}
           {selectedFilters.length > 0 && (
-            <button
-              onClick={() => setSelectedFilters([])}
-              className="shrink-0 text-xs text-red-500 hover:underline"
-            >
+            <button onClick={() => setSelectedFilters([])} className="shrink-0 text-xs text-red-500 hover:underline">
               Clear all
             </button>
           )}
@@ -173,14 +200,17 @@ export function AddSwapPanel({ mode, currentMeal, defaultCategory, onAdd, onSwap
           ) : (
             <div className="grid grid-cols-2 gap-3">
               {filtered.map((meal) => {
-                const selected = isSelected(meal);
+                const cartQty = inCartQty(meal.id);
+                const selQty = selectedQty(meal.id);
+                const issel = isSelected(meal.id);
+
                 return (
                   <div key={meal.id} className="flex flex-col">
                     <button
-                      onClick={() => toggleSelect(meal)}
+                      onClick={() => handleToggle(meal)}
                       className={cn(
                         "relative rounded-xl overflow-hidden border-2 transition-all text-left",
-                        selected
+                        issel
                           ? "border-[#7ED22A] ring-2 ring-[#7ED22A]/20"
                           : "border-[#E8E4DC] hover:border-[#B9EA91]"
                       )}
@@ -194,15 +224,27 @@ export function AddSwapPanel({ mode, currentMeal, defaultCategory, onAdd, onSwap
                           className="object-cover"
                           sizes="(max-width: 768px) 50vw, 25vw"
                         />
+
+                        {/* New badge */}
                         {meal.isNew && (
                           <div className="absolute top-1.5 left-1.5">
                             <Badge variant="green" size="sm">New</Badge>
                           </div>
                         )}
-                        {selected && (
-                          <div className="absolute inset-0 bg-[#004945]/20 flex items-center justify-center">
-                            <div className="w-8 h-8 bg-[#7ED22A] rounded-full flex items-center justify-center">
-                              <Check className="w-5 h-5 text-[#004945]" />
+
+                        {/* ── Already in cart badge (top-right) ── */}
+                        {cartQty > 0 && (
+                          <div className="absolute top-1.5 right-1.5 flex items-center gap-0.5 bg-[#004945] text-white rounded-full px-1.5 py-0.5 text-[10px] font-bold shadow">
+                            <span>✓</span>
+                            <span>{cartQty} in order</span>
+                          </div>
+                        )}
+
+                        {/* Selected overlay */}
+                        {issel && (
+                          <div className="absolute inset-0 bg-[#004945]/15 flex items-center justify-center">
+                            <div className="w-7 h-7 bg-[#7ED22A] rounded-full flex items-center justify-center shadow">
+                              <Check className="w-4 h-4 text-[#004945]" />
                             </div>
                           </div>
                         )}
@@ -213,9 +255,7 @@ export function AddSwapPanel({ mode, currentMeal, defaultCategory, onAdd, onSwap
                         <p className="text-xs font-semibold text-[#1A1A1A] line-clamp-2 leading-tight">
                           {meal.name}
                         </p>
-                        <Badge variant="gray" size="sm" className="mt-1 text-[10px]">
-                          {meal.planType}
-                        </Badge>
+                        <Badge variant="gray" size="sm" className="mt-1 text-[10px]">{meal.planType}</Badge>
                         <DietaryPills tags={meal.dietaryTags} className="mt-1" />
                         <div className="flex items-center justify-between mt-1.5">
                           <span className="text-xs font-bold text-[#004945]">{formatCurrency(meal.price)}</span>
@@ -223,6 +263,28 @@ export function AddSwapPanel({ mode, currentMeal, defaultCategory, onAdd, onSwap
                         </div>
                       </div>
                     </button>
+
+                    {/* ── Quantity stepper (only when selected, subtle) ── */}
+                    {issel && mode === "add" && (
+                      <div className="flex items-center justify-between mt-1.5 px-1">
+                        <span className="text-[10px] text-[#9E9E9E]">Qty</span>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={(e) => changeQty(meal.id, -1, e)}
+                            className="w-5 h-5 rounded-full border border-[#E8E4DC] flex items-center justify-center hover:bg-[#F0EBE0] transition-colors"
+                          >
+                            <Minus className="w-2.5 h-2.5 text-[#6B6B6B]" />
+                          </button>
+                          <span className="text-xs font-semibold text-[#004945] w-4 text-center">{selQty}</span>
+                          <button
+                            onClick={(e) => changeQty(meal.id, 1, e)}
+                            className="w-5 h-5 rounded-full border border-[#E8E4DC] flex items-center justify-center hover:bg-[#F0EBE0] transition-colors"
+                          >
+                            <Plus className="w-2.5 h-2.5 text-[#6B6B6B]" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
 
                     {/* Expand for nutrition */}
                     <button
@@ -233,12 +295,12 @@ export function AddSwapPanel({ mode, currentMeal, defaultCategory, onAdd, onSwap
                     </button>
                     {expandedMeal === meal.id && (
                       <div className="bg-[#F0EBE0] rounded-lg p-2.5 mt-1 text-xs text-[#6B6B6B] space-y-1">
-                        <p className="text-[#6B6B6B]">{meal.description}</p>
+                        <p>{meal.description}</p>
                         <div className="grid grid-cols-3 gap-1 pt-1">
                           {[
                             { label: "Protein", value: `${meal.protein}g` },
-                            { label: "Carbs", value: `${meal.carbs}g` },
-                            { label: "Fat", value: `${meal.fat}g` },
+                            { label: "Carbs",   value: `${meal.carbs}g` },
+                            { label: "Fat",     value: `${meal.fat}g` },
                           ].map(({ label, value }) => (
                             <div key={label} className="text-center">
                               <p className="font-semibold text-[#004945]">{value}</p>
@@ -257,18 +319,15 @@ export function AddSwapPanel({ mode, currentMeal, defaultCategory, onAdd, onSwap
 
         {/* Bottom action bar */}
         {mode === "add" && (
-          <div className="px-5 py-4 border-t border-[#F0EBE0] bg-white">
+          <div className="px-5 py-4 border-t border-[#F0EBE0] bg-white shrink-0">
             <div className="flex items-center justify-between mb-3">
               <span className="text-sm text-[#6B6B6B]">
-                {selectedMeals.length > 0
-                  ? `${selectedMeals.length} item${selectedMeals.length !== 1 ? "s" : ""} selected`
+                {totalSelected > 0
+                  ? `${totalSelected} meal${totalSelected !== 1 ? "s" : ""} to add`
                   : "Select meals to add"}
               </span>
-              {selectedMeals.length > 0 && (
-                <button
-                  onClick={() => setSelectedMeals([])}
-                  className="text-xs text-[#9E9E9E] hover:text-[#6B6B6B]"
-                >
+              {selected.length > 0 && (
+                <button onClick={() => setSelected([])} className="text-xs text-[#9E9E9E] hover:text-[#6B6B6B]">
                   Clear
                 </button>
               )}
@@ -279,10 +338,10 @@ export function AddSwapPanel({ mode, currentMeal, defaultCategory, onAdd, onSwap
               </Button>
               <Button
                 className="flex-1"
-                disabled={selectedMeals.length === 0}
-                onClick={() => onAdd(selectedMeals)}
+                disabled={totalSelected === 0}
+                onClick={handleAdd}
               >
-                Add {selectedMeals.length > 0 ? `${selectedMeals.length} ` : ""}Meal{selectedMeals.length !== 1 ? "s" : ""}
+                Add {totalSelected > 0 ? `${totalSelected} ` : ""}Meal{totalSelected !== 1 ? "s" : ""}
               </Button>
             </div>
           </div>
