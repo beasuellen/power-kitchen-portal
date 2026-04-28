@@ -58,7 +58,16 @@ export function Sidebar() {
               )}
             >
               <Icon className="w-4 h-4 shrink-0" />
-              {label}
+              <span className="flex-1">{label}</span>
+              {/* Radio-style indicator */}
+              <div className={cn(
+                "w-4 h-4 rounded-full border-2 shrink-0 flex items-center justify-center transition-all",
+                isActive
+                  ? "border-[#004945] bg-[#004945]"
+                  : "border-white/30 group-hover:border-white/60"
+              )}>
+                {isActive && <div className="w-1.5 h-1.5 rounded-full bg-[#7ED22A]" />}
+              </div>
             </Link>
           );
         })}

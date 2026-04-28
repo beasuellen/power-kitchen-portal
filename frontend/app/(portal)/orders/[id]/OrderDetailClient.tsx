@@ -207,7 +207,7 @@ export function OrderDetailClient({ order }: { order: Order }) {
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm text-[#1A1A1A] line-clamp-2">{item.meal.name}</p>
                     <Badge variant="gray" size="sm" className="mt-0.5">{item.meal.planType}</Badge>
-                    <DietaryPills tags={item.meal.dietaryTags} className="mt-1.5" />
+                    <DietaryPills tags={item.meal.dietaryTags} className="mt-1.5" compact />
 
                     {/* Price */}
                     <div className="mt-2">
