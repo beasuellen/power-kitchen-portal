@@ -8,7 +8,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         <Header />
-        <main className="flex-1 overflow-y-auto w-full px-4 lg:px-[15%] py-6 pb-24 lg:pb-10">
+        <main className="flex-1 overflow-y-auto w-full px-4 lg:px-[80px] py-6 pb-24 lg:pb-10">
           {children}
         </main>
       </div>
