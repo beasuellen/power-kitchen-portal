@@ -253,16 +253,16 @@ export function OrderDetailClient({ order }: { order: Order }) {
             {draftItems.map((item) => (
               <Card key={item.id} className={cn("relative", removeConfirm === item.id && "ring-2 ring-red-300")}>
                 {/* Card top: image + info */}
-                <div className="flex gap-4 p-4 pb-3">
+                <div className="flex gap-4 p-5">
                   <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-[#F0EBE0] shrink-0">
                     <Image src={item.meal.imageUrl} alt={item.meal.name} fill className="object-cover" sizes="80px" />
                   </div>
-                  <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
+                  <div className="flex-1 min-w-0 flex flex-col justify-between">
                     <div>
                       <p className="font-semibold text-sm text-[#1A1A1A] line-clamp-2 leading-snug">{item.meal.name}</p>
-                      <DietaryPills tags={item.meal.dietaryTags} className="mt-2" compact />
+                      <DietaryPills tags={item.meal.dietaryTags} className="mt-2" />
                     </div>
-                    <div className="mt-2">
+                    <div className="mt-3">
                       {item.quantity > 1 ? (
                         <div className="flex items-baseline gap-1.5">
                           <span className="font-bold text-base text-[#004945]">{formatCurrency(item.quantity * item.unitPrice)}</span>
@@ -277,7 +277,7 @@ export function OrderDetailClient({ order }: { order: Order }) {
 
                 {/* Card bottom: actions */}
                 {isEditable && (
-                  <div className="flex items-center justify-between px-4 py-3 border-t border-[#F0EBE0] bg-[#FDFBF7] rounded-b-xl">
+                  <div className="flex items-center justify-between px-5 py-4 border-t border-[#F0EBE0] bg-[#FDFBF7] rounded-b-xl">
                     {/* Qty stepper */}
                     <div className="flex items-center gap-3">
                       <button
