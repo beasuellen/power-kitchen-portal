@@ -9,13 +9,14 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, SkipForward, ShoppingCart, X, CalendarDays, AlertTriangle } from "lucide-react";
+import { ArrowRight, SkipForward, ShoppingCart, X, CalendarDays, AlertTriangle, RotateCcw, Lock } from "lucide-react";
 
 export function NextOrderCard() {
-  const { draftItems } = useOrderStore();
+  const { draftItems, orderSkipped, skipOrder, unskipOrder } = useOrderStore();
   const nextOrder = mockOrders.find((o) => o.status === "customizable");
+  // The order after the skipped one (first locked order)
+  const followingOrder = mockOrders.find((o) => o.status === "locked");
 
-  const { orderSkipped, skipOrder, unskipOrder } = useOrderStore();
   const [showSkipModal, setShowSkipModal] = useState(false);
 
   if (!nextOrder) return null;
@@ -28,27 +29,71 @@ export function NextOrderCard() {
     setShowSkipModal(false);
   };
 
-  // ── Skipped state ──
+  // ── Skipped state — show next (following) order instead ──
   if (orderSkipped) {
+    const followingItems = followingOrder?.items ?? [];
+    const followingTotal = followingItems.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
+    const followingMeals = followingItems.reduce((s, i) => s + i.quantity, 0);
+
     return (
       <Card className="lg:col-span-3">
-        <CardBody className="py-10 flex flex-col items-center justify-center text-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-[#F0EBE0] flex items-center justify-center">
-            <SkipForward className="w-5 h-5 text-[#9E9E9E]" />
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              {/* Skipped banner */}
+              <div className="flex items-center gap-1.5 mb-1">
+                <SkipForward className="w-3.5 h-3.5 text-[#9E9E9E]" />
+                <span className="text-xs text-[#9E9E9E]">
+                  {formatDate(nextOrder.deliveryDate, { month: "long", day: "numeric" })} delivery skipped
+                </span>
+                <button
+                  onClick={unskipOrder}
+                  className="flex items-center gap-0.5 text-[10px] font-medium text-[#004945] hover:underline ml-1"
+                >
+                  <RotateCcw className="w-2.5 h-2.5" /> Undo
+                </button>
+              </div>
+              <h2 className="font-semibold text-[#004945]">Next Delivery</h2>
+              {followingOrder && (
+                <p className="text-xs text-[#9E9E9E] mt-0.5">
+                  {formatDate(followingOrder.deliveryDate, { weekday: "long", month: "long", day: "numeric" })}
+                </p>
+              )}
+            </div>
+            <Badge variant="gray"><Lock className="w-2.5 h-2.5 mr-1 inline" /> Locked</Badge>
           </div>
-          <div>
-            <p className="font-semibold text-[#004945]">Order skipped</p>
-            <p className="text-sm text-[#9E9E9E] mt-0.5">
-              Your {formatDate(nextOrder.deliveryDate, { weekday: "long", month: "long", day: "numeric" })} delivery won't be sent.
-            </p>
-          </div>
-          <p className="text-xs text-[#9E9E9E]">Your next delivery will resume the following week.</p>
-          <button
-            onClick={unskipOrder}
-            className="mt-1 text-xs text-[#004945] font-medium hover:underline"
-          >
-            Undo skip
-          </button>
+        </CardHeader>
+        <CardBody className="pt-0">
+          {followingOrder && followingItems.length > 0 ? (
+            <>
+              <div className="space-y-2 mb-4">
+                {followingItems.slice(0, 5).map((item) => (
+                  <div key={item.id} className="flex items-center gap-3 p-2 rounded-xl bg-[#FDFBF7] border border-[#F0EBE0]">
+                    <div className="relative w-10 h-10 rounded-lg overflow-hidden shrink-0">
+                      <Image src={item.meal.imageUrl} alt={item.meal.name} fill className="object-cover" sizes="40px" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-[#1A1A1A] truncate">{item.meal.name}</p>
+                      <p className="text-xs text-[#9E9E9E]">{item.meal.planType}</p>
+                    </div>
+                    {item.quantity > 1 && <span className="text-xs text-[#9E9E9E] shrink-0">×{item.quantity}</span>}
+                    <span className="text-sm font-semibold text-[#004945] shrink-0">{formatCurrency(item.unitPrice * item.quantity)}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="flex items-center justify-between pt-3 border-t border-[#F0EBE0]">
+                <div>
+                  <p className="text-xs text-[#9E9E9E]">Order total · <span className="text-[#004945] font-medium">{followingMeals} meals</span></p>
+                  <p className="text-xl font-bold text-[#004945]">{formatCurrency(followingTotal)}</p>
+                </div>
+                <Link href="/orders">
+                  <Button size="sm" variant="outline">See all orders <ArrowRight className="w-3.5 h-3.5" /></Button>
+                </Link>
+              </div>
+            </>
+          ) : (
+            <p className="text-sm text-[#9E9E9E] py-4 text-center">No upcoming orders found.</p>
+          )}
         </CardBody>
       </Card>
     );
