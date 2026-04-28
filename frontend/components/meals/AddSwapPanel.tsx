@@ -45,7 +45,11 @@ const dietaryFilters: { id: DietaryTag; label: string }[] = [
 ];
 
 export function AddSwapPanel({ mode, currentMeal, defaultCategory, hideMealsTab, onAdd, onSwap, onClose }: AddSwapPanelProps) {
-  const [category, setCategory] = useState<MealCategory | "all">(defaultCategory ?? "all");
+  // Multi-select categories: empty set = "All Meals"
+  const [activeCategories, setActiveCategories] = useState<Set<MealCategory>>(() => {
+    if (!defaultCategory || defaultCategory === "all") return new Set();
+    return new Set([defaultCategory as MealCategory]);
+  });
   const [selectedFilters, setSelectedFilters] = useState<DietaryTag[]>([]);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<SelectedEntry[]>([]);
@@ -60,9 +64,19 @@ export function AddSwapPanel({ mode, currentMeal, defaultCategory, hideMealsTab,
     );
   };
 
+  const isAllMeals = activeCategories.size === 0;
+
+  const toggleCategory = (id: MealCategory) => {
+    setActiveCategories((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) { next.delete(id); } else { next.add(id); }
+      return next;
+    });
+  };
+
   const filtered = mockMeals.filter((meal) => {
     if (meal.id === currentMeal?.id) return false;
-    if (category !== "all" && meal.category !== category) return false;
+    if (!isAllMeals && !activeCategories.has(meal.category)) return false;
     if (selectedFilters.length > 0 && !selectedFilters.every((f) => meal.dietaryTags.includes(f))) return false;
     if (search && !meal.name.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
@@ -146,26 +160,44 @@ export function AddSwapPanel({ mode, currentMeal, defaultCategory, hideMealsTab,
           </div>
         </div>
 
-        {/* Category tabs */}
+        {/* Category tabs — multi-select */}
         <div className="px-5 py-2 border-b border-[#F0EBE0] flex gap-1 overflow-x-auto scrollbar-hide shrink-0">
-          {categories.filter(({ id }) => !(hideMealsTab && id === "meals")).map(({ id, label }) => {
-            const count = id === "all" ? mockMeals.length : mockMeals.filter((m) => m.category === id).length;
-            return (
-              <button
-                key={id}
-                onClick={() => setCategory(id)}
-                className={cn(
-                  "shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors",
-                  category === id
-                    ? "bg-[#004945] text-white"
-                    : "bg-[#F0EBE0] text-[#6B6B6B] hover:bg-[#E8E4DC]"
-                )}
-              >
-                {label}
-                <span className="ml-1 text-[10px] opacity-70">({count})</span>
-              </button>
-            );
-          })}
+          {/* See All button */}
+          <button
+            onClick={() => setActiveCategories(new Set())}
+            className={cn(
+              "shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors",
+              isAllMeals
+                ? "bg-[#004945] text-white"
+                : "bg-[#F0EBE0] text-[#6B6B6B] hover:bg-[#E8E4DC]"
+            )}
+          >
+            All Meals
+            <span className="ml-1 text-[10px] opacity-70">({mockMeals.length})</span>
+          </button>
+
+          {/* Individual category toggles */}
+          {categories
+            .filter(({ id }) => id !== "all" && !(hideMealsTab && id === "meals"))
+            .map(({ id, label }) => {
+              const count = mockMeals.filter((m) => m.category === id).length;
+              const isActive = activeCategories.has(id as MealCategory);
+              return (
+                <button
+                  key={id}
+                  onClick={() => toggleCategory(id as MealCategory)}
+                  className={cn(
+                    "shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors",
+                    isActive
+                      ? "bg-[#004945] text-white"
+                      : "bg-[#F0EBE0] text-[#6B6B6B] hover:bg-[#E8E4DC]"
+                  )}
+                >
+                  {label}
+                  <span className="ml-1 text-[10px] opacity-70">({count})</span>
+                </button>
+              );
+            })}
         </div>
 
         {/* Dietary filters */}

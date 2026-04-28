@@ -63,10 +63,18 @@ export function NextOrderCard() {
             <Badge variant="gray"><Lock className="w-2.5 h-2.5 mr-1 inline" /> Locked</Badge>
           </div>
         </CardHeader>
-        <CardBody className="pt-0">
+        <CardBody className="pt-0 flex flex-col">
           {followingOrder && followingItems.length > 0 ? (
             <>
-              <div className="space-y-2 mb-4">
+              {/* Opens for editing notice */}
+              <div className="flex items-center gap-1.5 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2 mb-3">
+                <Lock className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                <p className="text-xs text-amber-700">
+                  Opens for editing on <span className="font-semibold">{formatDate(followingOrder.cutoffDate, { month: "short", day: "numeric" })}</span>
+                </p>
+              </div>
+
+              <div className="space-y-2 flex-1">
                 {followingItems.slice(0, 5).map((item) => (
                   <div key={item.id} className="flex items-center gap-3 p-2 rounded-xl bg-[#FDFBF7] border border-[#F0EBE0]">
                     <div className="relative w-10 h-10 rounded-lg overflow-hidden shrink-0">
@@ -81,7 +89,8 @@ export function NextOrderCard() {
                   </div>
                 ))}
               </div>
-              <div className="flex items-center justify-between pt-3 border-t border-[#F0EBE0]">
+
+              <div className="flex items-center justify-between pt-3 mt-4 border-t border-[#F0EBE0]">
                 <div>
                   <p className="text-xs text-[#9E9E9E]">Order total · <span className="text-[#004945] font-medium">{followingMeals} meals</span></p>
                   <p className="text-xl font-bold text-[#004945]">{formatCurrency(followingTotal)}</p>
