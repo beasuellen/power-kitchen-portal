@@ -10,67 +10,53 @@ import { DietaryPills } from "@/components/ui/DietaryPills";
 import Image from "next/image";
 import Link from "next/link";
 import {
-  ArrowLeft,
-  Lock,
-  SkipForward,
-  Plus,
-  Trash2,
-  RefreshCw,
-  Minus,
-  AlertCircle,
-  Check,
-  Info,
-  ShoppingCart,
+  ArrowLeft, Lock, SkipForward, Plus, Trash2,
+  RefreshCw, Minus, AlertCircle, Check, Info, ShoppingCart, X, AlertTriangle, CalendarDays,
 } from "lucide-react";
 import { AddSwapPanel } from "@/components/meals/AddSwapPanel";
 import { cn } from "@/lib/utils";
 import { useOrderStore } from "@/lib/useOrderStore";
 
-interface DraftChange {
-  type: "add" | "remove" | "quantity" | "swap";
-  description: string;
-}
-
-interface DraftItem extends OrderItem {
-  swappingWith?: string;
-}
+interface DraftChange { type: "add" | "remove" | "quantity" | "swap"; description: string; }
+interface DraftItem extends OrderItem { }
 
 export function OrderDetailClient({ order }: { order: Order }) {
   const isEditable = order.status === "customizable";
-  const { syncItems } = useOrderStore();
 
-  const [draftItems, setDraftItems] = useState<DraftItem[]>(order.items.map((i) => ({ ...i })));
+  // Global store — only written on explicit Save
+  const { syncItems, skipOrder, unskipOrder, orderSkipped } = useOrderStore();
+
+  // ── Local working copy — mutations stay here until Save ──
+  const [draftItems, setDraftItems] = useState<DraftItem[]>(
+    // initialise from store so we reflect any previously saved state
+    isEditable
+      ? useOrderStore.getState().draftItems.map((i) => ({ ...i }))
+      : order.items.map((i) => ({ ...i }))
+  );
   const [changes, setChanges] = useState<DraftChange[]>([]);
   const [showAddPanel, setShowAddPanel] = useState(false);
   const [swappingItem, setSwappingItem] = useState<DraftItem | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [removeConfirm, setRemoveConfirm] = useState<string | null>(null);
-  const [skipConfirm, setSkipConfirm] = useState(false);
+  const [showSkipModal, setShowSkipModal] = useState(false);
 
   const hasChanges = changes.length > 0;
-  const draftTotal = draftItems.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
+  const draftTotal = draftItems.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
 
   const addChange = useCallback((change: DraftChange) => {
     setChanges((prev) => [...prev, change]);
     setSaved(false);
   }, []);
 
+  // ── Local mutations (do NOT touch the store yet) ──
   const handleQuantityChange = (itemId: string, delta: number) => {
     setDraftItems((prev) =>
       prev
-        .map((item) => {
-          if (item.id !== itemId) return item;
-          const newQty = item.quantity + delta;
-          if (newQty <= 0) return null as unknown as DraftItem;
-          return { ...item, quantity: newQty };
-        })
-        .filter(Boolean) as DraftItem[]
+        .map((item) => item.id === itemId ? { ...item, quantity: Math.max(0, item.quantity + delta) } : item)
+        .filter((i) => i.quantity > 0)
     );
-    addChange({
-      type: "quantity",
-      description: delta > 0 ? "Increased quantity" : "Decreased quantity",
-    });
+    addChange({ type: "quantity", description: delta > 0 ? "Increased quantity" : "Decreased quantity" });
   };
 
   const handleRemove = (item: DraftItem) => {
@@ -86,9 +72,7 @@ export function OrderDetailClient({ order }: { order: Order }) {
   const handleAddMeals = (meals: Meal[]) => {
     const newItems: DraftItem[] = meals.map((meal) => ({
       id: `draft_${Math.random().toString(36).slice(2)}`,
-      meal,
-      quantity: 1,
-      unitPrice: meal.price,
+      meal, quantity: 1, unitPrice: meal.price,
     }));
     setDraftItems((prev) => [...prev, ...newItems]);
     meals.forEach((m) => addChange({ type: "add", description: `Added ${m.name}` }));
@@ -98,32 +82,69 @@ export function OrderDetailClient({ order }: { order: Order }) {
   const handleSwap = (targetMeal: Meal) => {
     if (!swappingItem) return;
     setDraftItems((prev) =>
-      prev.map((item) =>
-        item.id === swappingItem.id
-          ? { ...item, meal: targetMeal, unitPrice: targetMeal.price }
-          : item
-      )
+      prev.map((i) => i.id === swappingItem.id ? { ...i, meal: targetMeal, unitPrice: targetMeal.price } : i)
     );
     addChange({ type: "swap", description: `Swapped ${swappingItem.meal.name} → ${targetMeal.name}` });
     setSwappingItem(null);
     setShowAddPanel(false);
   };
 
+  // ── Save → write to global store → dashboard + orders list update ──
   const handleSave = async () => {
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 2000));
+    await new Promise((r) => setTimeout(r, 1200));
     setSaving(false);
     setSaved(true);
     setChanges([]);
-    // Sync to global store so dashboard reflects the saved state
-    if (isEditable) syncItems(draftItems);
+    if (isEditable) syncItems(draftItems); // 🔄 push to global store
   };
 
+  // ── Discard → reset local copy back to last saved state ──
   const handleDiscard = () => {
-    setDraftItems(order.items.map((i) => ({ ...i })));
+    setDraftItems(
+      isEditable
+        ? useOrderStore.getState().draftItems.map((i) => ({ ...i }))
+        : order.items.map((i) => ({ ...i }))
+    );
     setChanges([]);
     setSaved(false);
   };
+
+  const handleConfirmSkip = () => {
+    skipOrder();           // global skip
+    setShowSkipModal(false);
+  };
+
+  // ── Skipped view ──
+  if (isEditable && orderSkipped) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-start gap-3">
+          <Link href="/orders" className="p-1.5 rounded-lg hover:bg-[#F0EBE0] transition-colors mt-0.5">
+            <ArrowLeft className="w-5 h-5 text-[#6B6B6B]" />
+          </Link>
+          <h1 className="text-xl font-bold text-[#004945]">
+            {formatDate(order.deliveryDate, { weekday: "long", month: "long", day: "numeric" })}
+          </h1>
+        </div>
+        <div className="flex flex-col items-center justify-center py-16 gap-4 text-center">
+          <div className="w-14 h-14 rounded-full bg-[#F0EBE0] flex items-center justify-center">
+            <SkipForward className="w-6 h-6 text-[#9E9E9E]" />
+          </div>
+          <div>
+            <p className="font-bold text-[#004945] text-lg">Order skipped</p>
+            <p className="text-sm text-[#9E9E9E] mt-1">
+              You won't receive a delivery on {formatDate(order.deliveryDate, { month: "long", day: "numeric" })}.
+            </p>
+            <p className="text-xs text-[#9E9E9E] mt-0.5">Your subscription resumes automatically next week.</p>
+          </div>
+          <button onClick={unskipOrder} className="text-sm font-medium text-[#004945] hover:underline">
+            Undo skip
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -137,7 +158,7 @@ export function OrderDetailClient({ order }: { order: Order }) {
             <h1 className="text-xl font-bold text-[#004945]">
               {formatDate(order.deliveryDate, { weekday: "long", month: "long", day: "numeric" })}
             </h1>
-            {order.status === "customizable" ? (
+            {isEditable ? (
               <Badge variant="green">Ready to customize</Badge>
             ) : order.status === "locked" ? (
               <Badge variant="gray"><Lock className="w-2.5 h-2.5 mr-1" /> Locked</Badge>
@@ -150,12 +171,7 @@ export function OrderDetailClient({ order }: { order: Order }) {
           </p>
         </div>
         {isEditable && (
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={() => setSkipConfirm(true)}
-            className="shrink-0"
-          >
+          <Button variant="destructive" size="sm" onClick={() => setShowSkipModal(true)} className="shrink-0">
             <SkipForward className="w-3.5 h-3.5" /> Skip Order
           </Button>
         )}
@@ -167,7 +183,6 @@ export function OrderDetailClient({ order }: { order: Order }) {
           <Info className="w-5 h-5 text-amber-600 shrink-0" />
           <p className="text-sm text-amber-800">
             This order is locked. Customization opens on <strong>{formatShortDate(order.cutoffDate)}</strong>.
-            You can view the planned meals below.
           </p>
         </div>
       )}
@@ -193,23 +208,13 @@ export function OrderDetailClient({ order }: { order: Order }) {
             {draftItems.map((item) => (
               <Card key={item.id} className={cn("relative", removeConfirm === item.id && "ring-2 ring-red-300")}>
                 <div className="flex gap-3 p-4">
-                  {/* Image */}
                   <div className="relative w-20 h-20 rounded-lg overflow-hidden bg-[#F0EBE0] shrink-0">
-                    <Image
-                      src={item.meal.imageUrl}
-                      alt={item.meal.name}
-                      fill
-                      className="object-cover"
-                      sizes="80px"
-                    />
+                    <Image src={item.meal.imageUrl} alt={item.meal.name} fill className="object-cover" sizes="80px" />
                   </div>
-                  {/* Info */}
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm text-[#1A1A1A] line-clamp-2">{item.meal.name}</p>
                     <Badge variant="gray" size="sm" className="mt-0.5">{item.meal.planType}</Badge>
-                    <DietaryPills tags={item.meal.dietaryTags} className="mt-1.5" compact />
-
-                    {/* Price */}
+                    <DietaryPills tags={item.meal.dietaryTags} className="mt-1.5" />
                     <div className="mt-2">
                       {item.quantity > 1 ? (
                         <>
@@ -223,54 +228,28 @@ export function OrderDetailClient({ order }: { order: Order }) {
                   </div>
                 </div>
 
-                {/* Actions */}
                 {isEditable && (
                   <div className="flex items-center justify-between px-4 pb-3 pt-0 border-t border-[#F0EBE0]">
-                    {/* Quantity */}
                     <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleQuantityChange(item.id, -1)}
-                        className="w-7 h-7 rounded-full border border-[#E8E4DC] flex items-center justify-center hover:bg-[#F0EBE0] transition-colors"
-                      >
+                      <button onClick={() => handleQuantityChange(item.id, -1)} className="w-7 h-7 rounded-full border border-[#E8E4DC] flex items-center justify-center hover:bg-[#F0EBE0] transition-colors">
                         <Minus className="w-3 h-3 text-[#6B6B6B]" />
                       </button>
                       <span className="text-sm font-semibold w-5 text-center text-[#1A1A1A]">{item.quantity}</span>
-                      <button
-                        onClick={() => handleQuantityChange(item.id, 1)}
-                        className="w-7 h-7 rounded-full border border-[#E8E4DC] flex items-center justify-center hover:bg-[#F0EBE0] transition-colors"
-                      >
+                      <button onClick={() => handleQuantityChange(item.id, 1)} className="w-7 h-7 rounded-full border border-[#E8E4DC] flex items-center justify-center hover:bg-[#F0EBE0] transition-colors">
                         <Plus className="w-3 h-3 text-[#6B6B6B]" />
                       </button>
                     </div>
-                    {/* Swap & Remove */}
                     <div className="flex items-center gap-1">
-                      <button
-                        onClick={() => { setSwappingItem(item); setShowAddPanel(true); }}
-                        className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs text-[#6B6B6B] hover:bg-[#EAF7D9] hover:text-[#004945] transition-colors"
-                      >
+                      <button onClick={() => { setSwappingItem(item); setShowAddPanel(true); }} className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs text-[#6B6B6B] hover:bg-[#EAF7D9] hover:text-[#004945] transition-colors">
                         <RefreshCw className="w-3 h-3" /> Swap
                       </button>
-
                       {removeConfirm === item.id ? (
                         <div className="flex items-center gap-1">
-                          <button
-                            onClick={() => setRemoveConfirm(null)}
-                            className="px-2 py-1 rounded-lg text-xs text-[#6B6B6B] hover:bg-[#F0EBE0]"
-                          >
-                            Keep
-                          </button>
-                          <button
-                            onClick={() => handleRemove(item)}
-                            className="px-2 py-1 rounded-lg text-xs text-red-600 hover:bg-red-50 font-medium"
-                          >
-                            Remove
-                          </button>
+                          <button onClick={() => setRemoveConfirm(null)} className="px-2 py-1 rounded-lg text-xs text-[#6B6B6B] hover:bg-[#F0EBE0]">Keep</button>
+                          <button onClick={() => handleRemove(item)} className="px-2 py-1 rounded-lg text-xs text-red-600 hover:bg-red-50 font-medium">Remove</button>
                         </div>
                       ) : (
-                        <button
-                          onClick={() => handleRemove(item)}
-                          className="p-1.5 rounded-lg text-[#9E9E9E] hover:text-red-500 hover:bg-red-50 transition-colors"
-                        >
+                        <button onClick={() => handleRemove(item)} className="p-1.5 rounded-lg text-[#9E9E9E] hover:text-red-500 hover:bg-red-50 transition-colors">
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       )}
@@ -281,7 +260,6 @@ export function OrderDetailClient({ order }: { order: Order }) {
             ))}
           </div>
 
-          {/* Add meal button (large) */}
           {isEditable && (
             <button
               onClick={() => { setSwappingItem(null); setShowAddPanel(true); }}
@@ -303,7 +281,6 @@ export function OrderDetailClient({ order }: { order: Order }) {
                 </div>
               </CardHeader>
               <CardBody className="pt-0 space-y-3">
-                {/* Line items */}
                 <div className="space-y-2">
                   {draftItems.map((item) => (
                     <div key={item.id} className="flex justify-between items-start gap-2">
@@ -318,7 +295,6 @@ export function OrderDetailClient({ order }: { order: Order }) {
                   ))}
                 </div>
 
-                {/* Store credit */}
                 <div className="border-t border-[#F0EBE0] pt-2">
                   <div className="flex justify-between text-sm text-[#6B6B6B]">
                     <span>Store Credit</span>
@@ -326,13 +302,12 @@ export function OrderDetailClient({ order }: { order: Order }) {
                   </div>
                 </div>
 
-                {/* Total */}
                 <div className="border-t border-[#F0EBE0] pt-2 flex justify-between">
                   <span className="font-bold text-[#004945]">Total</span>
                   <span className="font-bold text-[#004945]">{formatCurrency(Math.max(0, draftTotal - 12.5))}</span>
                 </div>
 
-                {/* Changes summary */}
+                {/* Unsaved changes notice */}
                 {hasChanges && (
                   <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
                     <div className="flex items-center gap-1.5 mb-1">
@@ -349,7 +324,6 @@ export function OrderDetailClient({ order }: { order: Order }) {
                   </div>
                 )}
 
-                {/* Save actions */}
                 {isEditable && (
                   <div className="space-y-2 pt-1">
                     {saved ? (
@@ -358,20 +332,12 @@ export function OrderDetailClient({ order }: { order: Order }) {
                         <span className="text-sm font-medium">All changes saved!</span>
                       </div>
                     ) : (
-                      <Button
-                        className="w-full"
-                        onClick={handleSave}
-                        loading={saving}
-                        disabled={!hasChanges}
-                      >
-                        {saving ? "Saving changes..." : "Save All Changes"}
+                      <Button className="w-full" onClick={handleSave} loading={saving} disabled={!hasChanges}>
+                        {saving ? "Saving…" : "Save All Changes"}
                       </Button>
                     )}
                     {hasChanges && !saving && (
-                      <button
-                        onClick={handleDiscard}
-                        className="w-full text-center text-xs text-[#9E9E9E] hover:text-[#6B6B6B] transition-colors py-1"
-                      >
+                      <button onClick={handleDiscard} className="w-full text-center text-xs text-[#9E9E9E] hover:text-[#6B6B6B] transition-colors py-1">
                         Discard Changes
                       </button>
                     )}
@@ -383,17 +349,13 @@ export function OrderDetailClient({ order }: { order: Order }) {
         </div>
       </div>
 
-      {/* Floating draft save bar (mobile) */}
+      {/* Mobile save bar */}
       {hasChanges && isEditable && (
         <div className="fixed bottom-20 lg:hidden left-4 right-4 bg-[#004945] text-white rounded-xl px-4 py-3 flex items-center justify-between shadow-xl z-20">
           <span className="text-sm">{changes.length} unsaved change{changes.length !== 1 ? "s" : ""}</span>
           <div className="flex gap-2">
-            <button onClick={handleDiscard} className="text-sm text-white/60 px-2">
-              Discard
-            </button>
-            <Button size="sm" onClick={handleSave} loading={saving}>
-              Save
-            </Button>
+            <button onClick={handleDiscard} className="text-sm text-white/60 px-2">Discard</button>
+            <Button size="sm" onClick={handleSave} loading={saving}>Save</Button>
           </div>
         </div>
       )}
@@ -409,22 +371,46 @@ export function OrderDetailClient({ order }: { order: Order }) {
         />
       )}
 
-      {/* Skip confirmation modal */}
-      {skipConfirm && (
+      {/* Skip modal */}
+      {showSkipModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl">
-            <h3 className="font-bold text-lg text-[#004945] mb-2">Skip this order?</h3>
-            <p className="text-sm text-[#6B6B6B] mb-4">
-              You'll miss your curated meal lineup for{" "}
-              <strong>{formatDate(order.deliveryDate, { month: "long", day: "numeric" })}</strong>.
-              Your meals are prepared just for you!
-            </p>
-            <div className="flex gap-3">
-              <Button className="flex-1" onClick={() => setSkipConfirm(false)}>
-                Keep My Order
+          <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl border border-[#E8E4DC] overflow-hidden">
+            <div className="px-6 pt-6 pb-4 flex items-start justify-between gap-3">
+              <div className="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-5 h-5 text-amber-500" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-[#004945]">Skip this delivery?</h3>
+                <p className="text-xs text-[#9E9E9E] mt-0.5">
+                  {formatDate(order.deliveryDate, { weekday: "long", month: "long", day: "numeric" })}
+                </p>
+              </div>
+              <button onClick={() => setShowSkipModal(false)} className="p-1 rounded-lg hover:bg-[#F0EBE0] transition-colors">
+                <X className="w-4 h-4 text-[#9E9E9E]" />
+              </button>
+            </div>
+            <div className="px-6 pb-2 space-y-3">
+              <div className="bg-[#FDFBF7] rounded-xl border border-[#F0EBE0] p-3.5 space-y-2">
+                <p className="text-xs font-semibold text-[#6B6B6B] uppercase tracking-wide">This order</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-[#1A1A1A]">{draftItems.reduce((s, i) => s + i.quantity, 0)} meals</span>
+                  <span className="text-sm font-bold text-[#004945]">{formatCurrency(draftTotal)}</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-xs text-[#9E9E9E]">
+                  <CalendarDays className="w-3.5 h-3.5 shrink-0" />
+                  You won't be charged for this delivery
+                </div>
+              </div>
+              <p className="text-xs text-[#9E9E9E] leading-relaxed">
+                Skipping is free and your subscription stays active. Resumes automatically next week.
+              </p>
+            </div>
+            <div className="px-6 pb-6 pt-4 flex flex-col gap-2">
+              <Button variant="destructive" className="w-full" onClick={handleConfirmSkip}>
+                Yes, skip this delivery
               </Button>
-              <Button variant="outline" className="flex-1 border-red-300 text-red-600 hover:bg-red-50">
-                Yes, Skip
+              <Button variant="ghost" className="w-full" onClick={() => setShowSkipModal(false)}>
+                Keep my order
               </Button>
             </div>
           </div>

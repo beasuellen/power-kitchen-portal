@@ -15,8 +15,8 @@ export function NextOrderCard() {
   const { draftItems } = useOrderStore();
   const nextOrder = mockOrders.find((o) => o.status === "customizable");
 
+  const { orderSkipped, skipOrder, unskipOrder } = useOrderStore();
   const [showSkipModal, setShowSkipModal] = useState(false);
-  const [skipped, setSkipped] = useState(false);
 
   if (!nextOrder) return null;
 
@@ -24,12 +24,12 @@ export function NextOrderCard() {
   const draftTotal = draftItems.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
 
   const handleConfirmSkip = () => {
-    setSkipped(true);
+    skipOrder();
     setShowSkipModal(false);
   };
 
   // ── Skipped state ──
-  if (skipped) {
+  if (orderSkipped) {
     return (
       <Card className="lg:col-span-3">
         <CardBody className="py-10 flex flex-col items-center justify-center text-center gap-3">
@@ -44,7 +44,7 @@ export function NextOrderCard() {
           </div>
           <p className="text-xs text-[#9E9E9E]">Your next delivery will resume the following week.</p>
           <button
-            onClick={() => setSkipped(false)}
+            onClick={unskipOrder}
             className="mt-1 text-xs text-[#004945] font-medium hover:underline"
           >
             Undo skip

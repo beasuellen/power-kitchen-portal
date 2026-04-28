@@ -1,41 +1,26 @@
+"use client";
+
 import { mockOrders } from "@/lib/mock-data";
+import { useOrderStore } from "@/lib/useOrderStore";
 import { formatDate, formatShortDate, formatCurrency } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, Lock, SkipForward, CheckCircle2, RotateCcw, Info, Loader2, ChevronRight } from "lucide-react";
+import { ArrowRight, Lock, SkipForward, CheckCircle2, RotateCcw, Info, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 
 const statusConfig = {
-  customizable: {
-    ring: "border-[#7ED22A]",
-    badge: <Badge variant="green">Ready to customize</Badge>,
-    dim: false,
-  },
-  locked: {
-    ring: "border-[#E8E4DC]",
-    badge: <Badge variant="gray"><Lock className="w-2.5 h-2.5 mr-1 inline" />Locked</Badge>,
-    dim: true,
-  },
-  skipped: {
-    ring: "border-[#E8E4DC]",
-    badge: <Badge variant="gray">Skipped</Badge>,
-    dim: false,
-  },
-  processing: {
-    ring: "border-blue-300",
-    badge: <Badge variant="blue">Processing</Badge>,
-    dim: false,
-  },
-  delivered: {
-    ring: "border-[#F0EBE0]",
-    badge: <Badge variant="gray">Delivered</Badge>,
-    dim: true,
-  },
+  customizable: { ring: "border-[#7ED22A]", badge: <Badge variant="green">Ready to customize</Badge>, dim: false },
+  locked:       { ring: "border-[#E8E4DC]", badge: <Badge variant="gray"><Lock className="w-2.5 h-2.5 mr-1 inline" />Locked</Badge>, dim: true },
+  skipped:      { ring: "border-[#E8E4DC]", badge: <Badge variant="gray">Skipped</Badge>, dim: false },
+  processing:   { ring: "border-blue-300",  badge: <Badge variant="blue">Processing</Badge>, dim: false },
+  delivered:    { ring: "border-[#F0EBE0]", badge: <Badge variant="gray">Delivered</Badge>, dim: true },
 };
 
 export default function OrdersPage() {
+  const { draftItems, orderSkipped, unskipOrder } = useOrderStore();
+
   const upcoming = mockOrders
     .filter((o) => o.status !== "delivered")
     .sort((a, b) => new Date(a.deliveryDate).getTime() - new Date(b.deliveryDate).getTime());
@@ -43,28 +28,30 @@ export default function OrdersPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-[#004945]">My Orders</h1>
         <p className="text-sm text-[#6B6B6B] mt-0.5">Manage your upcoming deliveries</p>
       </div>
 
-      {/* Upcoming */}
       <section className="space-y-3">
         <p className="text-xs font-semibold text-[#9E9E9E] uppercase tracking-wider">Upcoming</p>
 
         {upcoming.map((order) => {
-          const cfg = statusConfig[order.status];
-          const mealCount = order.items.reduce((s, i) => s + i.quantity, 0);
+          const isCustomizable = order.status === "customizable";
+          // For the customizable order, reflect global store state
+          const effectiveSkipped = isCustomizable && orderSkipped;
+          const effectiveStatus = effectiveSkipped ? "skipped" : order.status;
+          const cfg = statusConfig[effectiveStatus];
+
+          // Items: use store for customizable, mock for others
+          const items = isCustomizable ? draftItems : order.items;
+          const mealCount = items.reduce((s, i) => s + i.quantity, 0);
+          const total = items.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
 
           return (
             <div
               key={order.id}
-              className={cn(
-                "bg-white rounded-2xl border-2 transition-all",
-                cfg.ring,
-                cfg.dim && "opacity-60"
-              )}
+              className={cn("bg-white rounded-2xl border-2 transition-all", cfg.ring, cfg.dim && "opacity-60")}
             >
               <div className="p-4">
                 <div className="flex items-start gap-4">
@@ -81,34 +68,25 @@ export default function OrdersPage() {
                     </p>
                   </div>
 
-                  {/* Divider */}
                   <div className="w-px self-stretch bg-[#F0EBE0] shrink-0" />
 
-                  {/* Content */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap mb-2">
                       {cfg.badge}
-                      {order.status !== "skipped" && (
+                      {effectiveStatus !== "skipped" && (
                         <span className="text-xs text-[#9E9E9E]">{mealCount} meals</span>
                       )}
                     </div>
 
                     {/* Meal thumbnails */}
-                    {order.status !== "skipped" && order.items.length > 0 && (
+                    {effectiveStatus !== "skipped" && items.length > 0 && (
                       <div className="flex gap-1.5 mb-3">
-                        {order.items.slice(0, 5).map((item, idx) => (
-                          <div
-                            key={item.id}
-                            className="relative w-9 h-9 rounded-lg overflow-hidden bg-[#F0EBE0] shrink-0 border border-[#E8E4DC]"
-                          >
-                            <Image
-                              src={item.meal.imageUrl}
-                              alt={item.meal.name}
-                              fill className="object-cover" sizes="36px"
-                            />
-                            {idx === 4 && order.items.length > 5 && (
+                        {items.slice(0, 5).map((item, idx) => (
+                          <div key={item.id} className="relative w-9 h-9 rounded-lg overflow-hidden bg-[#F0EBE0] shrink-0 border border-[#E8E4DC]">
+                            <Image src={item.meal.imageUrl} alt={item.meal.name} fill className="object-cover" sizes="36px" />
+                            {idx === 4 && items.length > 5 && (
                               <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white text-[9px] font-bold">
-                                +{order.items.length - 5}
+                                +{items.length - 5}
                               </div>
                             )}
                           </div>
@@ -116,8 +94,16 @@ export default function OrdersPage() {
                       </div>
                     )}
 
+                    {/* Skipped info */}
+                    {effectiveStatus === "skipped" && (
+                      <div className="flex items-center gap-1.5 text-xs text-[#9E9E9E] mb-2">
+                        <SkipForward className="w-3.5 h-3.5" />
+                        This delivery has been skipped
+                      </div>
+                    )}
+
                     {/* Locked info */}
-                    {order.status === "locked" && (
+                    {effectiveStatus === "locked" && (
                       <div className="flex items-center gap-1.5 rounded-xl bg-amber-50 border border-amber-100 px-3 py-1.5 mb-2">
                         <Info className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                         <p className="text-xs text-amber-700">
@@ -129,25 +115,24 @@ export default function OrdersPage() {
                     {/* Footer */}
                     <div className="flex items-center justify-between">
                       <span className="font-semibold text-[#004945] text-sm">
-                        {order.status !== "skipped" ? formatCurrency(order.total) : "—"}
+                        {effectiveStatus !== "skipped" ? formatCurrency(total) : "—"}
                       </span>
                       <div className="flex gap-2">
-                        {order.status === "skipped" && (
-                          <Button size="sm" variant="outline">
+                        {effectiveStatus === "skipped" && (
+                          <Button size="sm" variant="outline" onClick={unskipOrder}>
                             <RotateCcw className="w-3 h-3" /> Reactivate
                           </Button>
                         )}
-                        {(order.status === "customizable" || order.status === "locked") && (
+                        {(effectiveStatus === "customizable") && (
                           <Link href={`/orders/${order.id}`}>
-                            <Button
-                              size="sm"
-                              variant={order.status === "customizable" ? "primary" : "secondary"}
-                            >
-                              {order.status === "customizable"
-                                ? <><span>View & Edit</span><ArrowRight className="w-3.5 h-3.5" /></>
-                                : "View Details"
-                              }
+                            <Button size="sm">
+                              <span>View & Edit</span><ArrowRight className="w-3.5 h-3.5" />
                             </Button>
+                          </Link>
+                        )}
+                        {effectiveStatus === "locked" && (
+                          <Link href={`/orders/${order.id}`}>
+                            <Button size="sm" variant="secondary">View Details</Button>
                           </Link>
                         )}
                       </div>
@@ -160,7 +145,7 @@ export default function OrdersPage() {
         })}
       </section>
 
-      {/* Past */}
+      {/* Past orders */}
       {past.length > 0 && (
         <section className="space-y-2">
           <p className="text-xs font-semibold text-[#9E9E9E] uppercase tracking-wider">Recent Deliveries</p>
