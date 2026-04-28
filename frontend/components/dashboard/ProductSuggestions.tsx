@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { mockMeals, mockOrders, type Meal, type MealCategory } from "@/lib/mock-data";
 import { formatCurrency } from "@/lib/utils";
+import { useOrderStore } from "@/lib/useOrderStore";
 import { DietaryPills } from "@/components/ui/DietaryPills";
 import { AddSwapPanel } from "@/components/meals/AddSwapPanel";
 import Image from "next/image";
@@ -18,12 +19,13 @@ const tabs: { id: MealCategory; label: string; emoji: string }[] = [
 export function ProductSuggestions() {
   const [activeTab, setActiveTab] = useState<MealCategory>("breakfast");
   const [panelOpen, setPanelOpen] = useState(false);
+  const { addMeals } = useOrderStore();
 
   const nextOrder = mockOrders.find((o) => o.status === "customizable");
   const meals = mockMeals.filter((m) => m.category === activeTab);
 
-  const handleAdd = (meals: Meal[]) => {
-    console.log("Adding to order:", meals.map((m) => m.name));
+  const handleAdd = (mealsToAdd: Meal[]) => {
+    addMeals(mealsToAdd);
     setPanelOpen(false);
   };
 
