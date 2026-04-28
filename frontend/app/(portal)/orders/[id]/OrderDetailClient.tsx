@@ -48,7 +48,7 @@ export function OrderDetailClient({ order }: { order: Order }) {
   const draftTotal = draftItems.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
 
   // ── Promo / credits ──────────────────────────────────────────────
-  const [activePromoTab, setActivePromoTab] = useState<PromoTab | null>(null);
+  const [activePromoTab, setActivePromoTab] = useState<PromoTab | null>("discount");
   const [discountInput, setDiscountInput] = useState("");
   const [giftInput, setGiftInput] = useState("");
   const [appliedPromos, setAppliedPromos] = useState<{ id: string; label: string; amount: number }[]>([]);
