@@ -175,13 +175,13 @@ export function AddSwapPanel({ mode, currentMeal, defaultCategory, defaultCatego
                 : "bg-[#F0EBE0] text-[#6B6B6B] hover:bg-[#E8E4DC]"
             )}
           >
-            All Meals
+            See All
             <span className="ml-1 text-[10px] opacity-70">({mockMeals.length})</span>
           </button>
 
           {/* Individual category toggles */}
           {categories
-            .filter(({ id }) => id !== "all" && !(hideMealsTab && id === "meals"))
+            .filter(({ id }) => id !== "all")
             .map(({ id, label }) => {
               const count = mockMeals.filter((m) => m.category === id).length;
               const isActive = activeCategories.has(id as MealCategory);
@@ -288,7 +288,6 @@ export function AddSwapPanel({ mode, currentMeal, defaultCategory, defaultCatego
                         <p className="text-xs font-semibold text-[#1A1A1A] line-clamp-2 leading-tight">
                           {meal.name}
                         </p>
-                        <Badge variant="gray" size="sm" className="mt-1 text-[10px]">{meal.planType}</Badge>
                         <DietaryPills tags={meal.dietaryTags} className="mt-1" />
                         <div className="flex items-center justify-between mt-auto pt-1.5">
                           <span className="text-xs font-bold text-[#004945]">{formatCurrency(meal.price)}</span>
