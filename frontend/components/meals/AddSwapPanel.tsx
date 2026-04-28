@@ -235,7 +235,7 @@ export function AddSwapPanel({ mode, currentMeal, defaultCategory, defaultCatego
               <p className="text-sm">No meals match your filters.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 items-start">
               {filtered.map((meal) => {
                 const cartQty = inCartQty(meal.id);
                 const selQty = selectedQty(meal.id);
@@ -246,7 +246,7 @@ export function AddSwapPanel({ mode, currentMeal, defaultCategory, defaultCatego
                     <button
                       onClick={() => handleToggle(meal)}
                       className={cn(
-                        "relative rounded-xl overflow-hidden border-2 transition-all text-left flex flex-col h-full",
+                        "relative rounded-xl overflow-hidden border-2 transition-all text-left flex flex-col",
                         issel
                           ? "border-[#7ED22A] ring-2 ring-[#7ED22A]/20"
                           : "border-[#E8E4DC] hover:border-[#B9EA91]"
