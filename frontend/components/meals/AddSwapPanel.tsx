@@ -15,6 +15,8 @@ interface AddSwapPanelProps {
   mode: "add" | "swap";
   currentMeal?: Meal;
   defaultCategory?: MealCategory | "all";
+  /** Multiple initial categories pre-selected (takes precedence over defaultCategory) */
+  defaultCategories?: MealCategory[];
   /** When true, hides the "Meals" category tab (used from dashboard suggestions) */
   hideMealsTab?: boolean;
   onAdd: (meals: Meal[]) => void;
@@ -44,9 +46,10 @@ const dietaryFilters: { id: DietaryTag; label: string }[] = [
   { id: "V",  label: "Vegan" },
 ];
 
-export function AddSwapPanel({ mode, currentMeal, defaultCategory, hideMealsTab, onAdd, onSwap, onClose }: AddSwapPanelProps) {
+export function AddSwapPanel({ mode, currentMeal, defaultCategory, defaultCategories, hideMealsTab, onAdd, onSwap, onClose }: AddSwapPanelProps) {
   // Multi-select categories: empty set = "All Meals"
   const [activeCategories, setActiveCategories] = useState<Set<MealCategory>>(() => {
+    if (defaultCategories && defaultCategories.length > 0) return new Set(defaultCategories);
     if (!defaultCategory || defaultCategory === "all") return new Set();
     return new Set([defaultCategory as MealCategory]);
   });

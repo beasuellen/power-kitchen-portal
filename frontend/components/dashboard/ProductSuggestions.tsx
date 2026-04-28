@@ -87,7 +87,7 @@ export function ProductSuggestions() {
       {panelOpen && (
         <AddSwapPanel
           mode="add"
-          defaultCategory="breakfast"
+          defaultCategories={["breakfast", "shakes", "snacks"]}
           hideMealsTab
           onAdd={handleAdd}
           onSwap={() => {}}
