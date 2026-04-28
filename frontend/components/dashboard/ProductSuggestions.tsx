@@ -1,28 +1,25 @@
 "use client";
 
 import { useState } from "react";
-import { mockMeals, mockOrders, type Meal, type MealCategory } from "@/lib/mock-data";
+import { mockMeals, mockOrders, type Meal } from "@/lib/mock-data";
 import { formatCurrency } from "@/lib/utils";
 import { useOrderStore } from "@/lib/useOrderStore";
 import { DietaryPills } from "@/components/ui/DietaryPills";
 import { AddSwapPanel } from "@/components/meals/AddSwapPanel";
 import Image from "next/image";
 import { Plus, ChevronRight } from "lucide-react";
-import { cn } from "@/lib/utils";
 
-const tabs: { id: MealCategory; label: string; emoji: string }[] = [
-  { id: "breakfast", label: "Breakfast",       emoji: "🌅" },
-  { id: "shakes",    label: "Protein Shakes",   emoji: "🥤" },
-  { id: "snacks",    label: "Snacks & Desserts", emoji: "🍫" },
-];
+// 2 breakfast + 2 shakes + 2 snacks = 6 cards
+const breakfastMeals = mockMeals.filter((m) => m.category === "breakfast").slice(0, 2);
+const shakeMeals     = mockMeals.filter((m) => m.category === "shakes").slice(0, 2);
+const snackMeals     = mockMeals.filter((m) => m.category === "snacks").slice(0, 2);
+const sliderMeals: Meal[] = [...breakfastMeals, ...shakeMeals, ...snackMeals];
 
 export function ProductSuggestions() {
-  const [activeTab, setActiveTab] = useState<MealCategory>("breakfast");
   const [panelOpen, setPanelOpen] = useState(false);
   const { addMeals } = useOrderStore();
 
   const nextOrder = mockOrders.find((o) => o.status === "customizable");
-  const meals = mockMeals.filter((m) => m.category === activeTab);
 
   const handleAdd = (mealsToAdd: Meal[]) => {
     addMeals(mealsToAdd);
@@ -38,36 +35,11 @@ export function ProductSuggestions() {
             <h2 className="font-semibold text-[#004945]">Have you tried our other products?</h2>
             <p className="text-xs text-[#9E9E9E] mt-0.5">Quick-add to your next order</p>
           </div>
-          <button
-            onClick={() => setPanelOpen(true)}
-            className="flex items-center gap-0.5 text-xs text-[#004945] font-medium hover:underline shrink-0"
-          >
-            See all <ChevronRight className="w-3.5 h-3.5" />
-          </button>
         </div>
 
-        {/* Category tabs — all in one row */}
-        <div className="flex gap-2 mb-3">
-          {tabs.map(({ id, label, emoji }) => (
-            <button
-              key={id}
-              onClick={() => setActiveTab(id)}
-              className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all shrink-0",
-                activeTab === id
-                  ? "bg-[#004945] text-white border-[#004945]"
-                  : "bg-white text-[#6B6B6B] border-[#E8E4DC] hover:border-[#B9EA91] hover:text-[#004945]"
-              )}
-            >
-              <span>{emoji}</span>
-              {label}
-            </button>
-          ))}
-        </div>
-
-        {/* Single carousel for active category */}
+        {/* Single slider: 2 breakfast + 2 shakes + 2 snacks + "See all" card */}
         <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-1 -mx-4 px-4 lg:mx-0 lg:px-0">
-          {meals.map((meal) => (
+          {sliderMeals.map((meal) => (
             <div
               key={meal.id}
               className="shrink-0 w-40 bg-white rounded-2xl border border-[#E8E4DC] overflow-hidden"
@@ -103,16 +75,24 @@ export function ProductSuggestions() {
               </div>
             </div>
           ))}
-          {/* Half-card reveal */}
-          <div className="shrink-0 w-8" aria-hidden />
+
+          {/* "See all" card — last item in slider */}
+          <div className="shrink-0 w-40 bg-[#FDFBF7] rounded-2xl border border-dashed border-[#B9EA91] overflow-hidden flex flex-col items-center justify-center gap-2 p-4 cursor-pointer hover:bg-[#EAF7D9] transition-colors"
+            onClick={() => setPanelOpen(true)}
+          >
+            <div className="w-9 h-9 rounded-full bg-[#004945] flex items-center justify-center">
+              <ChevronRight className="w-4 h-4 text-white" />
+            </div>
+            <p className="text-xs font-semibold text-[#004945] text-center">See all meals</p>
+            <p className="text-[10px] text-[#9E9E9E] text-center">Browse full menu</p>
+          </div>
         </div>
       </section>
 
-      {/* Panel opens filtered to active category */}
       {panelOpen && (
         <AddSwapPanel
           mode="add"
-          defaultCategory={activeTab}
+          defaultCategory="all"
           onAdd={handleAdd}
           onSwap={() => {}}
           onClose={() => setPanelOpen(false)}
