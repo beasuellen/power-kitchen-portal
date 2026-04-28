@@ -15,6 +15,8 @@ interface AddSwapPanelProps {
   mode: "add" | "swap";
   currentMeal?: Meal;
   defaultCategory?: MealCategory | "all";
+  /** When true, hides the "Meals" category tab (used from dashboard suggestions) */
+  hideMealsTab?: boolean;
   onAdd: (meals: Meal[]) => void;
   onSwap: (meal: Meal) => void;
   onClose: () => void;
@@ -42,7 +44,7 @@ const dietaryFilters: { id: DietaryTag; label: string }[] = [
   { id: "V",  label: "Vegan" },
 ];
 
-export function AddSwapPanel({ mode, currentMeal, defaultCategory, onAdd, onSwap, onClose }: AddSwapPanelProps) {
+export function AddSwapPanel({ mode, currentMeal, defaultCategory, hideMealsTab, onAdd, onSwap, onClose }: AddSwapPanelProps) {
   const [category, setCategory] = useState<MealCategory | "all">(defaultCategory ?? "all");
   const [selectedFilters, setSelectedFilters] = useState<DietaryTag[]>([]);
   const [search, setSearch] = useState("");
@@ -146,7 +148,7 @@ export function AddSwapPanel({ mode, currentMeal, defaultCategory, onAdd, onSwap
 
         {/* Category tabs */}
         <div className="px-5 py-2 border-b border-[#F0EBE0] flex gap-1 overflow-x-auto scrollbar-hide shrink-0">
-          {categories.map(({ id, label }) => {
+          {categories.filter(({ id }) => !(hideMealsTab && id === "meals")).map(({ id, label }) => {
             const count = id === "all" ? mockMeals.length : mockMeals.filter((m) => m.category === id).length;
             return (
               <button
@@ -224,13 +226,6 @@ export function AddSwapPanel({ mode, currentMeal, defaultCategory, onAdd, onSwap
                           className="object-cover"
                           sizes="(max-width: 768px) 50vw, 25vw"
                         />
-
-                        {/* New badge */}
-                        {meal.isNew && (
-                          <div className="absolute top-1.5 left-1.5">
-                            <Badge variant="green" size="sm">New</Badge>
-                          </div>
-                        )}
 
                         {/* ── Already in cart badge (top-right) ── */}
                         {cartQty > 0 && (

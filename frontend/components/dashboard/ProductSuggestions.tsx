@@ -52,11 +52,6 @@ export function ProductSuggestions() {
                   className="object-cover"
                   sizes="160px"
                 />
-                {meal.isNew && (
-                  <div className="absolute top-2 left-2">
-                    <span className="bg-[#7ED22A] text-[#004945] text-[10px] font-bold px-2 py-0.5 rounded-full">New</span>
-                  </div>
-                )}
               </div>
               <div className="p-2.5">
                 <p className="text-xs font-semibold text-[#1A1A1A] leading-tight line-clamp-2">{meal.name}</p>
@@ -92,7 +87,8 @@ export function ProductSuggestions() {
       {panelOpen && (
         <AddSwapPanel
           mode="add"
-          defaultCategory="all"
+          defaultCategory="breakfast"
+          hideMealsTab
           onAdd={handleAdd}
           onSwap={() => {}}
           onClose={() => setPanelOpen(false)}
