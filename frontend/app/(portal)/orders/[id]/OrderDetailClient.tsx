@@ -12,7 +12,7 @@ import Link from "next/link";
 import {
   ArrowLeft, Lock, SkipForward, Plus, Trash2,
   RefreshCw, Minus, AlertCircle, Check, Info, ShoppingCart, X, AlertTriangle, CalendarDays,
-  Tag, Wallet, Gift, ChevronDown, ChevronUp,
+  Tag, Wallet, Gift,
 } from "lucide-react";
 import { AddSwapPanel } from "@/components/meals/AddSwapPanel";
 import { cn } from "@/lib/utils";
@@ -252,49 +252,67 @@ export function OrderDetailClient({ order }: { order: Order }) {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {draftItems.map((item) => (
               <Card key={item.id} className={cn("relative", removeConfirm === item.id && "ring-2 ring-red-300")}>
-                <div className="flex gap-3 p-4">
-                  <div className="relative w-20 h-20 rounded-lg overflow-hidden bg-[#F0EBE0] shrink-0">
+                {/* Card top: image + info */}
+                <div className="flex gap-4 p-4 pb-3">
+                  <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-[#F0EBE0] shrink-0">
                     <Image src={item.meal.imageUrl} alt={item.meal.name} fill className="object-cover" sizes="80px" />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm text-[#1A1A1A] line-clamp-2">{item.meal.name}</p>
-                    <Badge variant="gray" size="sm" className="mt-0.5">{item.meal.planType}</Badge>
-                    <DietaryPills tags={item.meal.dietaryTags} className="mt-1.5" />
+                  <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
+                    <div>
+                      <p className="font-semibold text-sm text-[#1A1A1A] line-clamp-2 leading-snug">{item.meal.name}</p>
+                      <DietaryPills tags={item.meal.dietaryTags} className="mt-2" compact />
+                    </div>
                     <div className="mt-2">
                       {item.quantity > 1 ? (
-                        <>
-                          <span className="font-bold text-[#1A1A1A]">{formatCurrency(item.quantity * item.unitPrice)}</span>
-                          <span className="text-xs text-[#9E9E9E] ml-1">{formatCurrency(item.unitPrice)}/each</span>
-                        </>
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="font-bold text-base text-[#004945]">{formatCurrency(item.quantity * item.unitPrice)}</span>
+                          <span className="text-xs text-[#9E9E9E]">{formatCurrency(item.unitPrice)} each</span>
+                        </div>
                       ) : (
-                        <span className="font-semibold text-[#1A1A1A]">{formatCurrency(item.unitPrice)}</span>
+                        <span className="font-bold text-base text-[#004945]">{formatCurrency(item.unitPrice)}</span>
                       )}
                     </div>
                   </div>
                 </div>
 
+                {/* Card bottom: actions */}
                 {isEditable && (
-                  <div className="flex items-center justify-between px-4 pb-3 pt-0 border-t border-[#F0EBE0]">
-                    <div className="flex items-center gap-2">
-                      <button onClick={() => handleQuantityChange(item.id, -1)} className="w-7 h-7 rounded-full border border-[#E8E4DC] flex items-center justify-center hover:bg-[#F0EBE0] transition-colors">
-                        <Minus className="w-3 h-3 text-[#6B6B6B]" />
+                  <div className="flex items-center justify-between px-4 py-3 border-t border-[#F0EBE0] bg-[#FDFBF7] rounded-b-xl">
+                    {/* Qty stepper */}
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => handleQuantityChange(item.id, -1)}
+                        className="w-8 h-8 rounded-full border border-[#E8E4DC] flex items-center justify-center hover:bg-[#F0EBE0] transition-colors"
+                      >
+                        <Minus className="w-3.5 h-3.5 text-[#6B6B6B]" />
                       </button>
-                      <span className="text-sm font-semibold w-5 text-center text-[#1A1A1A]">{item.quantity}</span>
-                      <button onClick={() => handleQuantityChange(item.id, 1)} className="w-7 h-7 rounded-full border border-[#E8E4DC] flex items-center justify-center hover:bg-[#F0EBE0] transition-colors">
-                        <Plus className="w-3 h-3 text-[#6B6B6B]" />
+                      <span className="text-sm font-semibold w-4 text-center text-[#1A1A1A]">{item.quantity}</span>
+                      <button
+                        onClick={() => handleQuantityChange(item.id, 1)}
+                        className="w-8 h-8 rounded-full border border-[#E8E4DC] flex items-center justify-center hover:bg-[#F0EBE0] transition-colors"
+                      >
+                        <Plus className="w-3.5 h-3.5 text-[#6B6B6B]" />
                       </button>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <button onClick={() => { setSwappingItem(item); setShowAddPanel(true); }} className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs text-[#6B6B6B] hover:bg-[#EAF7D9] hover:text-[#004945] transition-colors">
+
+                    {/* Swap + Remove */}
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => { setSwappingItem(item); setShowAddPanel(true); }}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-[#6B6B6B] hover:bg-[#EAF7D9] hover:text-[#004945] transition-colors border border-[#E8E4DC]"
+                      >
                         <RefreshCw className="w-3 h-3" /> Swap
                       </button>
                       {removeConfirm === item.id ? (
                         <div className="flex items-center gap-1">
-                          <button onClick={() => setRemoveConfirm(null)} className="px-2 py-1 rounded-lg text-xs text-[#6B6B6B] hover:bg-[#F0EBE0]">Keep</button>
-                          <button onClick={() => handleRemove(item)} className="px-2 py-1 rounded-lg text-xs text-red-600 hover:bg-red-50 font-medium">Remove</button>
+                          <button onClick={() => setRemoveConfirm(null)} className="px-2.5 py-1.5 rounded-lg text-xs text-[#6B6B6B] hover:bg-[#F0EBE0] border border-[#E8E4DC]">Keep</button>
+                          <button onClick={() => handleRemove(item)} className="px-2.5 py-1.5 rounded-lg text-xs text-red-600 hover:bg-red-50 font-medium border border-red-200">Remove</button>
                         </div>
                       ) : (
-                        <button onClick={() => handleRemove(item)} className="p-1.5 rounded-lg text-[#9E9E9E] hover:text-red-500 hover:bg-red-50 transition-colors">
+                        <button
+                          onClick={() => handleRemove(item)}
+                          className="w-8 h-8 rounded-lg flex items-center justify-center text-[#9E9E9E] hover:text-red-500 hover:bg-red-50 transition-colors border border-[#E8E4DC]"
+                        >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       )}
