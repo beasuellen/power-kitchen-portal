@@ -55,7 +55,7 @@ export function ProductSuggestions() {
               </div>
               <div className="p-2.5">
                 <p className="text-xs font-semibold text-[#1A1A1A] leading-tight line-clamp-2">{meal.name}</p>
-                <DietaryPills tags={meal.dietaryTags} className="mt-1.5" compact />
+                <DietaryPills tags={meal.dietaryTags} className="mt-1.5" />
                 <div className="flex items-center justify-between mt-2">
                   <span className="text-xs font-bold text-[#004945]">{formatCurrency(meal.price)}</span>
                   {nextOrder && (
