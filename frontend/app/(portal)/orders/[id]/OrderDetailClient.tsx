@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { mockOrders } from "@/lib/mock-data";
 import type { Order, OrderItem, Meal } from "@/lib/mock-data";
 import { formatDate, formatShortDate, formatCurrency } from "@/lib/utils";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
@@ -12,7 +13,7 @@ import Link from "next/link";
 import {
   ArrowLeft, Lock, SkipForward, Plus, Trash2,
   RefreshCw, Minus, AlertCircle, Check, Info, ShoppingCart, X, AlertTriangle, CalendarDays,
-  Tag, Wallet, Gift,
+  Tag, Wallet, Gift, RotateCcw,
 } from "lucide-react";
 import { AddSwapPanel } from "@/components/meals/AddSwapPanel";
 import { cn } from "@/lib/utils";
@@ -156,33 +157,115 @@ export function OrderDetailClient({ order }: { order: Order }) {
     setShowSkipModal(false);
   };
 
-  // ── Skipped view ──
+  // ── Skipped view — show next locked order ──
   if (isEditable && orderSkipped) {
+    const nextLocked = mockOrders.find((o) => o.status === "locked");
+    const lockedItems = nextLocked?.items ?? [];
+    const lockedTotal = lockedItems.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
+    const lockedMeals = lockedItems.reduce((s, i) => s + i.quantity, 0);
+
     return (
       <div className="space-y-6">
+        {/* Header */}
         <div className="flex items-start gap-3">
           <Link href="/orders" className="p-1.5 rounded-lg hover:bg-[#F0EBE0] transition-colors mt-0.5">
             <ArrowLeft className="w-5 h-5 text-[#6B6B6B]" />
           </Link>
-          <h1 className="text-xl font-bold text-[#004945]">
-            {formatDate(order.deliveryDate, { weekday: "long", month: "long", day: "numeric" })}
-          </h1>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl font-bold text-[#004945]">
+              {formatDate(order.deliveryDate, { weekday: "long", month: "long", day: "numeric" })}
+            </h1>
+          </div>
         </div>
-        <div className="flex flex-col items-center justify-center py-16 gap-4 text-center">
-          <div className="w-14 h-14 rounded-full bg-[#F0EBE0] flex items-center justify-center">
-            <SkipForward className="w-6 h-6 text-[#9E9E9E]" />
+
+        {/* Skipped notice */}
+        <div className="flex items-center justify-between bg-[#F7F3EC] border border-[#E8E4DC] rounded-2xl px-5 py-4">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full bg-[#E8E4DC] flex items-center justify-center shrink-0">
+              <SkipForward className="w-4 h-4 text-[#9E9E9E]" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-[#1A1A1A]">Delivery skipped</p>
+              <p className="text-xs text-[#9E9E9E]">You won't be charged for this week</p>
+            </div>
           </div>
-          <div>
-            <p className="font-bold text-[#004945] text-lg">Order skipped</p>
-            <p className="text-sm text-[#9E9E9E] mt-1">
-              You won't receive a delivery on {formatDate(order.deliveryDate, { month: "long", day: "numeric" })}.
-            </p>
-            <p className="text-xs text-[#9E9E9E] mt-0.5">Your subscription resumes automatically next week.</p>
-          </div>
-          <button onClick={unskipOrder} className="text-sm font-medium text-[#004945] hover:underline">
-            Undo skip
+          <button
+            onClick={unskipOrder}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-[#004945] bg-white border border-[#B9EA91] hover:bg-[#EAF7D9] transition-colors shrink-0"
+          >
+            <RotateCcw className="w-3 h-3" /> Reactivate
           </button>
         </div>
+
+        {/* Next order — locked */}
+        {nextLocked && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold text-[#9E9E9E] uppercase tracking-wider mb-1">Your next delivery</p>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-xl font-bold text-[#004945]">
+                    {formatDate(nextLocked.deliveryDate, { weekday: "long", month: "long", day: "numeric" })}
+                  </h2>
+                  <Badge variant="gray"><Lock className="w-2.5 h-2.5 mr-1 inline" /> Locked</Badge>
+                </div>
+              </div>
+            </div>
+
+            {/* Opens for editing notice */}
+            <div className="flex items-center gap-3 bg-amber-50 border border-amber-100 rounded-2xl px-4 py-3">
+              <Lock className="w-4 h-4 text-amber-500 shrink-0" />
+              <p className="text-sm text-amber-700">
+                Opens for editing on <span className="font-semibold">{formatDate(nextLocked.cutoffDate, { weekday: "long", month: "long", day: "numeric" })}</span>
+              </p>
+            </div>
+
+            {/* Meals grid — read only */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {lockedItems.map((item) => (
+                <Card key={item.id} className="flex flex-col opacity-80">
+                  <div className="flex gap-4 p-5 flex-1">
+                    <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-[#F0EBE0] shrink-0">
+                      <Image src={item.meal.imageUrl} alt={item.meal.name} fill className="object-cover" sizes="80px" />
+                    </div>
+                    <div className="flex-1 min-w-0 flex flex-col">
+                      <p className="font-semibold text-sm text-[#1A1A1A] leading-snug">{item.meal.name}</p>
+                      <DietaryPills tags={item.meal.dietaryTags} className="mt-2 flex-1" />
+                      <div className="mt-3">
+                        {item.quantity > 1 ? (
+                          <div className="flex items-baseline gap-1.5">
+                            <span className="font-bold text-base text-[#004945]">{formatCurrency(item.quantity * item.unitPrice)}</span>
+                            <span className="text-xs text-[#9E9E9E]">{formatCurrency(item.unitPrice)} each</span>
+                          </div>
+                        ) : (
+                          <span className="font-bold text-base text-[#004945]">{formatCurrency(item.unitPrice)}</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  {/* Locked footer */}
+                  <div className="flex items-center justify-between px-5 py-3 border-t border-[#F0EBE0] bg-[#FDFBF7] rounded-b-xl">
+                    <span className="text-xs text-[#9E9E9E] flex items-center gap-1.5">
+                      <Lock className="w-3 h-3" /> Qty: {item.quantity}
+                    </span>
+                    <span className="text-xs text-[#9E9E9E]">{item.meal.calories} cal</span>
+                  </div>
+                </Card>
+              ))}
+            </div>
+
+            {/* Summary footer */}
+            <div className="flex items-center justify-between bg-white border border-[#F0EBE0] rounded-2xl px-5 py-4">
+              <div>
+                <p className="text-xs text-[#9E9E9E]">{lockedMeals} meals · locked order</p>
+                <p className="text-xl font-bold text-[#004945]">{formatCurrency(lockedTotal)}</p>
+              </div>
+              <Link href="/orders">
+                <Button variant="outline" size="sm">See all orders <ArrowLeft className="w-3.5 h-3.5 rotate-180" /></Button>
+              </Link>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
