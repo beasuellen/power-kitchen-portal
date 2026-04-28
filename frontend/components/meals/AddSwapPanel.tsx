@@ -246,7 +246,7 @@ export function AddSwapPanel({ mode, currentMeal, defaultCategory, defaultCatego
                     <button
                       onClick={() => handleToggle(meal)}
                       className={cn(
-                        "relative rounded-xl overflow-hidden border-2 transition-all text-left",
+                        "relative rounded-xl overflow-hidden border-2 transition-all text-left flex flex-col h-full",
                         issel
                           ? "border-[#7ED22A] ring-2 ring-[#7ED22A]/20"
                           : "border-[#E8E4DC] hover:border-[#B9EA91]"
@@ -284,13 +284,13 @@ export function AddSwapPanel({ mode, currentMeal, defaultCategory, defaultCatego
                       </div>
 
                       {/* Info */}
-                      <div className="p-2.5">
+                      <div className="p-2.5 flex flex-col flex-1">
                         <p className="text-xs font-semibold text-[#1A1A1A] line-clamp-2 leading-tight">
                           {meal.name}
                         </p>
                         <Badge variant="gray" size="sm" className="mt-1 text-[10px]">{meal.planType}</Badge>
                         <DietaryPills tags={meal.dietaryTags} className="mt-1" />
-                        <div className="flex items-center justify-between mt-1.5">
+                        <div className="flex items-center justify-between mt-auto pt-1.5">
                           <span className="text-xs font-bold text-[#004945]">{formatCurrency(meal.price)}</span>
                           <span className="text-[10px] text-[#9E9E9E]">{meal.calories} cal</span>
                         </div>

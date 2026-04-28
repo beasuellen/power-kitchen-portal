@@ -42,9 +42,9 @@ export function ProductSuggestions() {
           {sliderMeals.map((meal) => (
             <div
               key={meal.id}
-              className="shrink-0 w-40 bg-white rounded-2xl border border-[#E8E4DC] overflow-hidden"
+              className="shrink-0 w-40 bg-white rounded-2xl border border-[#E8E4DC] overflow-hidden flex flex-col"
             >
-              <div className="relative h-28">
+              <div className="relative h-28 shrink-0">
                 <Image
                   src={meal.imageUrl}
                   alt={meal.name}
@@ -53,10 +53,10 @@ export function ProductSuggestions() {
                   sizes="160px"
                 />
               </div>
-              <div className="p-2.5">
+              <div className="p-2.5 flex flex-col flex-1">
                 <p className="text-xs font-semibold text-[#1A1A1A] leading-tight line-clamp-2">{meal.name}</p>
                 <DietaryPills tags={meal.dietaryTags} className="mt-1.5" />
-                <div className="flex items-center justify-between mt-2">
+                <div className="flex items-center justify-between mt-auto pt-2">
                   <span className="text-xs font-bold text-[#004945]">{formatCurrency(meal.price)}</span>
                   {nextOrder && (
                     <button
