@@ -254,7 +254,7 @@ export function AddSwapPanel({ mode, currentMeal, defaultCategory, hideMealsTab,
                           {meal.name}
                         </p>
                         <Badge variant="gray" size="sm" className="mt-1 text-[10px]">{meal.planType}</Badge>
-                        <DietaryPills tags={meal.dietaryTags} className="mt-1" />
+                        <DietaryPills tags={meal.dietaryTags} className="mt-1" compact />
                         <div className="flex items-center justify-between mt-1.5">
                           <span className="text-xs font-bold text-[#004945]">{formatCurrency(meal.price)}</span>
                           <span className="text-[10px] text-[#9E9E9E]">{meal.calories} cal</span>
