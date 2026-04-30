@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useOrderStore } from "@/lib/useOrderStore";
 import { mockOrders } from "@/lib/mock-data";
 import { formatDate, formatCurrency } from "@/lib/utils";
@@ -12,6 +13,7 @@ import Link from "next/link";
 import { ArrowRight, SkipForward, ShoppingCart, X, CalendarDays, AlertTriangle, RotateCcw, Lock } from "lucide-react";
 
 export function NextOrderCard() {
+  const router = useRouter();
   const { draftItems, orderSkipped, skipOrder, unskipOrder } = useOrderStore();
   const nextOrder = mockOrders.find((o) => o.status === "customizable");
   // The order after the skipped one (first locked order)
@@ -77,7 +79,7 @@ export function NextOrderCard() {
 
               <div className="space-y-2 flex-1">
                 {followingItems.slice(0, 5).map((item) => (
-                  <div key={item.id} className="flex items-center gap-3 p-2 rounded-xl bg-[#FDFBF7] border border-[#F0EBE0]">
+                  <div key={item.id} onClick={() => followingOrder && router.push(`/orders/${followingOrder.id}`)} className="flex items-center gap-3 p-2 rounded-xl bg-[#FDFBF7] border border-[#F0EBE0] cursor-pointer hover:bg-[#EAF7D9] hover:border-[#B9EA91] transition-colors">
                     <div className="relative w-10 h-10 rounded-lg overflow-hidden shrink-0">
                       <Image src={item.meal.imageUrl} alt={item.meal.name} fill className="object-cover" sizes="40px" />
                     </div>
@@ -128,12 +130,13 @@ export function NextOrderCard() {
           </div>
         </CardHeader>
         <CardBody className="pt-0">
-          {/* Meal list */}
+          {/* Meal list — clickable rows navigate to order detail */}
           <div className="space-y-2 mb-4">
             {draftItems.slice(0, 5).map((item) => (
               <div
                 key={item.id}
-                className="flex items-center gap-3 p-2 rounded-xl bg-[#FDFBF7] border border-[#F0EBE0]"
+                onClick={() => router.push(`/orders/${nextOrder.id}`)}
+                className="flex items-center gap-3 p-2 rounded-xl bg-[#FDFBF7] border border-[#F0EBE0] cursor-pointer hover:bg-[#EAF7D9] hover:border-[#B9EA91] transition-colors"
               >
                 <div className="relative w-10 h-10 rounded-lg overflow-hidden shrink-0">
                   <Image
@@ -158,7 +161,10 @@ export function NextOrderCard() {
             ))}
 
             {draftItems.length > 5 && (
-              <div className="flex items-center gap-2 px-2 py-1">
+              <div
+                onClick={() => router.push(`/orders/${nextOrder.id}`)}
+                className="flex items-center gap-2 px-2 py-1 cursor-pointer hover:opacity-70 transition-opacity"
+              >
                 <ShoppingCart className="w-3.5 h-3.5 text-[#9E9E9E]" />
                 <p className="text-xs text-[#9E9E9E]">
                   +{draftItems.length - 5} more meal{draftItems.length - 5 !== 1 ? "s" : ""} in your order
@@ -169,13 +175,16 @@ export function NextOrderCard() {
 
           {/* Footer */}
           <div className="flex items-center justify-between pt-3 border-t border-[#F0EBE0]">
-            <div>
+            <div
+              onClick={() => router.push(`/orders/${nextOrder.id}`)}
+              className="cursor-pointer hover:opacity-80 transition-opacity"
+            >
               <p className="text-xs text-[#9E9E9E]">
                 Order total · <span className="text-[#004945] font-medium">{totalMeals} meals</span>
               </p>
               <p className="text-xl font-bold text-[#004945]">{formatCurrency(draftTotal)}</p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
               {nextOrder.status === "customizable" && (
                 <Button variant="outline" size="sm" onClick={() => setShowSkipModal(true)}>
                   <SkipForward className="w-3.5 h-3.5" /> Skip
