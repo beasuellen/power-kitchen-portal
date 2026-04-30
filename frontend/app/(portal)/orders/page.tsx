@@ -39,6 +39,10 @@ export default function OrdersPage() {
         <p className="text-sm text-[#6B6B6B] mt-0.5">Manage your upcoming deliveries</p>
       </div>
 
+      {/* ── 70/30 grid: upcoming left, recent deliveries right ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-[7fr_3fr] gap-5 items-start">
+
+      {/* Left column — Upcoming orders */}
       <section className="space-y-3">
         <p className="text-xs font-semibold text-[#9E9E9E] uppercase tracking-wider">Upcoming</p>
 
@@ -155,72 +159,72 @@ export default function OrdersPage() {
         })}
       </section>
 
-      {/* Past orders */}
+      {/* Right column — Recent Deliveries (30%) */}
       {past.length > 0 && (
         <section className="space-y-2">
           <p className="text-xs font-semibold text-[#9E9E9E] uppercase tracking-wider">Recent Deliveries</p>
           {past.map((order) => {
             const rated = ratedOrderIds.has(order.id);
+            const mealCount = order.items.reduce((s, i) => s + i.quantity, 0);
             return (
               <div
                 key={order.id}
                 className="bg-white rounded-2xl border border-[#F0EBE0] overflow-hidden"
               >
-                <div className="p-3 flex items-center justify-between gap-3">
-                  <Link href={`/orders/${order.id}`} className="flex items-center gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity">
-                    <CheckCircle2 className="w-4 h-4 text-[#B9EA91] shrink-0" />
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-[#1A1A1A]">
-                        {formatDate(order.deliveryDate, { month: "long", day: "numeric" })}
-                      </p>
-                      <p className="text-xs text-[#9E9E9E]">
-                        {order.items.reduce((s, i) => s + i.quantity, 0)} meals · {formatCurrency(order.total)}
-                      </p>
-                    </div>
-                  </Link>
-                  <div className="flex items-center gap-2 shrink-0">
-                    {rated ? (
-                      <span className="text-xs text-[#9E9E9E] flex items-center gap-1">
-                        <CheckCircle2 className="w-3 h-3 text-[#7ED22A]" /> Rated
-                      </span>
-                    ) : (
-                      <button
-                        onClick={() => setFeedbackOrder(order)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-2 border-[#E8E4DC] text-xs font-semibold text-[#004945] hover:border-[#7ED22A] hover:bg-[#EAF7D9] transition-all"
-                      >
-                        <Star className="w-3 h-3" />
-                        Rate delivery
-                      </button>
-                    )}
-                    <Link href={`/orders/${order.id}`}>
-                      <ChevronRight className="w-4 h-4 text-[#9E9E9E]" />
-                    </Link>
-                  </div>
-                </div>
-
-                {/* Meal thumbnails strip */}
+                {/* Thumbnail strip */}
                 {order.items.length > 0 && (
-                  <div className="flex gap-1 px-3 pb-3">
-                    {order.items.slice(0, 6).map((item, idx) => (
+                  <div className="flex gap-0.5 px-2.5 pt-2.5">
+                    {order.items.slice(0, 4).map((item, idx) => (
                       <div
                         key={item.id}
-                        className="relative w-8 h-8 rounded-lg overflow-hidden bg-[#F0EBE0] shrink-0"
+                        className="relative flex-1 h-14 rounded-lg overflow-hidden bg-[#F0EBE0]"
                       >
-                        <Image src={item.meal.imageUrl} alt={item.meal.name} fill className="object-cover" sizes="32px" />
-                        {idx === 5 && order.items.length > 6 && (
-                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white text-[8px] font-bold">
-                            +{order.items.length - 6}
+                        <Image src={item.meal.imageUrl} alt={item.meal.name} fill className="object-cover" sizes="60px" />
+                        {idx === 3 && order.items.length > 4 && (
+                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white text-[9px] font-bold">
+                            +{order.items.length - 4}
                           </div>
                         )}
                       </div>
                     ))}
                   </div>
                 )}
+
+                <div className="px-2.5 py-2">
+                  <Link href={`/orders/${order.id}`} className="block hover:opacity-80 transition-opacity mb-1.5">
+                    <p className="text-xs font-semibold text-[#1A1A1A]">
+                      {formatDate(order.deliveryDate, { month: "short", day: "numeric" })}
+                    </p>
+                    <p className="text-[10px] text-[#9E9E9E]">
+                      {mealCount} meals · {formatCurrency(order.total)}
+                    </p>
+                  </Link>
+                  <div className="flex items-center justify-between">
+                    {rated ? (
+                      <span className="text-[10px] text-[#9E9E9E] flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3 text-[#7ED22A]" /> Rated
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => setFeedbackOrder(order)}
+                        className="flex items-center gap-1 px-2 py-1 rounded-lg border border-[#E8E4DC] text-[10px] font-semibold text-[#004945] hover:border-[#7ED22A] hover:bg-[#EAF7D9] transition-all"
+                      >
+                        <Star className="w-2.5 h-2.5" />
+                        Rate
+                      </button>
+                    )}
+                    <Link href={`/orders/${order.id}`}>
+                      <ChevronRight className="w-3.5 h-3.5 text-[#9E9E9E]" />
+                    </Link>
+                  </div>
+                </div>
               </div>
             );
           })}
         </section>
       )}
+
+      </div>{/* end 70/30 grid */}
 
       {/* Feedback modal */}
       {feedbackOrder && (

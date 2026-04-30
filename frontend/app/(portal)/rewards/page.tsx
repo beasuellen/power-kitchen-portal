@@ -90,8 +90,8 @@ export default function RewardsPage() {
       {/* ── Section 2: Membership (left) + Challenges (right) ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-stretch">
 
-        {/* Membership */}
-        <div className="bg-white rounded-2xl border border-[#E8E4DC] p-5 flex flex-col">
+        {/* Membership — fit height */}
+        <div className="bg-white rounded-2xl border border-[#E8E4DC] p-5 flex flex-col self-start">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Trophy className="w-4 h-4 text-[#004945]" />
@@ -250,8 +250,8 @@ export default function RewardsPage() {
       {/* ── Section 3: Referral (left) + Leaderboard (right) ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-stretch">
 
-        {/* Referral Program */}
-        <div className="bg-white rounded-2xl border border-[#E8E4DC] p-5">
+        {/* Referral Program — fit height */}
+        <div className="bg-white rounded-2xl border border-[#E8E4DC] p-5 self-start">
           <div className="flex items-center gap-2 mb-1">
             <Users className="w-4 h-4 text-[#004945]" />
             <h2 className="font-semibold text-[#004945] text-sm">Referral Program</h2>
