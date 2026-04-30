@@ -33,16 +33,24 @@ export const useOrderStore = create<OrderStore>((set) => ({
 
   addMeals: (meals) =>
     set((state) => {
-      const updated = state.draftItems.map((i) => ({ ...i }));
+      // Count occurrences per meal ID — AddSwapPanel sends [meal, meal, meal] for qty=3
+      const counts = new Map<string, { meal: Meal; count: number }>();
       for (const meal of meals) {
+        const entry = counts.get(meal.id);
+        if (entry) entry.count++;
+        else counts.set(meal.id, { meal, count: 1 });
+      }
+
+      const updated = state.draftItems.map((i) => ({ ...i }));
+      for (const { meal, count } of counts.values()) {
         const existing = updated.find((i) => i.meal.id === meal.id);
         if (existing) {
-          existing.quantity += 1;
+          existing.quantity += count;
         } else {
           updated.push({
             id: `draft_${Math.random().toString(36).slice(2)}`,
             meal,
-            quantity: 1,
+            quantity: count,
             unitPrice: meal.price,
           });
         }

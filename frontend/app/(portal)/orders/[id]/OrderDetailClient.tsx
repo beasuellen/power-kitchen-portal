@@ -113,12 +113,35 @@ export function OrderDetailClient({ order }: { order: Order }) {
   };
 
   const handleAddMeals = (meals: Meal[]) => {
-    const newItems: DraftItem[] = meals.map((meal) => ({
-      id: `draft_${Math.random().toString(36).slice(2)}`,
-      meal, quantity: 1, unitPrice: meal.price,
-    }));
-    setDraftItems((prev) => [...prev, ...newItems]);
-    meals.forEach((m) => addChange({ type: "add", description: `Added ${m.name}` }));
+    // AddSwapPanel sends [meal, meal, meal] for qty=3 — count occurrences per meal ID
+    const counts = new Map<string, { meal: Meal; count: number }>();
+    for (const meal of meals) {
+      const entry = counts.get(meal.id);
+      if (entry) entry.count++;
+      else counts.set(meal.id, { meal, count: 1 });
+    }
+
+    setDraftItems((prev) => {
+      const updated = prev.map((i) => ({ ...i }));
+      for (const { meal, count } of counts.values()) {
+        const existing = updated.find((i) => i.meal.id === meal.id);
+        if (existing) {
+          existing.quantity += count;
+        } else {
+          updated.push({
+            id: `draft_${Math.random().toString(36).slice(2)}`,
+            meal,
+            quantity: count,
+            unitPrice: meal.price,
+          });
+        }
+      }
+      return updated;
+    });
+
+    for (const { meal, count } of counts.values()) {
+      addChange({ type: "add", description: `Added ${count}× ${meal.name}` });
+    }
     setShowAddPanel(false);
   };
 
