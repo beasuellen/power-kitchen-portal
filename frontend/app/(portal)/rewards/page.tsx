@@ -88,10 +88,10 @@ export default function RewardsPage() {
       </div>
 
       {/* ── Section 2: Membership (left) + Challenges (right) ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-stretch">
 
         {/* Membership */}
-        <div className="bg-white rounded-2xl border border-[#E8E4DC] p-5 flex flex-col max-h-[420px]">
+        <div className="bg-white rounded-2xl border border-[#E8E4DC] p-5 flex flex-col">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Trophy className="w-4 h-4 text-[#004945]" />
@@ -155,13 +155,13 @@ export default function RewardsPage() {
         </div>
 
         {/* Challenges — internal scroll + accordion by level */}
-        <div className="bg-white rounded-2xl border border-[#E8E4DC] p-5 flex flex-col max-h-[420px]">
-          <div className="flex items-center gap-2 mb-4">
+        <div className="bg-white rounded-2xl border border-[#E8E4DC] p-5 flex flex-col overflow-hidden">
+          <div className="flex items-center gap-2 mb-4 shrink-0">
             <Flame className="w-4 h-4 text-[#004945]" />
             <h2 className="font-semibold text-[#004945] text-sm">Challenges</h2>
           </div>
 
-          <div className="overflow-y-auto flex-1 space-y-2 pr-1" style={{ maxHeight: 420 }}>
+          <div className="overflow-y-auto flex-1 space-y-2 pr-1">
             {LEVELS.map((lvl) => {
               const cfg = levelConfig[lvl];
               const challenges = challengesByLevel[lvl];

@@ -17,7 +17,7 @@ import {
   Tag, Wallet, Gift, RotateCcw, SlidersHorizontal,
 } from "lucide-react";
 import { AddSwapPanel } from "@/components/meals/AddSwapPanel";
-import { MealDetailModal } from "@/components/orders/MealDetailModal";
+import { MealDetailModal } from "@/components/meals/MealDetailModal";
 import { cn } from "@/lib/utils";
 import { useOrderStore } from "@/lib/useOrderStore";
 
@@ -880,13 +880,26 @@ export function OrderDetailClient({ order }: { order: Order }) {
         </div>
       )}
 
-      {/* ── Meal detail modal ── */}
+      {/* ── Meal detail modal (global shared component) ── */}
       {selectedItem && (
         <MealDetailModal
-          item={selectedItem}
-          isEditable={isEditable}
+          meal={selectedItem.meal}
+          mode={
+            isEditable
+              ? {
+                  type: "order",
+                  itemId: selectedItem.id,
+                  qty: selectedItem.quantity,
+                  onQtyChange: handleQuantityChange,
+                }
+              : {
+                  type: "browse",
+                  selectedQty: selectedItem.quantity,
+                  onToggle: () => {},
+                  onQtyChange: () => {},
+                }
+          }
           onClose={() => setSelectedItemId(null)}
-          onQuantityChange={(itemId, delta) => handleQuantityChange(itemId, delta)}
         />
       )}
 
