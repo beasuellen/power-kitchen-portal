@@ -169,7 +169,10 @@ export default function OrdersPage() {
             return (
               <div
                 key={order.id}
-                className="bg-white rounded-2xl border border-[#F0EBE0] overflow-hidden"
+                onClick={() => !rated && setFeedbackOrder(order)}
+                className={`bg-white rounded-2xl border border-[#F0EBE0] overflow-hidden transition-all ${
+                  !rated ? "cursor-pointer hover:border-[#7ED22A] hover:shadow-md" : ""
+                }`}
               >
                 {/* Thumbnail strip */}
                 {order.items.length > 0 && (
@@ -191,29 +194,28 @@ export default function OrdersPage() {
                 )}
 
                 <div className="px-2.5 py-2">
-                  <Link href={`/orders/${order.id}`} className="block hover:opacity-80 transition-opacity mb-1.5">
+                  <div className="mb-1.5">
                     <p className="text-xs font-semibold text-[#1A1A1A]">
                       {formatDate(order.deliveryDate, { month: "short", day: "numeric" })}
                     </p>
                     <p className="text-[10px] text-[#9E9E9E]">
                       {mealCount} meals · {formatCurrency(order.total)}
                     </p>
-                  </Link>
+                  </div>
                   <div className="flex items-center justify-between">
                     {rated ? (
                       <span className="text-[10px] text-[#9E9E9E] flex items-center gap-1">
                         <CheckCircle2 className="w-3 h-3 text-[#7ED22A]" /> Rated
                       </span>
                     ) : (
-                      <button
-                        onClick={() => setFeedbackOrder(order)}
-                        className="flex items-center gap-1 px-2 py-1 rounded-lg border border-[#E8E4DC] text-[10px] font-semibold text-[#004945] hover:border-[#7ED22A] hover:bg-[#EAF7D9] transition-all"
-                      >
-                        <Star className="w-2.5 h-2.5" />
-                        Rate
-                      </button>
+                      <span className="text-[10px] font-semibold text-[#004945] flex items-center gap-1">
+                        <Star className="w-2.5 h-2.5 text-[#7ED22A]" /> Tap to rate
+                      </span>
                     )}
-                    <Link href={`/orders/${order.id}`}>
+                    <Link
+                      href={`/orders/${order.id}`}
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <ChevronRight className="w-3.5 h-3.5 text-[#9E9E9E]" />
                     </Link>
                   </div>
