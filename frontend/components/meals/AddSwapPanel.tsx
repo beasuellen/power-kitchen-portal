@@ -54,6 +54,7 @@ export function AddSwapPanel({ mode, currentMeal, defaultCategory, defaultCatego
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<SelectedEntry[]>([]);
   const [detailMeal, setDetailMeal] = useState<Meal | null>(null);
+  const [showBackConfirm, setShowBackConfirm] = useState(false);
 
   const { draftItems } = useOrderStore();
 
@@ -349,7 +350,17 @@ export function AddSwapPanel({ mode, currentMeal, defaultCategory, defaultCatego
               )}
             </div>
             <div className="flex gap-2">
-              <Button variant="ghost" className="flex-1" onClick={onClose}>
+              <Button
+                variant="ghost"
+                className="flex-1"
+                onClick={() => {
+                  if (selected.length > 0) {
+                    setShowBackConfirm(true);
+                  } else {
+                    onClose();
+                  }
+                }}
+              >
                 Back to Order
               </Button>
               <Button className="flex-1" disabled={totalSelected === 0} onClick={handleAdd}>
@@ -359,6 +370,63 @@ export function AddSwapPanel({ mode, currentMeal, defaultCategory, defaultCatego
           </div>
         )}
       </div>
+
+      {/* ── Back-to-order confirmation ── */}
+      {showBackConfirm && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl border border-[#E8E4DC] overflow-hidden">
+            {/* Icon + title */}
+            <div className="px-6 pt-6 pb-4 text-center">
+              <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center mx-auto mb-3">
+                <span className="text-2xl">🛒</span>
+              </div>
+              <h3 className="font-bold text-[#004945] text-base">
+                Add meals before leaving?
+              </h3>
+              <p className="text-xs text-[#6B6B6B] mt-1.5 leading-relaxed">
+                You have{" "}
+                <span className="font-semibold text-[#1A1A1A]">
+                  {totalSelected} meal{totalSelected !== 1 ? "s" : ""}
+                </span>{" "}
+                selected. Do you want to add{" "}
+                {totalSelected === 1 ? "it" : "them"} to your order?
+              </p>
+            </div>
+
+            {/* Selected meals preview */}
+            <div className="mx-6 mb-4 bg-[#FDFBF7] border border-[#F0EBE0] rounded-xl px-4 py-3 space-y-1.5">
+              {selected.map((entry) => (
+                <div key={entry.meal.id} className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-[#1A1A1A] truncate">{entry.meal.name}</span>
+                  <span className="text-xs text-[#9E9E9E] shrink-0 ml-2">×{entry.qty}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Actions */}
+            <div className="px-6 pb-6 flex flex-col gap-2">
+              <Button
+                className="w-full"
+                onClick={() => {
+                  handleAdd();
+                  setShowBackConfirm(false);
+                }}
+              >
+                Yes, add {totalSelected} meal{totalSelected !== 1 ? "s" : ""} to my order
+              </Button>
+              <button
+                onClick={() => {
+                  setShowBackConfirm(false);
+                  onClose();
+                }}
+                className="w-full py-2.5 text-sm text-[#6B6B6B] hover:text-[#1A1A1A] transition-colors"
+              >
+                No, go back without adding
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Meal Detail Modal (shared component) ── */}
       {detailMeal && (
