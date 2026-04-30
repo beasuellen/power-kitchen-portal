@@ -293,14 +293,15 @@ export default function RewardsPage() {
               <p className="text-[10px] font-semibold text-[#9E9E9E] uppercase tracking-wider mb-2">Successful Referrals</p>
               <div className="space-y-1.5">
                 {mockReferralStats.successfulReferrals.map((ref) => {
-                  const initials = ref.firstName.split(" ").map((n: string) => n[0].toUpperCase()).join("").slice(0, 2);
+                  const initials = `${ref.firstName[0]}${ref.lastName?.[0] ?? ""}`.toUpperCase();
+                  const fullName = ref.lastName ? `${ref.firstName} ${ref.lastName}` : ref.firstName;
                   return (
                     <div key={ref.id} className="flex items-center justify-between px-2 py-1.5">
                       <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-full bg-[#F0EBE0] flex items-center justify-center shrink-0">
-                          <span className="text-[#9E9E9E] text-[9px] font-bold">{initials}</span>
+                        <div className="w-7 h-7 rounded-full bg-[#F0EBE0] flex items-center justify-center shrink-0">
+                          <span className="text-[#6B6B6B] text-[10px] font-bold">{initials}</span>
                         </div>
-                        <span className="text-xs text-[#6B6B6B] font-medium">{initials}</span>
+                        <span className="text-xs text-[#1A1A1A] font-medium">{fullName}</span>
                         <span className="text-[10px] text-[#C4BFB5]">·</span>
                         <span className="text-[10px] text-[#C4BFB5]">{formatDate(ref.date, { month: "short", day: "numeric" })}</span>
                       </div>

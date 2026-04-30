@@ -509,8 +509,8 @@ export const mockReferralStats = {
   pending: 1,
   totalEarned: 40,
   successfulReferrals: [
-    { id: "ref_1", firstName: "Carlos", date: "2026-04-12" },
-    { id: "ref_2", firstName: "Mia", date: "2026-03-28" },
+    { id: "ref_1", firstName: "Carlos", lastName: "Mendoza", date: "2026-04-12" },
+    { id: "ref_2", firstName: "Mia",    lastName: "Torres",  date: "2026-03-28" },
   ],
 };
 
