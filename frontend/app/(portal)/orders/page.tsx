@@ -1,14 +1,16 @@
 "use client";
 
-import { mockOrders } from "@/lib/mock-data";
+import { useState } from "react";
+import { mockOrders, type Order } from "@/lib/mock-data";
 import { useOrderStore } from "@/lib/useOrderStore";
 import { formatDate, formatShortDate, formatCurrency } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, Lock, SkipForward, CheckCircle2, RotateCcw, Info, ChevronRight } from "lucide-react";
+import { ArrowRight, Lock, SkipForward, CheckCircle2, RotateCcw, Info, ChevronRight, Star } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { FeedbackModal } from "@/components/feedback/FeedbackModal";
 
 const statusConfig = {
   customizable: { ring: "border-[#7ED22A]", badge: <Badge variant="green">Ready to customize</Badge>, dim: false },
@@ -20,6 +22,8 @@ const statusConfig = {
 
 export default function OrdersPage() {
   const { draftItems, orderSkipped, unskipOrder } = useOrderStore();
+  const [feedbackOrder, setFeedbackOrder] = useState<Order | null>(null);
+  const [ratedOrderIds, setRatedOrderIds] = useState<Set<string>>(new Set());
 
   const upcoming = mockOrders
     .filter((o) => o.status !== "delivered")
@@ -149,28 +153,78 @@ export default function OrdersPage() {
       {past.length > 0 && (
         <section className="space-y-2">
           <p className="text-xs font-semibold text-[#9E9E9E] uppercase tracking-wider">Recent Deliveries</p>
-          {past.map((order) => (
-            <Link key={order.id} href={`/orders/${order.id}`}>
-              <div className="bg-white rounded-2xl border border-[#F0EBE0] p-3 flex items-center justify-between hover:border-[#E8E4DC] transition-colors opacity-60 hover:opacity-80">
-                <div className="flex items-center gap-3">
-                  <CheckCircle2 className="w-4 h-4 text-[#B9EA91]" />
-                  <div>
-                    <p className="text-sm font-medium text-[#1A1A1A]">
-                      {formatDate(order.deliveryDate, { month: "long", day: "numeric" })}
-                    </p>
-                    <p className="text-xs text-[#9E9E9E]">
-                      {order.items.reduce((s, i) => s + i.quantity, 0)} meals · {formatCurrency(order.total)}
-                    </p>
+          {past.map((order) => {
+            const rated = ratedOrderIds.has(order.id);
+            return (
+              <div
+                key={order.id}
+                className="bg-white rounded-2xl border border-[#F0EBE0] overflow-hidden"
+              >
+                <div className="p-3 flex items-center justify-between gap-3">
+                  <Link href={`/orders/${order.id}`} className="flex items-center gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity">
+                    <CheckCircle2 className="w-4 h-4 text-[#B9EA91] shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-[#1A1A1A]">
+                        {formatDate(order.deliveryDate, { month: "long", day: "numeric" })}
+                      </p>
+                      <p className="text-xs text-[#9E9E9E]">
+                        {order.items.reduce((s, i) => s + i.quantity, 0)} meals · {formatCurrency(order.total)}
+                      </p>
+                    </div>
+                  </Link>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {rated ? (
+                      <span className="text-xs text-[#9E9E9E] flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3 text-[#7ED22A]" /> Rated
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => setFeedbackOrder(order)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-2 border-[#E8E4DC] text-xs font-semibold text-[#004945] hover:border-[#7ED22A] hover:bg-[#EAF7D9] transition-all"
+                      >
+                        <Star className="w-3 h-3" />
+                        Rate delivery
+                      </button>
+                    )}
+                    <Link href={`/orders/${order.id}`}>
+                      <ChevronRight className="w-4 h-4 text-[#9E9E9E]" />
+                    </Link>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant="gray">Delivered</Badge>
-                  <ChevronRight className="w-4 h-4 text-[#9E9E9E]" />
-                </div>
+
+                {/* Meal thumbnails strip */}
+                {order.items.length > 0 && (
+                  <div className="flex gap-1 px-3 pb-3">
+                    {order.items.slice(0, 6).map((item, idx) => (
+                      <div
+                        key={item.id}
+                        className="relative w-8 h-8 rounded-lg overflow-hidden bg-[#F0EBE0] shrink-0"
+                      >
+                        <Image src={item.meal.imageUrl} alt={item.meal.name} fill className="object-cover" sizes="32px" />
+                        {idx === 5 && order.items.length > 6 && (
+                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white text-[8px] font-bold">
+                            +{order.items.length - 6}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-            </Link>
-          ))}
+            );
+          })}
         </section>
+      )}
+
+      {/* Feedback modal */}
+      {feedbackOrder && (
+        <FeedbackModal
+          order={feedbackOrder}
+          onClose={() => {
+            setRatedOrderIds((prev) => new Set([...prev, feedbackOrder.id]));
+            setFeedbackOrder(null);
+          }}
+        />
       )}
     </div>
   );
