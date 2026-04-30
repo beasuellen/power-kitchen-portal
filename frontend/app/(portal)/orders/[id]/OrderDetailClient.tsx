@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { mockOrders, mockSubscription } from "@/lib/mock-data";
-import type { Order, OrderItem, Meal } from "@/lib/mock-data";
+import type { Order, OrderItem, Meal, DietaryTag } from "@/lib/mock-data";
 import { ProductSuggestions } from "@/components/dashboard/ProductSuggestions";
 import { formatDate, formatShortDate, formatCurrency } from "@/lib/utils";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
@@ -14,7 +14,7 @@ import Link from "next/link";
 import {
   ArrowLeft, Lock, SkipForward, Plus, Trash2,
   RefreshCw, Minus, AlertCircle, Check, Info, ShoppingCart, X, AlertTriangle, CalendarDays,
-  Tag, Wallet, Gift, RotateCcw,
+  Tag, Wallet, Gift, RotateCcw, SlidersHorizontal,
 } from "lucide-react";
 import { AddSwapPanel } from "@/components/meals/AddSwapPanel";
 import { cn } from "@/lib/utils";
@@ -23,12 +23,22 @@ import { useOrderStore } from "@/lib/useOrderStore";
 interface DraftChange { type: "add" | "remove" | "quantity" | "swap"; description: string; }
 interface DraftItem extends OrderItem { }
 type PromoTab = "discount" | "credit" | "gift";
+type RestrictionStep = "edit" | "scope" | "confirm";
+
+const RESTRICTION_OPTIONS: { tag: DietaryTag; emoji: string; label: string }[] = [
+  { tag: "GF", emoji: "🌾", label: "Gluten free" },
+  { tag: "DF", emoji: "🥛", label: "Dairy free" },
+  { tag: "NF", emoji: "🥜", label: "Nut free" },
+  { tag: "SF", emoji: "🫘", label: "Soy free" },
+  { tag: "H",  emoji: "☪️", label: "Halal" },
+  { tag: "V",  emoji: "🌱", label: "Vegan" },
+];
 
 export function OrderDetailClient({ order }: { order: Order }) {
   const isEditable = order.status === "customizable";
 
   // Global store — only written on explicit Save
-  const { syncItems, skipOrder, unskipOrder, orderSkipped } = useOrderStore();
+  const { syncItems, skipOrder, unskipOrder, orderSkipped, globalRestrictions, setGlobalRestrictions } = useOrderStore();
 
   // ── Local working copy — mutations stay here until Save ──
   const [draftItems, setDraftItems] = useState<DraftItem[]>(
@@ -90,6 +100,43 @@ export function OrderDetailClient({ order }: { order: Order }) {
   };
 
   const removePromo = (id: string) => setAppliedPromos((prev) => prev.filter((p) => p.id !== id));
+
+  // ── Dietary restrictions popover — source of truth is the global store ──
+  const [currentRestrictions, setCurrentRestrictions] = useState<DietaryTag[]>(globalRestrictions);
+  const [showRestrictionsPanel, setShowRestrictionsPanel] = useState(false);
+  const [draftRestrictions, setDraftRestrictions] = useState<DietaryTag[]>([]);
+  const [restrictionStep, setRestrictionStep] = useState<RestrictionStep>("edit");
+  const [restrictionScope, setRestrictionScope] = useState<"order" | "all" | null>(null);
+  const restrictionsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (restrictionsRef.current && !restrictionsRef.current.contains(e.target as Node)) {
+        setShowRestrictionsPanel(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const openRestrictionsPanel = () => {
+    setDraftRestrictions([...currentRestrictions]);
+    setRestrictionStep("edit");
+    setRestrictionScope(null);
+    setShowRestrictionsPanel(true);
+  };
+
+  const toggleRestriction = (tag: DietaryTag) => {
+    setDraftRestrictions((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+    );
+  };
+
+  const handleSaveRestrictions = () => {
+    setCurrentRestrictions(draftRestrictions);
+    if (restrictionScope === "all") setGlobalRestrictions(draftRestrictions);
+    setShowRestrictionsPanel(false);
+  };
 
   const addChange = useCallback((change: DraftChange) => {
     setChanges((prev) => [...prev, change]);
@@ -339,19 +386,6 @@ export function OrderDetailClient({ order }: { order: Order }) {
         {/* Meals grid */}
         <div className="lg:col-span-2 space-y-4">
 
-          {/* ── Dietary restrictions reference bar ── */}
-          {isEditable && mockSubscription.dietaryRestrictions.length > 0 && (
-            <div className="flex items-center justify-between bg-[#FDFBF7] border border-[#F0EBE0] rounded-xl px-4 py-2.5">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs font-semibold text-[#6B6B6B] shrink-0">Your restrictions:</span>
-                <DietaryPills tags={mockSubscription.dietaryRestrictions} />
-              </div>
-              <Link href="/plan" className="text-[10px] font-semibold text-[#004945] hover:underline shrink-0 ml-2">
-                Edit
-              </Link>
-            </div>
-          )}
-
           <div className="flex items-center justify-between">
             <h2 className="font-semibold text-[#004945]">
               Your Meals
@@ -360,9 +394,200 @@ export function OrderDetailClient({ order }: { order: Order }) {
               </span>
             </h2>
             {isEditable && (
-              <Button size="sm" onClick={() => { setSwappingItem(null); setShowAddPanel(true); }}>
-                <Plus className="w-3.5 h-3.5" /> Add Meal
-              </Button>
+              <div className="flex items-center gap-2">
+
+                {/* ── Dietary restrictions button + popover ── */}
+                <div className="relative" ref={restrictionsRef}>
+                  <button
+                    onClick={openRestrictionsPanel}
+                    className={cn(
+                      "flex items-center gap-1.5 text-xs font-medium border rounded-lg px-2.5 py-1.5 transition-colors",
+                      showRestrictionsPanel
+                        ? "bg-[#EAF7D9] border-[#7ED22A] text-[#004945]"
+                        : "bg-white border-[#E8E4DC] text-[#6B6B6B] hover:border-[#B9EA91] hover:text-[#004945]"
+                    )}
+                  >
+                    <SlidersHorizontal className="w-3 h-3" />
+                    <span className="hidden sm:inline">Restrictions</span>
+                    {currentRestrictions.length > 0 && (
+                      <span className="w-4 h-4 bg-[#004945] text-white text-[9px] font-bold rounded-full flex items-center justify-center leading-none">
+                        {currentRestrictions.length}
+                      </span>
+                    )}
+                  </button>
+
+                  {/* Dropdown popover */}
+                  {showRestrictionsPanel && (
+                    <div className="absolute right-0 top-full mt-2 w-72 bg-white rounded-2xl border border-[#E8E4DC] shadow-xl z-30 overflow-hidden">
+
+                      {/* Step 1: edit */}
+                      {restrictionStep === "edit" && (
+                        <div className="p-4 space-y-3">
+                          <div>
+                            <p className="text-xs font-semibold text-[#1A1A1A]">Dietary restrictions</p>
+                            <p className="text-[10px] text-[#9E9E9E] mt-0.5">Tap to toggle — no need to click edit first</p>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {RESTRICTION_OPTIONS.map(({ tag, emoji, label }) => {
+                              const selected = draftRestrictions.includes(tag);
+                              return (
+                                <button
+                                  key={tag}
+                                  onClick={() => toggleRestriction(tag)}
+                                  className={cn(
+                                    "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border-2 transition-all",
+                                    selected
+                                      ? "bg-[#EAF7D9] border-[#7ED22A] text-[#004945]"
+                                      : "bg-white border-[#E8E4DC] text-[#6B6B6B] hover:border-[#B9EA91]"
+                                  )}
+                                >
+                                  <span>{emoji}</span>
+                                  {label}
+                                </button>
+                              );
+                            })}
+                          </div>
+                          {(() => {
+                            const hasChanged =
+                              draftRestrictions.length !== currentRestrictions.length ||
+                              draftRestrictions.some((t) => !currentRestrictions.includes(t));
+                            return hasChanged ? (
+                              <button
+                                onClick={() => setRestrictionStep("scope")}
+                                className="w-full py-2.5 bg-[#004945] text-white text-xs font-semibold rounded-xl hover:bg-[#003835] transition-colors"
+                              >
+                                Save
+                              </button>
+                            ) : null;
+                          })()}
+                        </div>
+                      )}
+
+                      {/* Step 2: scope */}
+                      {restrictionStep === "scope" && (
+                        <div className="p-4 space-y-3">
+                          <div>
+                            <p className="text-xs font-semibold text-[#1A1A1A]">Apply changes to:</p>
+                            <p className="text-[10px] text-[#9E9E9E] mt-0.5">Where should these restrictions apply?</p>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <button
+                              onClick={() => { setRestrictionScope("order"); setRestrictionStep("confirm"); }}
+                              className="flex flex-col items-center gap-2 p-3 rounded-xl border border-[#E8E4DC] hover:border-[#7ED22A] hover:bg-[#EAF7D9] transition-all text-center"
+                            >
+                              <span className="text-2xl">📦</span>
+                              <div>
+                                <p className="text-xs font-semibold text-[#1A1A1A]">This order only</p>
+                                <p className="text-[10px] text-[#9E9E9E] mt-0.5">Won't affect future orders</p>
+                              </div>
+                            </button>
+                            <button
+                              onClick={() => { setRestrictionScope("all"); setRestrictionStep("confirm"); }}
+                              className="flex flex-col items-center gap-2 p-3 rounded-xl border border-[#E8E4DC] hover:border-[#7ED22A] hover:bg-[#EAF7D9] transition-all text-center"
+                            >
+                              <span className="text-2xl">🔄</span>
+                              <div>
+                                <p className="text-xs font-semibold text-[#1A1A1A]">All my orders</p>
+                                <p className="text-[10px] text-[#9E9E9E] mt-0.5">Updates your account preferences</p>
+                              </div>
+                            </button>
+                          </div>
+                          <button
+                            onClick={() => setShowRestrictionsPanel(false)}
+                            className="w-full text-center text-xs text-[#9E9E9E] hover:text-[#6B6B6B] py-1 transition-colors"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Step 3: confirm */}
+                      {restrictionStep === "confirm" && (() => {
+                        const added = draftRestrictions.filter((t) => !currentRestrictions.includes(t));
+                        const removed = currentRestrictions.filter((t) => !draftRestrictions.includes(t));
+                        const label = (tags: DietaryTag[]) =>
+                          tags.map((t) => RESTRICTION_OPTIONS.find((o) => o.tag === t)?.label ?? t).join(", ");
+
+                        let actionText = "";
+                        if (added.length > 0 && removed.length === 0)
+                          actionText = `add ${label(added)}`;
+                        else if (removed.length > 0 && added.length === 0)
+                          actionText = `remove ${label(removed)}`;
+                        else if (added.length > 0 && removed.length > 0)
+                          actionText = `add ${label(added)} and remove ${label(removed)}`;
+                        else
+                          actionText = "keep your current restrictions";
+
+                        const scopeSuffix = restrictionScope === "all" ? " for all your orders" : " for this order";
+
+                        return (
+                          <div className="p-4 space-y-3">
+                            <div>
+                              <p className="text-xs font-semibold text-[#1A1A1A]">Confirm your restrictions</p>
+                              <p className="text-[10px] text-[#9E9E9E] mt-0.5">
+                                {restrictionScope === "all"
+                                  ? "This will update all your future orders"
+                                  : "This will apply to this order only"}
+                              </p>
+                            </div>
+                            <div className="bg-[#FDFBF7] border border-[#F0EBE0] rounded-xl p-3 space-y-2">
+                              <p className="text-[10px] text-[#9E9E9E] leading-relaxed">
+                                Are you sure you want to{" "}
+                                <span className="font-semibold text-[#1A1A1A]">{actionText}</span>
+                                {scopeSuffix}?
+                              </p>
+                              {/* Added pills */}
+                              {added.length > 0 && (
+                                <div className="flex flex-wrap gap-1.5">
+                                  {added.map((tag) => {
+                                    const opt = RESTRICTION_OPTIONS.find((o) => o.tag === tag);
+                                    return opt ? (
+                                      <span key={tag} className="flex items-center gap-1 px-2 py-0.5 bg-[#EAF7D9] border border-[#7ED22A] rounded-full text-[10px] font-medium text-[#004945]">
+                                        {opt.emoji} {opt.label}
+                                      </span>
+                                    ) : null;
+                                  })}
+                                </div>
+                              )}
+                              {/* Removed pills */}
+                              {removed.length > 0 && (
+                                <div className="flex flex-wrap gap-1.5">
+                                  {removed.map((tag) => {
+                                    const opt = RESTRICTION_OPTIONS.find((o) => o.tag === tag);
+                                    return opt ? (
+                                      <span key={tag} className="flex items-center gap-1 px-2 py-0.5 bg-red-50 border border-red-200 rounded-full text-[10px] font-medium text-red-500 line-through">
+                                        {opt.emoji} {opt.label}
+                                      </span>
+                                    ) : null;
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                            <div className="space-y-2">
+                              <button
+                                onClick={handleSaveRestrictions}
+                                className="w-full py-2.5 bg-[#004945] text-white text-xs font-semibold rounded-xl hover:bg-[#003835] transition-colors"
+                              >
+                                Yes, confirm
+                              </button>
+                              <button
+                                onClick={() => setShowRestrictionsPanel(false)}
+                                className="w-full text-center text-xs text-[#9E9E9E] hover:text-[#6B6B6B] py-1 transition-colors"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  )}
+                </div>
+
+                <Button size="sm" onClick={() => { setSwappingItem(null); setShowAddPanel(true); }}>
+                  <Plus className="w-3.5 h-3.5" /> Add Meal
+                </Button>
+              </div>
             )}
           </div>
 
@@ -426,12 +651,17 @@ export function OrderDetailClient({ order }: { order: Order }) {
           )}
 
           {/* ── Product suggestions — always visible to upsell ── */}
-          {isEditable && <ProductSuggestions />}
+          {isEditable && (
+            <div className="pt-8">
+              <div className="border-t border-[#F0EBE0] mb-8" />
+              <ProductSuggestions />
+            </div>
+          )}
         </div>
 
         {/* Order summary sidebar */}
         <div>
-          <div className="sticky top-4 max-h-[calc(100vh-2rem)] overflow-y-auto">
+          <div className="sticky top-4">
             <Card>
               <CardHeader>
                 <div className="flex items-center gap-2">
@@ -484,17 +714,17 @@ export function OrderDetailClient({ order }: { order: Order }) {
                   </div>
 
                   {/* Option buttons */}
-                  <div className="flex gap-2">
+                  <div className="grid grid-cols-3 gap-2">
                     {([
-                      { id: "discount" as PromoTab, icon: <Tag className="w-3.5 h-3.5" />, label: "Discount Code" },
-                      { id: "credit"   as PromoTab, icon: <Wallet className="w-3.5 h-3.5" />, label: "Store Credit" },
+                      { id: "discount" as PromoTab, icon: <Tag className="w-3.5 h-3.5" />, label: "Discount" },
+                      { id: "credit"   as PromoTab, icon: <Wallet className="w-3.5 h-3.5" />, label: "Credit" },
                       { id: "gift"     as PromoTab, icon: <Gift className="w-3.5 h-3.5" />, label: "Gift Card" },
                     ]).map(({ id, icon, label }) => (
                       <button
                         key={id}
                         onClick={() => setActivePromoTab(activePromoTab === id ? null : id)}
                         className={cn(
-                          "flex-1 flex flex-col items-center gap-1 py-2.5 px-1 rounded-xl text-[10px] font-medium border-2 transition-all",
+                          "flex flex-col items-center gap-1 py-2.5 px-1 rounded-xl text-[10px] font-medium border-2 transition-all whitespace-nowrap",
                           activePromoTab === id
                             ? "bg-[#EAF7D9] text-[#004945] border-[#7ED22A]"
                             : "bg-white text-[#6B6B6B] border-[#E8E4DC] hover:border-[#B9EA91] hover:text-[#004945]"
@@ -510,18 +740,18 @@ export function OrderDetailClient({ order }: { order: Order }) {
                   {activePromoTab === "discount" && (
                     <div className="space-y-1.5">
                       <p className="text-[10px] text-[#9E9E9E]">Enter your promo or discount code below</p>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 min-w-0">
                         <input
                           type="text"
                           placeholder="e.g. POWER10"
                           value={discountInput}
                           onChange={(e) => setDiscountInput(e.target.value)}
                           onKeyDown={(e) => e.key === "Enter" && applyDiscountCode()}
-                          className="flex-1 text-sm px-3 py-2.5 border border-[#E8E4DC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7ED22A] bg-[#FDFBF7]"
+                          className="flex-1 min-w-0 text-sm px-3 py-2.5 border border-[#E8E4DC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7ED22A] bg-[#FDFBF7]"
                         />
                         <button
                           onClick={applyDiscountCode}
-                          className="px-4 py-2.5 bg-[#004945] text-white text-xs font-semibold rounded-xl hover:bg-[#003835] transition-colors"
+                          className="shrink-0 px-4 py-2.5 bg-[#004945] text-white text-xs font-semibold rounded-xl hover:bg-[#003835] transition-colors"
                         >
                           Apply
                         </button>
@@ -558,18 +788,18 @@ export function OrderDetailClient({ order }: { order: Order }) {
                   {activePromoTab === "gift" && (
                     <div className="space-y-1.5">
                       <p className="text-[10px] text-[#9E9E9E]">Enter the code printed on your gift card</p>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 min-w-0">
                         <input
                           type="text"
                           placeholder="e.g. GIFT25"
                           value={giftInput}
                           onChange={(e) => setGiftInput(e.target.value)}
                           onKeyDown={(e) => e.key === "Enter" && applyGiftCard()}
-                          className="flex-1 text-sm px-3 py-2.5 border border-[#E8E4DC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7ED22A] bg-[#FDFBF7]"
+                          className="flex-1 min-w-0 text-sm px-3 py-2.5 border border-[#E8E4DC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7ED22A] bg-[#FDFBF7]"
                         />
                         <button
                           onClick={applyGiftCard}
-                          className="px-4 py-2.5 bg-[#004945] text-white text-xs font-semibold rounded-xl hover:bg-[#003835] transition-colors"
+                          className="shrink-0 px-4 py-2.5 bg-[#004945] text-white text-xs font-semibold rounded-xl hover:bg-[#003835] transition-colors"
                         >
                           Apply
                         </button>

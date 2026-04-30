@@ -3,11 +3,10 @@ import {
   mockSubscription,
   mockOrders,
   mockChallenges,
-  mockRecentActivity,
   tierColors,
 } from "@/lib/mock-data";
-import { formatDate, formatShortDate, daysUntil, formatCurrency } from "@/lib/utils";
-import { Card, CardBody, CardHeader } from "@/components/ui/Card";
+import { formatDate, daysUntil, formatCurrency } from "@/lib/utils";
+import { Card, CardBody } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { RatingPopup } from "@/components/dashboard/RatingPopup";
 import { ProductSuggestions } from "@/components/dashboard/ProductSuggestions";
@@ -19,7 +18,6 @@ import {
   Star,
   ChevronRight,
   CalendarDays,
-  Edit3,
 } from "lucide-react";
 
 export default function DashboardPage() {
@@ -154,31 +152,6 @@ export default function DashboardPage() {
 
       {/* ─── Product Suggestions ─── */}
       <ProductSuggestions />
-
-      {/* ─── Recent Activity (repositioned below suggestions) ─── */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <h2 className="font-semibold text-[#004945]">Recent Activity</h2>
-            <Edit3 className="w-4 h-4 text-gray-300" />
-          </div>
-        </CardHeader>
-        <CardBody className="pt-0">
-          <div className="space-y-3">
-            {mockRecentActivity.map((act) => (
-              <div key={act.id} className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-[#EAF7D9] flex items-center justify-center shrink-0">
-                  <div className="w-2 h-2 rounded-full bg-[#7ED22A]" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-700 line-clamp-1">{act.message}</p>
-                  <p className="text-xs text-gray-400">{formatShortDate(act.date)}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardBody>
-      </Card>
 
       {/* ─── Meal rating popup (bottom-left floating) ─── */}
       {deliveredOrder && <RatingPopup order={deliveredOrder} />}

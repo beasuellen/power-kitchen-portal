@@ -100,6 +100,8 @@ export type OrderStatus =
 export type MealCategory = "meals" | "breakfast" | "shakes" | "snacks";
 export type DietaryTag = "GF" | "DF" | "NF" | "SF" | "H" | "SpF" | "V";
 
+export interface PrepMethod { method: string; instructions: string; }
+
 export interface Meal {
   id: string;
   name: string;
@@ -114,6 +116,18 @@ export interface Meal {
   imageUrl: string;
   isNew?: boolean;
   description?: string;
+  // Extended detail fields
+  ingredients?: string[];
+  allergens?: string[];
+  saturatedFat?: number;
+  polyUnsaturatedFat?: number;
+  fiber?: number;
+  sugar?: number;
+  cholesterol?: number;
+  sodium?: number;
+  netCarbs?: number;
+  prepMethods?: PrepMethod[];
+  spiceLevel?: string[];
 }
 
 export interface OrderItem {
@@ -155,9 +169,23 @@ export const mockMeals: Meal[] = [
     protein: 42,
     carbs: 48,
     fat: 12,
+    saturatedFat: 2.8,
+    polyUnsaturatedFat: 2.1,
+    fiber: 4.5,
+    sugar: 9.2,
+    cholesterol: 118,
+    sodium: 742,
+    netCarbs: 43.5,
     dietaryTags: ["GF", "DF"],
     imageUrl: mealImages[0],
     description: "Grilled chicken thigh with teriyaki glaze, jasmine rice, and steamed broccoli.",
+    ingredients: ["Chicken Thigh", "Jasmine Rice", "Broccoli", "Teriyaki Glaze", "Sesame Oil", "Garlic", "Ginger", "Soy Sauce (GF)", "Honey", "Green Onion", "Sesame Seeds"],
+    allergens: ["Soya", "Sesame"],
+    prepMethods: [
+      { method: "Microwave", instructions: "Heat for 3 min" },
+      { method: "Oven bake", instructions: "350°F for 10–12 min" },
+      { method: "Storage", instructions: "Keep refrigerated" },
+    ],
   },
   {
     id: "meal_002",
@@ -169,9 +197,23 @@ export const mockMeals: Meal[] = [
     protein: 45,
     carbs: 35,
     fat: 18,
+    saturatedFat: 6.1,
+    polyUnsaturatedFat: 1.8,
+    fiber: 5.2,
+    sugar: 7.4,
+    cholesterol: 145,
+    sodium: 820,
+    netCarbs: 29.8,
     dietaryTags: ["GF", "DF", "NF"],
     imageUrl: mealImages[1],
     description: "Lean beef strips with mixed vegetables and savory sauce over cauliflower rice.",
+    ingredients: ["Grass-Fed Beef", "Cauliflower Rice", "Bell Peppers", "Snap Peas", "Carrots", "Broccoli", "Coconut Aminos", "Garlic", "Ginger", "Sesame Oil", "Olive Oil", "Sea Salt", "Black Pepper"],
+    allergens: ["Sesame"],
+    prepMethods: [
+      { method: "Microwave", instructions: "Heat for 3–4 min" },
+      { method: "Oven bake", instructions: "375°F for 12–15 min" },
+      { method: "Storage", instructions: "Keep refrigerated" },
+    ],
   },
   {
     id: "meal_003",
@@ -183,10 +225,24 @@ export const mockMeals: Meal[] = [
     protein: 38,
     carbs: 8,
     fat: 28,
+    saturatedFat: 5.4,
+    polyUnsaturatedFat: 8.2,
+    fiber: 3.1,
+    sugar: 2.8,
+    cholesterol: 112,
+    sodium: 610,
+    netCarbs: 4.9,
     dietaryTags: ["GF", "DF", "NF", "SF"],
     imageUrl: mealImages[2],
     isNew: true,
     description: "Wild Atlantic salmon fillet with roasted asparagus and lemon herb butter.",
+    ingredients: ["Wild Atlantic Salmon", "Asparagus", "Lemon", "Butter", "Fresh Dill", "Garlic", "Olive Oil", "Sea Salt", "Black Pepper", "Capers"],
+    allergens: ["Fish", "Milk"],
+    prepMethods: [
+      { method: "Microwave", instructions: "Heat for 2–3 min" },
+      { method: "Oven bake", instructions: "350°F for 8–10 min" },
+      { method: "Storage", instructions: "Keep refrigerated" },
+    ],
   },
   {
     id: "meal_004",
@@ -198,9 +254,23 @@ export const mockMeals: Meal[] = [
     protein: 35,
     carbs: 18,
     fat: 14,
+    saturatedFat: 3.2,
+    polyUnsaturatedFat: 2.0,
+    fiber: 4.8,
+    sugar: 8.1,
+    cholesterol: 98,
+    sodium: 540,
+    netCarbs: 13.2,
     dietaryTags: ["GF", "DF"],
     imageUrl: mealImages[3],
     description: "Lean turkey meatballs over zucchini noodles with marinara sauce.",
+    ingredients: ["Ground Turkey", "Zucchini", "Tomatoes", "Garlic", "Fresh Basil", "Olive Oil", "Onion", "Italian Seasoning", "Sea Salt", "Black Pepper", "Parmesan (DF sub)"],
+    allergens: ["Eggs"],
+    prepMethods: [
+      { method: "Microwave", instructions: "Heat for 3 min" },
+      { method: "Oven bake", instructions: "350°F for 10–12 min" },
+      { method: "Storage", instructions: "Keep refrigerated" },
+    ],
   },
   {
     id: "meal_005",
@@ -212,9 +282,23 @@ export const mockMeals: Meal[] = [
     protein: 18,
     carbs: 52,
     fat: 8,
+    saturatedFat: 1.2,
+    polyUnsaturatedFat: 2.5,
+    fiber: 7.2,
+    sugar: 14.5,
+    cholesterol: 0,
+    sodium: 120,
+    netCarbs: 44.8,
     dietaryTags: ["GF", "V"],
     imageUrl: mealImages[4],
     description: "Rolled oats with chia seeds, almond milk, berries, and honey.",
+    ingredients: ["Rolled Oats (GF)", "Chia Seeds", "Almond Milk", "Mixed Berries", "Honey", "Vanilla Extract", "Maple Syrup", "Cinnamon"],
+    allergens: ["Tree Nuts"],
+    prepMethods: [
+      { method: "Ready to eat", instructions: "Serve cold or warm" },
+      { method: "Microwave", instructions: "Heat for 1–2 min" },
+      { method: "Storage", instructions: "Keep refrigerated" },
+    ],
   },
   {
     id: "meal_006",
@@ -226,10 +310,24 @@ export const mockMeals: Meal[] = [
     protein: 28,
     carbs: 12,
     fat: 10,
+    saturatedFat: 2.1,
+    polyUnsaturatedFat: 1.4,
+    fiber: 2.8,
+    sugar: 4.2,
+    cholesterol: 20,
+    sodium: 480,
+    netCarbs: 9.2,
     dietaryTags: ["GF", "DF", "NF", "SF"],
     imageUrl: mealImages[5],
     isNew: true,
     description: "Fluffy egg white frittata with spinach, mushrooms, and feta cheese.",
+    ingredients: ["Egg Whites", "Baby Spinach", "Cremini Mushrooms", "Feta Cheese (DF sub)", "Cherry Tomatoes", "Olive Oil", "Garlic", "Fresh Chives", "Sea Salt", "Black Pepper"],
+    allergens: ["Eggs"],
+    prepMethods: [
+      { method: "Microwave", instructions: "Heat for 2 min" },
+      { method: "Oven bake", instructions: "350°F for 8 min" },
+      { method: "Storage", instructions: "Keep refrigerated" },
+    ],
   },
   {
     id: "meal_007",
@@ -241,9 +339,23 @@ export const mockMeals: Meal[] = [
     protein: 30,
     carbs: 18,
     fat: 4,
+    saturatedFat: 1.0,
+    polyUnsaturatedFat: 0.8,
+    fiber: 3.5,
+    sugar: 6.2,
+    cholesterol: 55,
+    sodium: 210,
+    netCarbs: 14.5,
     dietaryTags: ["GF", "NF"],
     imageUrl: mealImages[6],
     description: "Rich chocolate whey protein shake with almond milk and banana.",
+    ingredients: ["Whey Protein Isolate", "Almond Milk", "Banana", "Cocoa Powder", "Honey", "Vanilla Extract", "Ice"],
+    allergens: ["Milk", "Soya"],
+    prepMethods: [
+      { method: "Shake & drink", instructions: "Shake well before serving" },
+      { method: "Storage", instructions: "Keep refrigerated" },
+      { method: "Best by", instructions: "Within 24 hours" },
+    ],
   },
   {
     id: "meal_008",
@@ -255,9 +367,23 @@ export const mockMeals: Meal[] = [
     protein: 6,
     carbs: 22,
     fat: 9,
+    saturatedFat: 1.5,
+    polyUnsaturatedFat: 2.8,
+    fiber: 3.0,
+    sugar: 16.0,
+    cholesterol: 0,
+    sodium: 45,
+    netCarbs: 19.0,
     dietaryTags: ["GF", "V"],
     imageUrl: mealImages[7],
     description: "Energy-packed bar with dates, almonds, cashews, and dark chocolate chips.",
+    ingredients: ["Medjool Dates", "Almonds", "Cashews", "Dark Chocolate Chips", "Rolled Oats", "Coconut Oil", "Vanilla Extract", "Sea Salt"],
+    allergens: ["Tree Nuts"],
+    prepMethods: [
+      { method: "Ready to eat", instructions: "No prep needed" },
+      { method: "Storage", instructions: "Room temp up to 5 days" },
+      { method: "Best by", instructions: "See packaging date" },
+    ],
   },
 ];
 

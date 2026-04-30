@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { mockOrders, type Meal, type OrderItem } from "@/lib/mock-data";
+import { mockOrders, mockSubscription, type Meal, type OrderItem, type DietaryTag } from "@/lib/mock-data";
 
 export interface DraftItem extends OrderItem {}
 
@@ -8,6 +8,8 @@ interface OrderStore {
   draftItems: DraftItem[];
   /** Whether the next order has been skipped */
   orderSkipped: boolean;
+  /** Global dietary restrictions — shared across order detail modal and My Plan page */
+  globalRestrictions: DietaryTag[];
 
   // ── Meal actions ──────────────────────────────────────────────────
   addMeals: (meals: Meal[]) => void;
@@ -21,15 +23,20 @@ interface OrderStore {
   skipOrder: () => void;
   unskipOrder: () => void;
 
+  // ── Restrictions ──────────────────────────────────────────────────
+  setGlobalRestrictions: (tags: DietaryTag[]) => void;
+
   reset: () => void;
 }
 
 const nextOrder = mockOrders.find((o) => o.status === "customizable");
 const initialItems: DraftItem[] = nextOrder ? nextOrder.items.map((i) => ({ ...i })) : [];
+const initialRestrictions = [...mockSubscription.dietaryRestrictions] as DietaryTag[];
 
 export const useOrderStore = create<OrderStore>((set) => ({
   draftItems: initialItems,
   orderSkipped: false,
+  globalRestrictions: initialRestrictions,
 
   addMeals: (meals) =>
     set((state) => {
@@ -82,5 +89,7 @@ export const useOrderStore = create<OrderStore>((set) => ({
   skipOrder: () => set({ orderSkipped: true }),
   unskipOrder: () => set({ orderSkipped: false }),
 
-  reset: () => set({ draftItems: initialItems, orderSkipped: false }),
+  setGlobalRestrictions: (tags) => set({ globalRestrictions: tags }),
+
+  reset: () => set({ draftItems: initialItems, orderSkipped: false, globalRestrictions: initialRestrictions }),
 }));
