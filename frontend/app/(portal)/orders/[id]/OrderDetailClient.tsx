@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { mockOrders } from "@/lib/mock-data";
+import { mockOrders, mockSubscription } from "@/lib/mock-data";
 import type { Order, OrderItem, Meal } from "@/lib/mock-data";
+import { ProductSuggestions } from "@/components/dashboard/ProductSuggestions";
 import { formatDate, formatShortDate, formatCurrency } from "@/lib/utils";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -314,6 +315,20 @@ export function OrderDetailClient({ order }: { order: Order }) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Meals grid */}
         <div className="lg:col-span-2 space-y-4">
+
+          {/* ── Dietary restrictions reference bar ── */}
+          {isEditable && mockSubscription.dietaryRestrictions.length > 0 && (
+            <div className="flex items-center justify-between bg-[#FDFBF7] border border-[#F0EBE0] rounded-xl px-4 py-2.5">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-semibold text-[#6B6B6B] shrink-0">Your restrictions:</span>
+                <DietaryPills tags={mockSubscription.dietaryRestrictions} />
+              </div>
+              <Link href="/plan" className="text-[10px] font-semibold text-[#004945] hover:underline shrink-0 ml-2">
+                Edit
+              </Link>
+            </div>
+          )}
+
           <div className="flex items-center justify-between">
             <h2 className="font-semibold text-[#004945]">
               Your Meals
@@ -386,6 +401,9 @@ export function OrderDetailClient({ order }: { order: Order }) {
               <Plus className="w-4 h-4" /> Add Meal to This Order
             </button>
           )}
+
+          {/* ── Product suggestions — always visible to upsell ── */}
+          {isEditable && <ProductSuggestions />}
         </div>
 
         {/* Order summary sidebar */}
@@ -413,8 +431,8 @@ export function OrderDetailClient({ order }: { order: Order }) {
                   ))}
                 </div>
 
-                {/* ── Savings & Credits section ── */}
-                <div className="border-t border-[#F0EBE0] pt-4 space-y-3">
+                {/* ── Savings & Credits — only on next customizable order ── */}
+                {isEditable && <div className="border-t border-[#F0EBE0] pt-4 space-y-3">
 
                   {/* Applied promos */}
                   {appliedPromos.length > 0 && (
@@ -535,11 +553,11 @@ export function OrderDetailClient({ order }: { order: Order }) {
                       </div>
                     </div>
                   )}
-                </div>
+                </div>}
 
                 <div className="border-t border-[#F0EBE0] pt-2 flex justify-between">
                   <span className="font-bold text-[#004945]">Total</span>
-                  <span className="font-bold text-[#004945]">{formatCurrency(orderTotal)}</span>
+                  <span className="font-bold text-[#004945]">{formatCurrency(isEditable ? orderTotal : draftTotal)}</span>
                 </div>
 
                 {/* Unsaved changes notice */}

@@ -82,10 +82,12 @@ export const mockSubscription = {
   startDate: "2023-10-01",
   nextBillingDate: "2026-04-23",
   deliveryDay: "Thursday",
+  deliveryMethod: "delivery" as "delivery" | "pickup",
   streak: 24,
   tier: "gold" as const,
   storeCredit: 12.50,
   points: 840,
+  dietaryRestrictions: ["GF", "DF"] as Array<"GF" | "DF" | "NF" | "SF" | "H" | "SpF" | "V">,
 };
 
 export type OrderStatus =
@@ -325,39 +327,22 @@ export const mockOrders: Order[] = [
 ];
 
 export const mockChallenges = [
-  {
-    id: "ch_001",
-    name: "Consistency King",
-    description: "Complete 8 weeks without skipping or pausing",
-    type: "streak",
-    current: 6,
-    target: 8,
-    reward: "$15 store credit",
-    rewardValue: 15,
-    daysLeft: null,
-  },
-  {
-    id: "ch_002",
-    name: "Breakfast Explorer",
-    description: "Add breakfast to 3 consecutive orders",
-    type: "order",
-    current: 1,
-    target: 3,
-    reward: "$5 store credit",
-    rewardValue: 5,
-    daysLeft: 14,
-  },
-  {
-    id: "ch_003",
-    name: "Spread the Word",
-    description: "Refer 5 friends who subscribe",
-    type: "referral",
-    current: 2,
-    target: 5,
-    reward: "$100 store credit",
-    rewardValue: 100,
-    daysLeft: null,
-  },
+  // Easy
+  { id: "ch_easy_1", level: "easy", levelLabel: "Easy", name: "2-Week Streak", description: "Complete 2 weeks without skipping", current: 2, target: 2, reward: "Free Breakfast", rewardType: "physical", status: "completed", points: 50 },
+  { id: "ch_easy_2", level: "easy", levelLabel: "Easy", name: "Meal Rater", description: "Rate 4 meals", current: 3, target: 4, reward: "Free Wrap", rewardType: "physical", status: "active", points: 50, daysLeft: 7 },
+  { id: "ch_easy_3", level: "easy", levelLabel: "Easy", name: "First Referral", description: "Refer your first friend who subscribes", current: 2, target: 1, reward: "$20 Store Credit", rewardType: "credit", status: "completed", points: 100 },
+  // Medium
+  { id: "ch_med_1", level: "medium", levelLabel: "Medium", name: "4-Week Consistent", description: "Complete 4 weeks without skipping", current: 2, target: 4, reward: "Free Power Bowl", rewardType: "physical", status: "active", points: 150 },
+  { id: "ch_med_2", level: "medium", levelLabel: "Medium", name: "Weekly Reviewer", description: "Rate meals for 4 consecutive weeks", current: 1, target: 4, reward: "$10 Store Credit", rewardType: "credit", status: "active", points: 150, daysLeft: 21 },
+  { id: "ch_med_3", level: "medium", levelLabel: "Medium", name: "Active Referrer", description: "Keep 1 referral active for 2 weeks", current: 0, target: 1, reward: "Free Shake", rewardType: "physical", status: "locked", points: 150 },
+  // Hard
+  { id: "ch_hard_1", level: "hard", levelLabel: "Hard", name: "Consistency King", description: "Complete 8 weeks without skipping", current: 6, target: 8, reward: "Premium Shaker", rewardType: "physical", status: "active", points: 300 },
+  { id: "ch_hard_2", level: "hard", levelLabel: "Hard", name: "Community Builder", description: "8 weeks active + 3 referrals", current: 2, target: 3, reward: "$50 Store Credit", rewardType: "credit", status: "active", points: 300 },
+  { id: "ch_hard_3", level: "hard", levelLabel: "Hard", name: "Gold Member", description: "Reach Gold membership tier", current: 0, target: 1, reward: "Lunch Bag", rewardType: "physical", status: "locked", points: 300 },
+  // Premium
+  { id: "ch_prem_1", level: "premium", levelLabel: "Premium", name: "12-Week Champion", description: "Stay active for 12 consecutive weeks", current: 6, target: 12, reward: "Limited Edition Sauce Kit", rewardType: "physical", status: "active", points: 500 },
+  { id: "ch_prem_2", level: "premium", levelLabel: "Premium", name: "Top Referrer", description: "3 referrals active for 4+ weeks", current: 0, target: 3, reward: "$100 Store Credit", rewardType: "credit", status: "locked", points: 500 },
+  { id: "ch_prem_3", level: "premium", levelLabel: "Premium", name: "Platinum Elite", description: "Reach Platinum membership tier", current: 0, target: 1, reward: "Limited Edition Item", rewardType: "physical", status: "locked", points: 500 },
 ];
 
 export const mockBillingHistory = [
@@ -397,6 +382,37 @@ export const mockReferralStats = {
   successful: 2,
   pending: 1,
   totalEarned: 40,
+  successfulReferrals: [
+    { id: "ref_1", firstName: "Carlos", date: "2026-04-12" },
+    { id: "ref_2", firstName: "Mia", date: "2026-03-28" },
+  ],
+};
+
+export const mockLeaderboard = {
+  allTime: [
+    { rank: 1, name: "James T.", points: 2840, isMe: false },
+    { rank: 2, name: "Priya R.", points: 2310, isMe: false },
+    { rank: 3, name: "Lucas M.", points: 1890, isMe: false },
+    { rank: 4, name: "Sarah J.", points: 1240, isMe: true },
+    { rank: 5, name: "Omar K.", points: 1100, isMe: false },
+    { rank: 6, name: "Nina C.", points: 980, isMe: false },
+    { rank: 7, name: "Ethan B.", points: 850, isMe: false },
+    { rank: 8, name: "Zoe W.", points: 720, isMe: false },
+    { rank: 9, name: "Diego F.", points: 640, isMe: false },
+    { rank: 10, name: "Ava L.", points: 510, isMe: false },
+  ],
+  thisMonth: [
+    { rank: 1, name: "Sarah J.", points: 340, isMe: true },
+    { rank: 2, name: "Priya R.", points: 290, isMe: false },
+    { rank: 3, name: "Ethan B.", points: 210, isMe: false },
+    { rank: 4, name: "Omar K.", points: 180, isMe: false },
+    { rank: 5, name: "Nina C.", points: 150, isMe: false },
+    { rank: 6, name: "Lucas M.", points: 120, isMe: false },
+    { rank: 7, name: "Ava L.", points: 90, isMe: false },
+    { rank: 8, name: "Diego F.", points: 80, isMe: false },
+    { rank: 9, name: "James T.", points: 60, isMe: false },
+    { rank: 10, name: "Zoe W.", points: 50, isMe: false },
+  ],
 };
 
 export const mockRecentActivity = [

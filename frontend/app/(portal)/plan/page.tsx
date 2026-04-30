@@ -53,6 +53,9 @@ export default function PlanPage() {
   const [selectedDay, setSelectedDay] = useState(deliveryDay);
   const [showDayPicker, setShowDayPicker] = useState(false);
 
+  // Delivery method state
+  const [deliveryMethod, setDeliveryMethod] = useState<"delivery" | "pickup">(mockSubscription.deliveryMethod);
+
   // Cancel confirm
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
@@ -152,24 +155,34 @@ export default function PlanPage() {
             </div>
           </div>
 
-          {/* Delivery type */}
+          {/* Delivery method toggle */}
           <div className="mb-3">
-            <p className="text-xs text-[#9E9E9E] mb-1">Delivery type</p>
+            <p className="text-xs text-[#9E9E9E] mb-1">Delivery method</p>
             <div className="grid grid-cols-2 gap-2">
-              {["Local Delivery", "Pickup"].map((type) => (
+              {([
+                { value: "delivery" as const, label: "🚚 Local Delivery" },
+                { value: "pickup"   as const, label: "🏪 Pickup" },
+              ]).map(({ value, label }) => (
                 <button
-                  key={type}
+                  key={value}
+                  onClick={() => setDeliveryMethod(value)}
                   className={cn(
-                    "py-2 rounded-xl text-xs font-medium border transition-all",
-                    type === "Local Delivery"
-                      ? "bg-[#EAF7D9] border-[#B9EA91] text-[#004945]"
-                      : "border-[#E8E4DC] text-[#9E9E9E] hover:border-[#004945] hover:text-[#004945]"
+                    "py-2.5 rounded-xl text-xs font-medium border-2 transition-all",
+                    deliveryMethod === value
+                      ? "bg-[#EAF7D9] border-[#7ED22A] text-[#004945]"
+                      : "border-[#E8E4DC] text-[#9E9E9E] hover:border-[#B9EA91] hover:text-[#004945]"
                   )}
                 >
-                  {type}
+                  {label}
                 </button>
               ))}
             </div>
+            {deliveryMethod === "pickup" && (
+              <div className="mt-2 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2.5">
+                <p className="text-xs font-semibold text-amber-800">📍 Pickup location</p>
+                <p className="text-xs text-amber-700 mt-0.5">3270 Steeles Ave W, Concord, ON · Mon–Fri 9am–6pm</p>
+              </div>
+            )}
           </div>
 
           {/* Delivery note */}

@@ -32,17 +32,23 @@ export const useOrderStore = create<OrderStore>((set) => ({
   orderSkipped: false,
 
   addMeals: (meals) =>
-    set((state) => ({
-      draftItems: [
-        ...state.draftItems,
-        ...meals.map((meal) => ({
-          id: `draft_${Math.random().toString(36).slice(2)}`,
-          meal,
-          quantity: 1,
-          unitPrice: meal.price,
-        })),
-      ],
-    })),
+    set((state) => {
+      const updated = state.draftItems.map((i) => ({ ...i }));
+      for (const meal of meals) {
+        const existing = updated.find((i) => i.meal.id === meal.id);
+        if (existing) {
+          existing.quantity += 1;
+        } else {
+          updated.push({
+            id: `draft_${Math.random().toString(36).slice(2)}`,
+            meal,
+            quantity: 1,
+            unitPrice: meal.price,
+          });
+        }
+      }
+      return { draftItems: updated };
+    }),
 
   removeItem: (itemId) =>
     set((state) => ({
