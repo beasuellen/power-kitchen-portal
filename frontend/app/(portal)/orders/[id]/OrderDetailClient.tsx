@@ -17,6 +17,7 @@ import {
   Tag, Wallet, Gift, RotateCcw, SlidersHorizontal,
 } from "lucide-react";
 import { AddSwapPanel } from "@/components/meals/AddSwapPanel";
+import { MealDetailModal } from "@/components/orders/MealDetailModal";
 import { cn } from "@/lib/utils";
 import { useOrderStore } from "@/lib/useOrderStore";
 
@@ -54,6 +55,12 @@ export function OrderDetailClient({ order }: { order: Order }) {
   const [saved, setSaved] = useState(false);
   const [showSkipModal, setShowSkipModal] = useState(false);
   const [removeTarget, setRemoveTarget] = useState<DraftItem | null>(null);
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+
+  // Derive selected item live from draftItems so modal always shows current quantity
+  const selectedItem = selectedItemId
+    ? draftItems.find((i) => i.id === selectedItemId) ?? null
+    : null;
 
   const hasChanges = changes.length > 0;
   const draftTotal = draftItems.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
@@ -593,7 +600,11 @@ export function OrderDetailClient({ order }: { order: Order }) {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
             {draftItems.map((item) => (
-              <Card key={item.id} className="flex flex-col">
+              <Card
+                key={item.id}
+                className="flex flex-col cursor-pointer hover:shadow-md transition-shadow"
+                onClick={() => setSelectedItemId(item.id)}
+              >
                 {/* Top: image + info — grows to fill available space */}
                 <div className="flex gap-4 p-5 flex-1">
                   <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-[#F0EBE0] shrink-0">
@@ -617,7 +628,10 @@ export function OrderDetailClient({ order }: { order: Order }) {
 
                 {/* Bottom: actions — always pinned to bottom */}
                 {isEditable && (
-                  <div className="flex items-center justify-between px-5 py-4 border-t border-[#F0EBE0] bg-[#FDFBF7] rounded-b-xl">
+                  <div
+                    className="flex items-center justify-between px-5 py-4 border-t border-[#F0EBE0] bg-[#FDFBF7] rounded-b-xl"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <div className="flex items-center gap-3">
                       <button onClick={() => handleQuantityChange(item.id, -1)} className="w-8 h-8 rounded-full border border-[#E8E4DC] flex items-center justify-center hover:bg-[#F0EBE0] transition-colors">
                         <Minus className="w-3.5 h-3.5 text-[#6B6B6B]" />
@@ -864,6 +878,16 @@ export function OrderDetailClient({ order }: { order: Order }) {
             <Button size="sm" onClick={handleSave} loading={saving}>Save</Button>
           </div>
         </div>
+      )}
+
+      {/* ── Meal detail modal ── */}
+      {selectedItem && (
+        <MealDetailModal
+          item={selectedItem}
+          isEditable={isEditable}
+          onClose={() => setSelectedItemId(null)}
+          onQuantityChange={(itemId, delta) => handleQuantityChange(itemId, delta)}
+        />
       )}
 
       {/* Add/Swap Panel */}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { mockOrders, type Order } from "@/lib/mock-data";
 import { useOrderStore } from "@/lib/useOrderStore";
 import { formatDate, formatShortDate, formatCurrency } from "@/lib/utils";
@@ -21,6 +22,7 @@ const statusConfig = {
 };
 
 export default function OrdersPage() {
+  const router = useRouter();
   const { draftItems, orderSkipped, unskipOrder } = useOrderStore();
   const [feedbackOrder, setFeedbackOrder] = useState<Order | null>(null);
   const [ratedOrderIds, setRatedOrderIds] = useState<Set<string>>(new Set());
@@ -55,7 +57,11 @@ export default function OrdersPage() {
           return (
             <div
               key={order.id}
-              className={cn("bg-white rounded-2xl border-2 transition-all", cfg.ring, cfg.dim && "opacity-60")}
+              className={cn(
+                "bg-white rounded-2xl border-2 transition-all cursor-pointer hover:shadow-md",
+                cfg.ring, cfg.dim && "opacity-60"
+              )}
+              onClick={() => router.push(`/orders/${order.id}`)}
             >
               <div className="p-4">
                 <div className="flex items-start gap-4">
@@ -117,7 +123,7 @@ export default function OrdersPage() {
                     )}
 
                     {/* Footer */}
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between" onClick={(e) => e.stopPropagation()}>
                       <span className="font-semibold text-[#004945] text-sm">
                         {effectiveStatus !== "skipped" ? formatCurrency(total) : "—"}
                       </span>
@@ -127,7 +133,7 @@ export default function OrdersPage() {
                             <RotateCcw className="w-3 h-3" /> Reactivate
                           </Button>
                         )}
-                        {(effectiveStatus === "customizable") && (
+                        {effectiveStatus === "customizable" && (
                           <Link href={`/orders/${order.id}`}>
                             <Button size="sm">
                               <span>View & Edit</span><ArrowRight className="w-3.5 h-3.5" />
