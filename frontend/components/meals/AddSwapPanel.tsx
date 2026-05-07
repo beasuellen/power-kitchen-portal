@@ -1,7 +1,7 @@
 // v2
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { mealCatalog, mockMealPlanTypes, type Meal, type MealCategory, type DietaryTag, type OrderItem } from "@/lib/mock-data";
 import { formatCurrency } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
@@ -20,6 +20,7 @@ interface AddSwapPanelProps {
   defaultCategories?: MealCategory[];
   hideMealsTab?: boolean;
   cartItems?: OrderItem[];
+  initialSelectedMeal?: Meal;
   onAdd: (meals: Meal[]) => void;
   onSwap: (meal: Meal) => void;
   /** Called when the user adjusts the quantity of an existing cart item */
@@ -57,6 +58,7 @@ export function AddSwapPanel({
   defaultCategories,
   hideMealsTab,
   cartItems: cartItemsProp,
+  initialSelectedMeal,
   onAdd,
   onSwap,
   onEditInOrder,
@@ -71,9 +73,22 @@ export function AddSwapPanel({
   const [activePlanTypes, setActivePlanTypes] = useState<Set<string>>(new Set());
 
   // New meals to add (not yet in cart)
-  const [selected, setSelected] = useState<SelectedEntry[]>([]);
+  const [selected, setSelected] = useState<SelectedEntry[]>(() =>
+    initialSelectedMeal ? [{ meal: initialSelectedMeal, qty: 1 }] : []
+  );
   // In-order edits: mealId → new desired quantity
   const [inOrderEdits, setInOrderEdits] = useState<Map<string, number>>(new Map());
+
+  const scrollGridRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!initialSelectedMeal) return;
+    const timer = setTimeout(() => {
+      const el = scrollGridRef.current?.querySelector<HTMLElement>(`[data-meal-id="${initialSelectedMeal.id}"]`);
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [initialSelectedMeal]);
 
   const [detailMeal, setDetailMeal] = useState<Meal | null>(null);
   const [showBackConfirm, setShowBackConfirm] = useState(false);
@@ -298,7 +313,7 @@ export function AddSwapPanel({
         </div>
 
         {/* Meal grid */}
-        <div className="flex-1 overflow-y-auto px-5 py-4">
+        <div ref={scrollGridRef} className="flex-1 overflow-y-auto px-5 py-4">
           {filtered.length === 0 ? (
             <div className="text-center py-12 text-[#9E9E9E]">
               <p className="text-sm">No meals match your filters.</p>
@@ -323,6 +338,7 @@ export function AddSwapPanel({
                 return (
                   <div
                     key={meal.id}
+                    data-meal-id={meal.id}
                     className={cn(
                       "rounded-xl overflow-hidden border-2 transition-all",
                       isEditing

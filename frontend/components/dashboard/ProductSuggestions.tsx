@@ -18,6 +18,7 @@ const sliderMeals: Meal[] = [...breakfastMeals, ...shakeMeals, ...dessertMeals];
 
 export function ProductSuggestions() {
   const [panelOpen, setPanelOpen] = useState(false);
+  const [preSelectedMeal, setPreSelectedMeal] = useState<Meal | null>(null);
   const [detailMeal, setDetailMeal] = useState<Meal | null>(null);
   const { addMeals } = useOrderStore();
 
@@ -26,6 +27,12 @@ export function ProductSuggestions() {
   const handleAdd = (mealsToAdd: Meal[]) => {
     addMeals(mealsToAdd);
     setPanelOpen(false);
+    setPreSelectedMeal(null);
+  };
+
+  const openPanelWithMeal = (meal: Meal) => {
+    setPreSelectedMeal(meal);
+    setPanelOpen(true);
   };
 
   return (
@@ -62,7 +69,7 @@ export function ProductSuggestions() {
                   <span className="text-xs font-bold text-[#004945]">{formatCurrency(meal.price)}</span>
                   {nextOrder && (
                     <button
-                      onClick={() => setPanelOpen(true)}
+                      onClick={(e) => { e.stopPropagation(); openPanelWithMeal(meal); }}
                       className="w-6 h-6 rounded-full bg-[#004945] flex items-center justify-center hover:bg-[#003835] transition-colors"
                     >
                       <Plus className="w-3 h-3 text-white" />
@@ -91,9 +98,10 @@ export function ProductSuggestions() {
           mode="add"
           defaultCategories={["breakfast", "shakes", "desserts"]}
           hideMealsTab
+          initialSelectedMeal={preSelectedMeal ?? undefined}
           onAdd={handleAdd}
           onSwap={() => {}}
-          onClose={() => setPanelOpen(false)}
+          onClose={() => { setPanelOpen(false); setPreSelectedMeal(null); }}
         />
       )}
 
