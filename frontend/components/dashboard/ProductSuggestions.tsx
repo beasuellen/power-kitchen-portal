@@ -100,7 +100,6 @@ export function ProductSuggestions() {
       {detailMeal && (
         <MealDetailModal
           meal={detailMeal}
-          mode={{ type: "browse", selectedQty: 0, onToggle: () => {}, onQtyChange: () => {} }}
           onClose={() => setDetailMeal(null)}
         />
       )}

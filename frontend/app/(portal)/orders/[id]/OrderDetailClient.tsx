@@ -1032,21 +1032,6 @@ export function OrderDetailClient({ order }: { order: Order }) {
       {selectedItem && (
         <MealDetailModal
           meal={selectedItem.meal}
-          mode={
-            isEditable
-              ? {
-                  type: "order",
-                  itemId: selectedItem.id,
-                  qty: selectedItem.quantity,
-                  onQtyChange: handleQuantityChange,
-                }
-              : {
-                  type: "browse",
-                  selectedQty: selectedItem.quantity,
-                  onToggle: () => {},
-                  onQtyChange: () => {},
-                }
-          }
           onClose={() => setSelectedItemId(null)}
         />
       )}

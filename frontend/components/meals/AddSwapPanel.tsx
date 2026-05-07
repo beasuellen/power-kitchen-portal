@@ -572,12 +572,6 @@ export function AddSwapPanel({
       {detailMeal && (
         <MealDetailModal
           meal={detailMeal}
-          mode={{
-            type: "browse",
-            selectedQty: selectedQty(detailMeal.id),
-            onToggle: () => handleToggle(detailMeal),
-            onQtyChange: (delta, e) => changeNewQty(detailMeal.id, delta, e),
-          }}
           onClose={() => setDetailMeal(null)}
         />
       )}
