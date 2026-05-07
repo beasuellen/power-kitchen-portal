@@ -93,9 +93,9 @@ export function Sidebar() {
         {/* Secondary links */}
         <div className="space-y-0.5 pt-1">
           {[
-            { href: "/plan/address", label: "Address" },
-            { href: "/plan/payment", label: "Payment" },
-            { href: "/billing",      label: "Billing History" },
+            { href: "/plan#address-section", label: "Address" },
+            { href: "/plan#payment-section", label: "Payment" },
+            { href: "/billing",              label: "Billing History" },
           ].map(({ href, label }) => (
             <Link
               key={href}

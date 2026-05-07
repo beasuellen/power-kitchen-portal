@@ -5,7 +5,7 @@ import type { Order } from "@/lib/mock-data";
 import { formatCurrency } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
-import { X, ArrowLeft, Check, ChevronRight } from "lucide-react";
+import { X, ArrowLeft, Check, ChevronRight, Truck, Package, AlertCircle, UtensilsCrossed, Star, Flame } from "lucide-react";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 type FeedbackStep =
@@ -37,13 +37,13 @@ const ORDER_RATINGS = [
 ];
 
 const DELIVERY_OPTIONS = [
-  { value: "all-good",     icon: "✅", label: "Yes, everything was good" },
-  { value: "missing-item", icon: "📦", label: "Something was missing"    },
-  { value: "wrong-item",   icon: "❌", label: "Something was wrong"      },
-  { value: "delivery",     icon: "🚚", label: "Delivery issue"           },
-  { value: "packaging",    icon: "📫", label: "Packaging issue"          },
-  { value: "quality",      icon: "🍽️", label: "Food quality issue"       },
-];
+  { value: "all-good",     icon: <Check className="w-3.5 h-3.5 text-[#7ED22A]" />,          label: "Yes, everything was good" },
+  { value: "missing-item", icon: <Package className="w-3.5 h-3.5 text-[#6B6B6B]" />,        label: "Something was missing"    },
+  { value: "wrong-item",   icon: <AlertCircle className="w-3.5 h-3.5 text-red-500" />,      label: "Something was wrong"      },
+  { value: "delivery",     icon: <Truck className="w-3.5 h-3.5 text-[#6B6B6B]" />,          label: "Delivery issue"           },
+  { value: "packaging",    icon: <Package className="w-3.5 h-3.5 text-[#6B6B6B]" />,        label: "Packaging issue"          },
+  { value: "quality",      icon: <UtensilsCrossed className="w-3.5 h-3.5 text-[#6B6B6B]" />,label: "Food quality issue"       },
+] as const;
 
 const DELIVERY_ISSUES = [
   "Late delivery",
@@ -278,7 +278,7 @@ export function FeedbackModal({ order, onClose }: FeedbackModalProps) {
                         : "border-[#E8E4DC] hover:border-[#B9EA91]"
                     )}
                   >
-                    <span className="text-base shrink-0">{icon}</span>
+                    <div className="w-7 h-7 rounded-lg bg-[#F0EBE0] flex items-center justify-center shrink-0">{icon}</div>
                     <span className="text-sm font-medium text-[#1A1A1A]">{label}</span>
                   </button>
                 ))}
@@ -517,7 +517,7 @@ export function FeedbackModal({ order, onClose }: FeedbackModalProps) {
           {step === "done" && (
             <div className="flex flex-col items-center justify-center py-6 text-center space-y-4">
               <div className="w-20 h-20 rounded-full bg-[#EAF7D9] flex items-center justify-center">
-                <span className="text-4xl">🎉</span>
+                <Check className="w-9 h-9 text-[#7ED22A]" />
               </div>
               <div className="space-y-1.5">
                 <h2 className="text-lg font-bold text-[#004945]">Thanks for the feedback!</h2>
@@ -527,8 +527,14 @@ export function FeedbackModal({ order, onClose }: FeedbackModalProps) {
               </div>
               {/* Gamification nudge */}
               <div className="bg-[#EAF7D9] border border-[#B9EA91] rounded-2xl px-4 py-3 w-full text-left">
-                <p className="text-xs font-semibold text-[#004945]">⭐ +10 points earned</p>
-                <p className="text-[10px] text-[#6B6B6B] mt-0.5">Weekly feedback streak: 3 weeks in a row 🔥</p>
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  <Star className="w-3.5 h-3.5 text-yellow-500" />
+                  <p className="text-xs font-semibold text-[#004945]">+10 points earned</p>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Flame className="w-3 h-3 text-orange-400" />
+                  <p className="text-[10px] text-[#6B6B6B]">Weekly feedback streak: 3 weeks in a row</p>
+                </div>
               </div>
               <button
                 onClick={onClose}

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { MessageCircle, ChevronDown, ChevronUp, Mail, ExternalLink } from "lucide-react";
+import { MessageCircle, ChevronDown, ChevronUp, Mail, ExternalLink, Salad, UtensilsCrossed } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const faqs = [
@@ -52,6 +52,22 @@ export default function HelpPage() {
       <div>
         <h1 className="text-2xl font-bold text-[#004945]">Help & Support</h1>
         <p className="text-sm text-[#6B6B6B] mt-0.5">Find answers or contact our team</p>
+      </div>
+
+      {/* ── Nutritionist promo ── */}
+      <div className="bg-gradient-to-r from-[#004945] to-[#006860] rounded-2xl p-5 flex items-center gap-4 text-white">
+        <div className="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center shrink-0">
+          <UtensilsCrossed className="w-7 h-7 text-white/90" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-bold text-base">Talk to a Nutritionist</p>
+          <p className="text-sm text-white/80 mt-0.5 leading-snug">
+            Our registered nutritionists can help you optimize your meal plan, manage health goals, and answer any diet questions.
+          </p>
+          <button className="mt-3 px-4 py-2 bg-[#7ED22A] text-[#004945] font-semibold text-xs rounded-xl hover:bg-[#8fe830] transition-colors">
+            Book a free session →
+          </button>
+        </div>
       </div>
 
       {/* Quick contact */}

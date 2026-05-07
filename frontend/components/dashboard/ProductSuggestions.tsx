@@ -6,17 +6,19 @@ import { formatCurrency } from "@/lib/utils";
 import { useOrderStore } from "@/lib/useOrderStore";
 import { DietaryPills } from "@/components/ui/DietaryPills";
 import { AddSwapPanel } from "@/components/meals/AddSwapPanel";
+import { MealDetailModal } from "@/components/meals/MealDetailModal";
 import Image from "next/image";
 import { Plus, ChevronRight } from "lucide-react";
 
-// 2 breakfast + 2 shakes + 2 snacks = 6 cards
+// 2 breakfast + 2 shakes + 2 desserts = 6 cards
 const breakfastMeals = mockMeals.filter((m) => m.category === "breakfast").slice(0, 2);
 const shakeMeals     = mockMeals.filter((m) => m.category === "shakes").slice(0, 2);
-const snackMeals     = mockMeals.filter((m) => m.category === "snacks").slice(0, 2);
-const sliderMeals: Meal[] = [...breakfastMeals, ...shakeMeals, ...snackMeals];
+const dessertMeals   = mockMeals.filter((m) => m.category === "desserts").slice(0, 2);
+const sliderMeals: Meal[] = [...breakfastMeals, ...shakeMeals, ...dessertMeals];
 
 export function ProductSuggestions() {
   const [panelOpen, setPanelOpen] = useState(false);
+  const [detailMeal, setDetailMeal] = useState<Meal | null>(null);
   const { addMeals } = useOrderStore();
 
   const nextOrder = mockOrders.find((o) => o.status === "customizable");
@@ -55,7 +57,7 @@ export function ProductSuggestions() {
               </div>
               <div className="p-2.5 flex flex-col flex-1">
                 <p className="text-xs font-semibold text-[#1A1A1A] leading-tight line-clamp-2">{meal.name}</p>
-                <DietaryPills tags={meal.dietaryTags} className="mt-1.5" />
+                <DietaryPills tags={meal.dietaryTags} className="mt-1.5" onSeeAll={() => setDetailMeal(meal)} />
                 <div className="flex items-center justify-between mt-auto pt-2">
                   <span className="text-xs font-bold text-[#004945]">{formatCurrency(meal.price)}</span>
                   {nextOrder && (
@@ -87,11 +89,19 @@ export function ProductSuggestions() {
       {panelOpen && (
         <AddSwapPanel
           mode="add"
-          defaultCategories={["breakfast", "shakes", "snacks"]}
+          defaultCategories={["breakfast", "shakes", "desserts"]}
           hideMealsTab
           onAdd={handleAdd}
           onSwap={() => {}}
           onClose={() => setPanelOpen(false)}
+        />
+      )}
+
+      {detailMeal && (
+        <MealDetailModal
+          meal={detailMeal}
+          mode={{ type: "browse", selectedQty: 0, onToggle: () => {}, onQtyChange: () => {} }}
+          onClose={() => setDetailMeal(null)}
         />
       )}
     </>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { mockOrders, mockSubscription } from "@/lib/mock-data";
 import type { Order, OrderItem, Meal, DietaryTag } from "@/lib/mock-data";
 import { ProductSuggestions } from "@/components/dashboard/ProductSuggestions";
@@ -14,29 +15,52 @@ import Link from "next/link";
 import {
   ArrowLeft, Lock, SkipForward, Plus, Trash2,
   RefreshCw, Minus, AlertCircle, Check, Info, ShoppingCart, X, AlertTriangle, CalendarDays,
-  Tag, Wallet, Gift, RotateCcw, SlidersHorizontal,
+  Tag, Wallet, Gift, RotateCcw, SlidersHorizontal, Star, Zap, Trophy, Flame, Leaf, TrendingUp, Droplets, Heart, Package, Salad,
 } from "lucide-react";
+import { DietaryIcon } from "@/components/ui/DietaryIcon";
 import { AddSwapPanel } from "@/components/meals/AddSwapPanel";
 import { MealDetailModal } from "@/components/meals/MealDetailModal";
 import { cn } from "@/lib/utils";
 import { useOrderStore } from "@/lib/useOrderStore";
+import { FeedbackModal } from "@/components/feedback/FeedbackModal";
+
+const PLAN_TYPE_CONFIG: Record<string, { icon: React.ReactNode; color: string }> = {
+  "Power":        { icon: <Zap className="w-2.5 h-2.5" />,       color: "bg-yellow-50 text-yellow-700 border-yellow-200"   },
+  "Pro Athlete":  { icon: <Trophy className="w-2.5 h-2.5" />,    color: "bg-blue-50 text-blue-700 border-blue-200"         },
+  "Lean Muscle":  { icon: <Flame className="w-2.5 h-2.5" />,     color: "bg-orange-50 text-orange-700 border-orange-200"   },
+  "Low Carb":     { icon: <Leaf className="w-2.5 h-2.5" />,      color: "bg-green-50 text-green-700 border-green-200"      },
+  "Clean Bulking":{ icon: <TrendingUp className="w-2.5 h-2.5" />,color: "bg-purple-50 text-purple-700 border-purple-200"   },
+  "Vegan":        { icon: <Leaf className="w-2.5 h-2.5" />,      color: "bg-emerald-50 text-emerald-700 border-emerald-200"},
+  "Keto":         { icon: <Droplets className="w-2.5 h-2.5" />,  color: "bg-lime-50 text-lime-700 border-lime-200"         },
+  "GLP-1 Support":{ icon: <Heart className="w-2.5 h-2.5" />,     color: "bg-pink-50 text-pink-700 border-pink-200"         },
+};
+
+function PlanTypeTag({ planType }: { planType: string }) {
+  const config = PLAN_TYPE_CONFIG[planType] ?? { icon: null, color: "bg-[#F0EBE0] text-[#6B6B6B] border-[#E8E4DC]" };
+  return (
+    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold border ${config.color}`}>
+      {config.icon} {planType}
+    </span>
+  );
+}
 
 interface DraftChange { type: "add" | "remove" | "quantity" | "swap"; description: string; }
 interface DraftItem extends OrderItem { }
 type PromoTab = "discount" | "credit" | "gift";
 type RestrictionStep = "edit" | "scope" | "confirm";
 
-const RESTRICTION_OPTIONS: { tag: DietaryTag; emoji: string; label: string }[] = [
-  { tag: "GF", emoji: "🌾", label: "Gluten free" },
-  { tag: "DF", emoji: "🥛", label: "Dairy free" },
-  { tag: "NF", emoji: "🥜", label: "Nut free" },
-  { tag: "SF", emoji: "🫘", label: "Soy free" },
-  { tag: "H",  emoji: "☪️", label: "Halal" },
-  { tag: "V",  emoji: "🌱", label: "Vegan" },
+const RESTRICTION_OPTIONS: { tag: DietaryTag; label: string }[] = [
+  { tag: "GF", label: "Gluten free" },
+  { tag: "DF", label: "Dairy free" },
+  { tag: "NF", label: "Nut free" },
+  { tag: "SF", label: "Soy free" },
+  { tag: "H",  label: "Halal" },
+  { tag: "V",  label: "Vegan" },
 ];
 
 export function OrderDetailClient({ order }: { order: Order }) {
   const isEditable = order.status === "customizable";
+  const router = useRouter();
 
   // Global store — only written on explicit Save
   const { syncItems, skipOrder, unskipOrder, orderSkipped, globalRestrictions, setGlobalRestrictions } = useOrderStore();
@@ -56,6 +80,9 @@ export function OrderDetailClient({ order }: { order: Order }) {
   const [showSkipModal, setShowSkipModal] = useState(false);
   const [removeTarget, setRemoveTarget] = useState<DraftItem | null>(null);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [showLeaveModal, setShowLeaveModal] = useState(false);
+  const [pendingNavHref, setPendingNavHref] = useState<string | null>(null);
 
   // Derive selected item live from draftItems so modal always shows current quantity
   const selectedItem = selectedItemId
@@ -64,6 +91,38 @@ export function OrderDetailClient({ order }: { order: Order }) {
 
   const hasChanges = changes.length > 0;
   const draftTotal = draftItems.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
+
+  // ── Unsaved-changes navigation guard ──────────────────────────────
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasChanges && isEditable) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [hasChanges, isEditable]);
+
+  const handleNavAttempt = (href: string) => {
+    if (hasChanges && isEditable) {
+      setPendingNavHref(href);
+      setShowLeaveModal(true);
+    } else {
+      router.push(href);
+    }
+  };
+
+  const handleLeaveWithoutSaving = () => {
+    setShowLeaveModal(false);
+    if (pendingNavHref) router.push(pendingNavHref);
+  };
+
+  const handleSaveAndLeave = async () => {
+    await handleSave();
+    setShowLeaveModal(false);
+    if (pendingNavHref) router.push(pendingNavHref);
+  };
 
   // ── Promo / credits ──────────────────────────────────────────────
   const [activePromoTab, setActivePromoTab] = useState<PromoTab | null>("discount");
@@ -74,39 +133,46 @@ export function OrderDetailClient({ order }: { order: Order }) {
   const creditAlreadyApplied = appliedPromos.some((p) => p.id === "credit");
 
   const promoDiscount = appliedPromos.reduce((s, p) => s + p.amount, 0);
-  const orderTotal = Math.max(0, draftTotal - promoDiscount);
+  const orderTotal    = Math.max(0, draftTotal - promoDiscount);
+
+  // ── One discount at a time: block new promos while one is applied ──
+  const hasAppliedPromo = appliedPromos.length > 0;
 
   const applyDiscountCode = () => {
+    if (hasAppliedPromo) return;
     const code = discountInput.trim().toUpperCase();
     if (!code) return;
-    if (appliedPromos.some((p) => p.id === `code_${code}`)) return;
     const discount = code === "POWER10" ? draftTotal * 0.1
       : code === "WELCOME5" ? 5
       : null;
     if (discount === null) { alert("Invalid code. Try POWER10 or WELCOME5."); return; }
-    setAppliedPromos((prev) => [...prev, { id: `code_${code}`, label: `Code "${code}"`, amount: discount }]);
+    setAppliedPromos([{ id: `code_${code}`, label: `Code "${code}"`, amount: discount }]);
     setDiscountInput("");
     setActivePromoTab(null);
   };
 
   const applyStoreCredit = () => {
-    if (creditAlreadyApplied) return;
-    setAppliedPromos((prev) => [...prev, { id: "credit", label: "Store Credit", amount: Math.min(MOCK_STORE_CREDIT, draftTotal) }]);
+    if (hasAppliedPromo) return;
+    setAppliedPromos([{ id: "credit", label: "Store Credit", amount: Math.min(MOCK_STORE_CREDIT, draftTotal) }]);
     setActivePromoTab(null);
   };
 
   const applyGiftCard = () => {
+    if (hasAppliedPromo) return;
     const code = giftInput.trim().toUpperCase();
     if (!code) return;
-    if (appliedPromos.some((p) => p.id === `gift_${code}`)) return;
     const amount = code === "GIFT25" ? 25 : code === "GIFT50" ? 50 : null;
     if (amount === null) { alert("Invalid gift card. Try GIFT25 or GIFT50."); return; }
-    setAppliedPromos((prev) => [...prev, { id: `gift_${code}`, label: `Gift Card (${code})`, amount }]);
+    setAppliedPromos([{ id: `gift_${code}`, label: `Gift Card (${code})`, amount }]);
     setGiftInput("");
     setActivePromoTab(null);
   };
 
-  const removePromo = (id: string) => setAppliedPromos((prev) => prev.filter((p) => p.id !== id));
+  // Removing a promo also clears the open tab so the panel resets cleanly
+  const removePromo = (id: string) => {
+    setAppliedPromos((prev) => prev.filter((p) => p.id !== id));
+    setActivePromoTab(null);
+  };
 
   // ── Dietary restrictions popover — source of truth is the global store ──
   const [currentRestrictions, setCurrentRestrictions] = useState<DietaryTag[]>(globalRestrictions);
@@ -209,6 +275,21 @@ export function OrderDetailClient({ order }: { order: Order }) {
     setShowAddPanel(false);
   };
 
+  const handleEditInOrder = (edits: { mealId: string; newQty: number }[]) => {
+    setDraftItems((prev) =>
+      prev
+        .map((item) => {
+          const edit = edits.find((e) => e.mealId === item.meal.id);
+          if (!edit) return item;
+          return { ...item, quantity: edit.newQty };
+        })
+        .filter((i) => i.quantity > 0)
+    );
+    for (const edit of edits) {
+      addChange({ type: "quantity", description: `Updated ${edit.newQty}× ${edits.find(e => e.mealId === edit.mealId) ? draftItems.find(i => i.meal.id === edit.mealId)?.meal.name ?? "meal" : "meal"}` });
+    }
+  };
+
   // ── Save → write to global store → dashboard + orders list update ──
   const handleSave = async () => {
     setSaving(true);
@@ -216,7 +297,7 @@ export function OrderDetailClient({ order }: { order: Order }) {
     setSaving(false);
     setSaved(true);
     setChanges([]);
-    if (isEditable) syncItems(draftItems); // 🔄 push to global store
+    if (isEditable) syncItems(draftItems);
   };
 
   // ── Discard → reset local copy back to last saved state ──
@@ -308,7 +389,8 @@ export function OrderDetailClient({ order }: { order: Order }) {
                     </div>
                     <div className="flex-1 min-w-0 flex flex-col">
                       <p className="font-semibold text-sm text-[#1A1A1A] leading-snug">{item.meal.name}</p>
-                      <DietaryPills tags={item.meal.dietaryTags} className="mt-2 flex-1" />
+                      <div className="mt-1.5"><PlanTypeTag planType={item.meal.planType} /></div>
+                      <DietaryPills tags={item.meal.dietaryTags} className="mt-2" />
                       <div className="mt-3">
                         {item.quantity > 1 ? (
                           <div className="flex items-baseline gap-1.5">
@@ -352,9 +434,12 @@ export function OrderDetailClient({ order }: { order: Order }) {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-start gap-3">
-        <Link href="/orders" className="p-1.5 rounded-lg hover:bg-[#F0EBE0] transition-colors mt-0.5">
+        <button
+          onClick={() => handleNavAttempt("/orders")}
+          className="p-1.5 rounded-lg hover:bg-[#F0EBE0] transition-colors mt-0.5"
+        >
           <ArrowLeft className="w-5 h-5 text-[#6B6B6B]" />
-        </Link>
+        </button>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-xl font-bold text-[#004945]">
@@ -392,6 +477,25 @@ export function OrderDetailClient({ order }: { order: Order }) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Meals grid */}
         <div className="lg:col-span-2 space-y-4">
+
+          {/* ── Nutritionist banner — top of editable order ── */}
+          {isEditable && (
+            <button
+              onClick={() => window.dispatchEvent(new CustomEvent("openNutritionistPanel"))}
+              className="w-full flex items-center gap-3 bg-[#EAF7D9] hover:bg-[#D6F0B8] border border-[#B9EA91] rounded-xl px-4 py-2.5 transition-colors text-left group"
+            >
+              <div className="w-7 h-7 rounded-lg bg-[#004945] flex items-center justify-center shrink-0">
+                <Salad className="w-3.5 h-3.5 text-[#7ED22A]" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-[#004945]">Not sure what to order?</p>
+                <p className="text-[10px] text-[#6B6B6B] truncate">Our nutritionists can help you build the perfect plan</p>
+              </div>
+              <span className="text-xs font-semibold text-[#004945] whitespace-nowrap group-hover:underline shrink-0">
+                Talk to a nutritionist →
+              </span>
+            </button>
+          )}
 
           <div className="flex items-center justify-between">
             <h2 className="font-semibold text-[#004945]">
@@ -435,7 +539,7 @@ export function OrderDetailClient({ order }: { order: Order }) {
                             <p className="text-[10px] text-[#9E9E9E] mt-0.5">Tap to toggle — no need to click edit first</p>
                           </div>
                           <div className="flex flex-wrap gap-2">
-                            {RESTRICTION_OPTIONS.map(({ tag, emoji, label }) => {
+                            {RESTRICTION_OPTIONS.map(({ tag, label }) => {
                               const selected = draftRestrictions.includes(tag);
                               return (
                                 <button
@@ -448,7 +552,7 @@ export function OrderDetailClient({ order }: { order: Order }) {
                                       : "bg-white border-[#E8E4DC] text-[#6B6B6B] hover:border-[#B9EA91]"
                                   )}
                                 >
-                                  <span>{emoji}</span>
+                                  <DietaryIcon tag={tag} size={14} />
                                   {label}
                                 </button>
                               );
@@ -482,7 +586,9 @@ export function OrderDetailClient({ order }: { order: Order }) {
                               onClick={() => { setRestrictionScope("order"); setRestrictionStep("confirm"); }}
                               className="flex flex-col items-center gap-2 p-3 rounded-xl border border-[#E8E4DC] hover:border-[#7ED22A] hover:bg-[#EAF7D9] transition-all text-center"
                             >
-                              <span className="text-2xl">📦</span>
+                              <div className="w-10 h-10 rounded-xl bg-[#F0EBE0] flex items-center justify-center">
+                                <Package className="w-5 h-5 text-[#6B6B6B]" />
+                              </div>
                               <div>
                                 <p className="text-xs font-semibold text-[#1A1A1A]">This order only</p>
                                 <p className="text-[10px] text-[#9E9E9E] mt-0.5">Won't affect future orders</p>
@@ -492,7 +598,9 @@ export function OrderDetailClient({ order }: { order: Order }) {
                               onClick={() => { setRestrictionScope("all"); setRestrictionStep("confirm"); }}
                               className="flex flex-col items-center gap-2 p-3 rounded-xl border border-[#E8E4DC] hover:border-[#7ED22A] hover:bg-[#EAF7D9] transition-all text-center"
                             >
-                              <span className="text-2xl">🔄</span>
+                              <div className="w-10 h-10 rounded-xl bg-[#F0EBE0] flex items-center justify-center">
+                                <RotateCcw className="w-5 h-5 text-[#6B6B6B]" />
+                              </div>
                               <div>
                                 <p className="text-xs font-semibold text-[#1A1A1A]">All my orders</p>
                                 <p className="text-[10px] text-[#9E9E9E] mt-0.5">Updates your account preferences</p>
@@ -550,7 +658,7 @@ export function OrderDetailClient({ order }: { order: Order }) {
                                     const opt = RESTRICTION_OPTIONS.find((o) => o.tag === tag);
                                     return opt ? (
                                       <span key={tag} className="flex items-center gap-1 px-2 py-0.5 bg-[#EAF7D9] border border-[#7ED22A] rounded-full text-[10px] font-medium text-[#004945]">
-                                        {opt.emoji} {opt.label}
+                                        <DietaryIcon tag={opt.tag} size={12} /> {opt.label}
                                       </span>
                                     ) : null;
                                   })}
@@ -563,7 +671,7 @@ export function OrderDetailClient({ order }: { order: Order }) {
                                     const opt = RESTRICTION_OPTIONS.find((o) => o.tag === tag);
                                     return opt ? (
                                       <span key={tag} className="flex items-center gap-1 px-2 py-0.5 bg-red-50 border border-red-200 rounded-full text-[10px] font-medium text-red-500 line-through">
-                                        {opt.emoji} {opt.label}
+                                        <DietaryIcon tag={opt.tag} size={12} /> {opt.label}
                                       </span>
                                     ) : null;
                                   })}
@@ -612,7 +720,8 @@ export function OrderDetailClient({ order }: { order: Order }) {
                   </div>
                   <div className="flex-1 min-w-0 flex flex-col">
                     <p className="font-semibold text-sm text-[#1A1A1A] leading-snug">{item.meal.name}</p>
-                    <DietaryPills tags={item.meal.dietaryTags} className="mt-2 flex-1" />
+                    <div className="mt-1.5"><PlanTypeTag planType={item.meal.planType} /></div>
+                    <DietaryPills tags={item.meal.dietaryTags} className="mt-2" onSeeAll={() => setSelectedItemId(item.id)} />
                     <div className="mt-3">
                       {item.quantity > 1 ? (
                         <div className="flex items-baseline gap-1.5">
@@ -662,6 +771,29 @@ export function OrderDetailClient({ order }: { order: Order }) {
             >
               <Plus className="w-4 h-4" /> Add Meal to This Order
             </button>
+          )}
+
+          {/* ── Rate your meals CTA — for delivered orders that haven't been rated ── */}
+          {order.status === "delivered" && !showFeedback && (
+            <div className="mt-2 border border-[#E8E4DC] rounded-2xl overflow-hidden">
+              <div className="bg-gradient-to-r from-[#EAF7D9] to-[#f4fcea] px-5 py-4 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-[#004945] flex items-center justify-center shrink-0">
+                    <Star className="w-5 h-5 text-[#7ED22A]" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-[#004945]">How was this delivery?</p>
+                    <p className="text-xs text-[#6B6B6B]">Rate your meals and earn <span className="font-semibold text-[#004945]">+10 points</span></p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowFeedback(true)}
+                  className="shrink-0 px-4 py-2 bg-[#004945] text-white text-xs font-semibold rounded-xl hover:bg-[#003835] transition-colors"
+                >
+                  Rate now
+                </button>
+              </div>
+            </div>
           )}
 
           {/* ── Product suggestions — always visible to upsell ── */}
@@ -724,30 +856,46 @@ export function OrderDetailClient({ order }: { order: Order }) {
                   {/* Section header */}
                   <div>
                     <p className="text-xs font-semibold text-[#1A1A1A]">Savings & Credits</p>
-                    <p className="text-[10px] text-[#9E9E9E] mt-0.5">Apply a discount code, store credit, or gift card to this order</p>
+                    <p className="text-[10px] mt-0.5">
+                      {hasAppliedPromo
+                        ? <span className="text-amber-600 font-medium">Remove the applied discount to use a different option.</span>
+                        : <span className="text-[#9E9E9E]">Apply a discount code, store credit, or gift card to this order</span>
+                      }
+                    </p>
                   </div>
 
-                  {/* Option buttons */}
+                  {/* Option buttons — disabled while any promo is applied */}
                   <div className="grid grid-cols-3 gap-2">
                     {([
                       { id: "discount" as PromoTab, icon: <Tag className="w-3.5 h-3.5" />, label: "Discount" },
                       { id: "credit"   as PromoTab, icon: <Wallet className="w-3.5 h-3.5" />, label: "Credit" },
                       { id: "gift"     as PromoTab, icon: <Gift className="w-3.5 h-3.5" />, label: "Gift Card" },
-                    ]).map(({ id, icon, label }) => (
-                      <button
-                        key={id}
-                        onClick={() => setActivePromoTab(activePromoTab === id ? null : id)}
-                        className={cn(
-                          "flex flex-col items-center gap-1 py-2.5 px-1 rounded-xl text-[10px] font-medium border-2 transition-all whitespace-nowrap",
-                          activePromoTab === id
-                            ? "bg-[#EAF7D9] text-[#004945] border-[#7ED22A]"
-                            : "bg-white text-[#6B6B6B] border-[#E8E4DC] hover:border-[#B9EA91] hover:text-[#004945]"
-                        )}
-                      >
-                        <span className={cn("transition-colors", activePromoTab === id ? "text-[#004945]" : "text-[#9E9E9E]")}>{icon}</span>
-                        {label}
-                      </button>
-                    ))}
+                    ]).map(({ id, icon, label }) => {
+                      const isActive   = activePromoTab === id;
+                      const isDisabled = hasAppliedPromo;
+                      return (
+                        <button
+                          key={id}
+                          disabled={isDisabled}
+                          onClick={() => !isDisabled && setActivePromoTab(isActive ? null : id)}
+                          title={isDisabled ? "Remove the current discount first" : undefined}
+                          className={cn(
+                            "flex flex-col items-center gap-1 py-2.5 px-1 rounded-xl text-[10px] font-medium border-2 transition-all whitespace-nowrap",
+                            isDisabled
+                              ? "bg-[#F7F5F0] text-[#C4BFB5] border-[#EDE8DF] opacity-50 cursor-not-allowed"
+                              : isActive
+                              ? "bg-[#EAF7D9] text-[#004945] border-[#7ED22A]"
+                              : "bg-white text-[#6B6B6B] border-[#E8E4DC] hover:border-[#B9EA91] hover:text-[#004945]"
+                          )}
+                        >
+                          <span className={cn(
+                            "transition-colors",
+                            isDisabled ? "text-[#C4BFB5]" : isActive ? "text-[#004945]" : "text-[#9E9E9E]"
+                          )}>{icon}</span>
+                          {label}
+                        </button>
+                      );
+                    })}
                   </div>
 
                   {/* Discount code input */}
@@ -908,8 +1056,10 @@ export function OrderDetailClient({ order }: { order: Order }) {
         <AddSwapPanel
           mode={swappingItem ? "swap" : "add"}
           currentMeal={swappingItem?.meal}
+          cartItems={draftItems}
           onAdd={handleAddMeals}
           onSwap={handleSwap}
+          onEditInOrder={handleEditInOrder}
           onClose={() => { setShowAddPanel(false); setSwappingItem(null); }}
         />
       )}
@@ -951,6 +1101,68 @@ export function OrderDetailClient({ order }: { order: Order }) {
               <Button variant="ghost" className="w-full" onClick={() => setRemoveTarget(null)}>
                 Keep in my order
               </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Feedback modal — triggered from delivered order Rate CTA */}
+      {showFeedback && (
+        <FeedbackModal
+          order={order}
+          onClose={() => setShowFeedback(false)}
+        />
+      )}
+
+      {/* ── Leave without saving confirmation modal ── */}
+      {showLeaveModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-[2px]">
+          <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl border border-[#E8E4DC] overflow-hidden">
+            {/* Header */}
+            <div className="px-6 pt-6 pb-4 flex items-start justify-between gap-3">
+              <div className="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-5 h-5 text-amber-500" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-[#004945]">You have unsaved changes</h3>
+                <p className="text-xs text-[#9E9E9E] mt-0.5">
+                  {changes.length} change{changes.length !== 1 ? "s" : ""} will be lost if you leave now.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowLeaveModal(false)}
+                className="p-1 rounded-lg hover:bg-[#F0EBE0] transition-colors shrink-0"
+              >
+                <X className="w-4 h-4 text-[#9E9E9E]" />
+              </button>
+            </div>
+
+            {/* Change list */}
+            <div className="px-6 pb-2">
+              <div className="bg-amber-50 border border-amber-100 rounded-xl px-4 py-3 space-y-1">
+                {changes.slice(-4).map((c, i) => (
+                  <p key={i} className="text-xs text-amber-700">· {c.description}</p>
+                ))}
+                {changes.length > 4 && (
+                  <p className="text-xs text-amber-500">+{changes.length - 4} more…</p>
+                )}
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="px-6 pb-6 pt-4 flex flex-col gap-2">
+              <Button className="w-full" onClick={handleSaveAndLeave} loading={saving}>
+                Save changes & leave
+              </Button>
+              <Button variant="destructive" className="w-full" onClick={handleLeaveWithoutSaving}>
+                Leave without saving
+              </Button>
+              <button
+                onClick={() => setShowLeaveModal(false)}
+                className="w-full text-center text-xs text-[#9E9E9E] hover:text-[#6B6B6B] transition-colors py-1.5"
+              >
+                Stay on this page
+              </button>
             </div>
           </div>
         </div>

@@ -6,7 +6,7 @@ import { formatCurrency, formatDate } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { Trophy, Flame, Star, Copy, Share2, Clock, Users, Gift, Lock, ChevronDown, Info, X } from "lucide-react";
+import { Trophy, Flame, Star, Copy, Share2, Clock, Users, Gift, Lock, ChevronDown, Info, X, Medal } from "lucide-react";
 
 const levelConfig = {
   easy:    { label: "Easy",    badge: "bg-emerald-100 text-emerald-800 border border-emerald-200", bar: "bg-emerald-400" },
@@ -26,11 +26,16 @@ export default function RewardsPage() {
   const { streak, tier, storeCredit, points } = mockSubscription;
   const tierStyle = tierColors[tier];
 
+  // ── 12-week cycle logic ─────────────────────────────────────────
+  // Every 12 consecutive active weeks = level up.
+  // Skipping/pausing resets the streak to 0, but the tier is kept.
+  // Progress bar shows position within the current 12-week cycle.
+  const WEEKS_PER_CYCLE = 12;
   const tierNextMap = { bronze: "Silver", silver: "Gold", gold: "Platinum", platinum: null };
-  const tierWeeksMap = { bronze: 8, silver: 16, gold: 26, platinum: null };
-  const nextTier = tierNextMap[tier];
-  const weeksToNext = tierWeeksMap[tier];
-  const streakPct = weeksToNext ? Math.min(100, Math.round((streak / weeksToNext) * 100)) : 100;
+  const nextTier    = tierNextMap[tier];
+  const weeksInCycle      = streak % WEEKS_PER_CYCLE;          // 0–11 weeks into current cycle
+  const cyclePct          = Math.round((weeksInCycle / WEEKS_PER_CYCLE) * 100);
+  const weeksToNextLevel  = WEEKS_PER_CYCLE - weeksInCycle;    // weeks remaining to level up
 
   const tierPerks: Record<string, string[]> = {
     bronze:   ["Full meal catalog access", "Weekly streak tracking"],
@@ -64,7 +69,9 @@ export default function RewardsPage() {
       {/* ── Section 1: Stats (3 cols) ── */}
       <div className="grid grid-cols-3 gap-3">
         <div className="bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-100 rounded-2xl p-5 flex flex-col items-center text-center">
-          <div className="w-12 h-12 rounded-2xl bg-orange-100 flex items-center justify-center mb-3 text-2xl">🔥</div>
+          <div className="w-12 h-12 rounded-2xl bg-orange-100 flex items-center justify-center mb-3">
+            <Flame className="w-6 h-6 text-orange-500" />
+          </div>
           <p className="text-4xl font-bold text-orange-600">{streak}</p>
           <p className="text-xs font-semibold text-orange-500 mt-1 uppercase tracking-wide">Week Streak</p>
           <p className="text-[10px] text-orange-400 mt-1">Active — keep it up!</p>
@@ -87,72 +94,8 @@ export default function RewardsPage() {
         </div>
       </div>
 
-      {/* ── Section 2: Membership (left) + Challenges (right) ── */}
+      {/* ── Section 2: Challenges (left) + Referral (right) ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-stretch">
-
-        {/* Membership — fit height */}
-        <div className="bg-white rounded-2xl border border-[#E8E4DC] p-5 flex flex-col self-start">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Trophy className="w-4 h-4 text-[#004945]" />
-              <h2 className="font-semibold text-[#004945] text-sm">Membership Tier</h2>
-            </div>
-            <span className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${tierStyle.bg} ${tierStyle.text} ${tierStyle.border}`}>
-              {tier.charAt(0).toUpperCase() + tier.slice(1)}
-            </span>
-          </div>
-
-          {nextTier && weeksToNext && (
-            <div className="mb-4">
-              <div className="flex justify-between text-xs mb-1.5">
-                <span className="text-[#6B6B6B]">{streak} weeks active</span>
-                <span className="text-[#004945] font-semibold">{weeksToNext - streak}w to {nextTier}</span>
-              </div>
-              <div className="w-full bg-[#F0EBE0] rounded-full h-2.5">
-                <div
-                  className="h-2.5 rounded-full bg-gradient-to-r from-[#004945] to-[#7ED22A] transition-all"
-                  style={{ width: `${streakPct}%` }}
-                />
-              </div>
-            </div>
-          )}
-
-          <div className="mb-4">
-            <p className="text-[10px] font-semibold text-[#9E9E9E] uppercase tracking-wider mb-2">Your perks</p>
-            <div className="space-y-1.5">
-              {tierPerks[tier].map((perk) => (
-                <div key={perk} className="flex items-center gap-2 text-xs text-[#6B6B6B]">
-                  <div className="w-4 h-4 rounded-full bg-[#EAF7D9] flex items-center justify-center shrink-0">
-                    <span className="text-[#7ED22A] text-[9px] font-bold">✓</span>
-                  </div>
-                  {perk}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="mt-auto grid grid-cols-4 gap-1.5">
-            {(["bronze", "silver", "gold", "platinum"] as const).map((t) => {
-              const s = tierColors[t];
-              const isActive = t === tier;
-              return (
-                <div
-                  key={t}
-                  className={`text-center p-2 rounded-lg border transition-all ${
-                    isActive ? `${s.bg} ${s.border}` : "border-[#F0EBE0] bg-[#FDFBF7] opacity-40"
-                  }`}
-                >
-                  <p className={`text-[10px] font-semibold ${isActive ? s.text : "text-[#6B6B6B]"}`}>
-                    {t.charAt(0).toUpperCase() + t.slice(1)}
-                  </p>
-                  <p className={`text-[9px] mt-0.5 ${isActive ? s.text : "text-[#9E9E9E]"}`}>
-                    {t === "bronze" ? "0–7w" : t === "silver" ? "8–15w" : t === "gold" ? "16–25w" : "26w+"}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
 
         {/* Challenges — internal scroll + accordion by level */}
         <div className="bg-white rounded-2xl border border-[#E8E4DC] p-5 flex flex-col overflow-hidden">
@@ -168,7 +111,6 @@ export default function RewardsPage() {
               const isOpen = openLevels.has(lvl);
               return (
                 <div key={lvl} className="border border-[#F0EBE0] rounded-xl overflow-hidden">
-                  {/* Accordion header */}
                   <button
                     onClick={() => toggleLevel(lvl)}
                     className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#FDFBF7] transition-colors"
@@ -182,7 +124,6 @@ export default function RewardsPage() {
                     <ChevronDown className={cn("w-4 h-4 text-[#9E9E9E] transition-transform", isOpen && "rotate-180")} />
                   </button>
 
-                  {/* Accordion content */}
                   {isOpen && (
                     <div className="px-4 pb-3 space-y-3 border-t border-[#F0EBE0]">
                       {challenges.map((c) => {
@@ -245,12 +186,8 @@ export default function RewardsPage() {
             })}
           </div>
         </div>
-      </div>
 
-      {/* ── Section 3: Referral (left) + Leaderboard (right) ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-stretch">
-
-        {/* Referral Program — fit height */}
+        {/* Referral Program */}
         <div className="bg-white rounded-2xl border border-[#E8E4DC] p-5 self-start">
           <div className="flex items-center gap-2 mb-1">
             <Users className="w-4 h-4 text-[#004945]" />
@@ -263,9 +200,9 @@ export default function RewardsPage() {
           <p className="text-[10px] font-semibold text-[#9E9E9E] uppercase tracking-wider mb-3">Your results</p>
           <div className="grid grid-cols-3 gap-2 mb-4">
             {[
-              { label: "Sent", value: mockReferralStats.totalSent },
+              { label: "Sent",       value: mockReferralStats.totalSent },
               { label: "Successful", value: mockReferralStats.successful },
-              { label: "Earned", value: `$${mockReferralStats.totalEarned}` },
+              { label: "Earned",     value: `$${mockReferralStats.totalEarned}` },
             ].map(({ label, value }) => (
               <div key={label} className="text-center bg-[#FDFBF7] border border-[#F0EBE0] rounded-xl p-3">
                 <p className="font-bold text-[#004945] text-lg">{value}</p>
@@ -312,6 +249,94 @@ export default function RewardsPage() {
               </div>
             </>
           )}
+        </div>
+      </div>
+
+      {/* ── Section 3: Membership Tier (left) + Leaderboard (right) ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-stretch">
+
+        {/* Membership Tier — fit height */}
+        <div className="bg-white rounded-2xl border border-[#E8E4DC] p-5 flex flex-col self-start">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Trophy className="w-4 h-4 text-[#004945]" />
+              <h2 className="font-semibold text-[#004945] text-sm">Membership Tier</h2>
+            </div>
+            <span className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${tierStyle.bg} ${tierStyle.text} ${tierStyle.border}`}>
+              {tier.charAt(0).toUpperCase() + tier.slice(1)}
+            </span>
+          </div>
+
+          {nextTier ? (
+            <div className="mb-4">
+              <div className="flex justify-between text-xs mb-1.5">
+                <span className="text-[#6B6B6B]">{weeksInCycle} / {WEEKS_PER_CYCLE} active weeks</span>
+                <span className="text-[#004945] font-semibold">{weeksToNextLevel}w to {nextTier}</span>
+              </div>
+              <div className="w-full bg-[#F0EBE0] rounded-full h-2.5">
+                <div
+                  className="h-2.5 rounded-full bg-gradient-to-r from-[#004945] to-[#7ED22A] transition-all"
+                  style={{ width: `${cyclePct}%` }}
+                />
+              </div>
+              <p className="text-[10px] text-[#9E9E9E] mt-1.5 leading-relaxed">
+                12 consecutive active weeks to level up. Skip or pause resets your streak, but your tier is kept.
+              </p>
+            </div>
+          ) : (
+            <div className="mb-4 px-3 py-2.5 bg-gradient-to-r from-[#EAF7D9] to-[#f4fcea] rounded-xl border border-[#B9EA91] flex items-center gap-2">
+              <Trophy className="w-4 h-4 text-[#004945] shrink-0" />
+              <p className="text-xs font-semibold text-[#004945]">Max level reached — Platinum!</p>
+              <p className="text-[10px] text-[#6B6B6B] mt-0.5">You've unlocked all benefits.</p>
+            </div>
+          )}
+
+          <div className="mb-4">
+            <p className="text-[10px] font-semibold text-[#9E9E9E] uppercase tracking-wider mb-2">Your perks</p>
+            <div className="space-y-1.5">
+              {tierPerks[tier].map((perk) => (
+                <div key={perk} className="flex items-center gap-2 text-xs text-[#6B6B6B]">
+                  <div className="w-4 h-4 rounded-full bg-[#EAF7D9] flex items-center justify-center shrink-0">
+                    <span className="text-[#7ED22A] text-[9px] font-bold">✓</span>
+                  </div>
+                  {perk}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-auto grid grid-cols-4 gap-1.5">
+            {(["bronze", "silver", "gold", "platinum"] as const).map((t) => {
+              const s = tierColors[t];
+              const isActive  = t === tier;
+              const isPast    = ["bronze","silver","gold","platinum"].indexOf(t) < ["bronze","silver","gold","platinum"].indexOf(tier);
+              return (
+                <div
+                  key={t}
+                  className={`text-center p-2 rounded-lg border transition-all ${
+                    isActive
+                      ? `${s.bg} ${s.border} ring-2 ring-offset-1 ring-[#7ED22A]/40`
+                      : isPast
+                      ? `${s.bg} ${s.border} opacity-70`
+                      : "border-[#F0EBE0] bg-[#FDFBF7] opacity-35"
+                  }`}
+                >
+                  <div className="flex justify-center mb-0.5">
+                    <Trophy className={`w-4 h-4 ${isActive ? s.text : isPast ? s.text : "text-[#9E9E9E]"}`} />
+                  </div>
+                  <p className={`text-[10px] font-semibold ${isActive ? s.text : isPast ? s.text : "text-[#9E9E9E]"}`}>
+                    {t.charAt(0).toUpperCase() + t.slice(1)}
+                  </p>
+                  {isPast && !isActive && (
+                    <p className="text-[8px] text-[#7ED22A] font-bold mt-0.5">✓ done</p>
+                  )}
+                  {isActive && (
+                    <p className="text-[8px] font-bold mt-0.5" style={{ color: "inherit" }}>← you</p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         {/* Leaderboard — internal scroll */}
@@ -361,9 +386,7 @@ export default function RewardsPage() {
               >
                 <div className="flex items-center justify-center">
                   {entry.rank <= 3 ? (
-                    <span className="text-base leading-none">
-                      {entry.rank === 1 ? "🥇" : entry.rank === 2 ? "🥈" : "🥉"}
-                    </span>
+                    <Medal className={`w-4 h-4 ${entry.rank === 1 ? "text-yellow-500" : entry.rank === 2 ? "text-slate-400" : "text-amber-600"}`} />
                   ) : (
                     <span className={`text-xs font-bold ${entry.isMe ? "text-[#004945]" : "text-[#9E9E9E]"}`}>{entry.rank}</span>
                   )}
@@ -395,12 +418,12 @@ export default function RewardsPage() {
             </div>
             <div className="px-5 py-4 space-y-3">
               {[
-                { icon: "🔥", title: "Weekly streak", desc: "Earn 50 pts for every consecutive week you keep your subscription active." },
-                { icon: "🏆", title: "Complete challenges", desc: "Each challenge rewards between 100–500 pts depending on difficulty." },
-                { icon: "👥", title: "Refer a friend", desc: "Get 200 pts when a friend signs up using your referral link." },
+                { icon: <Flame className="w-4 h-4 text-orange-500" />, title: "Weekly streak", desc: "Earn 50 pts for every consecutive week you keep your subscription active." },
+                { icon: <Trophy className="w-4 h-4 text-yellow-600" />, title: "Complete challenges", desc: "Each challenge rewards between 100–500 pts depending on difficulty." },
+                { icon: <Users className="w-4 h-4 text-[#004945]" />, title: "Refer a friend", desc: "Get 200 pts when a friend signs up using your referral link." },
               ].map(({ icon, title, desc }) => (
                 <div key={title} className="flex items-start gap-3 p-3 bg-[#FDFBF7] border border-[#F0EBE0] rounded-xl">
-                  <span className="text-xl shrink-0">{icon}</span>
+                  <div className="w-7 h-7 rounded-lg bg-[#F0EBE0] flex items-center justify-center shrink-0">{icon}</div>
                   <div>
                     <p className="text-xs font-semibold text-[#004945]">{title}</p>
                     <p className="text-[10px] text-[#9E9E9E] mt-0.5 leading-relaxed">{desc}</p>

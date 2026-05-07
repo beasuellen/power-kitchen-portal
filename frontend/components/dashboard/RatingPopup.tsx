@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { Order } from "@/lib/mock-data";
 import { formatShortDate } from "@/lib/utils";
-import { X } from "lucide-react";
+import { X, Star, PartyPopper } from "lucide-react";
 import { FeedbackModal } from "@/components/feedback/FeedbackModal";
 
 interface RatingPopupProps {
@@ -23,7 +23,9 @@ export function RatingPopup({ order }: RatingPopupProps) {
       {!submitted && (
         <div className="fixed bottom-20 lg:bottom-6 left-4 lg:left-72 z-30 w-80 bg-white rounded-2xl shadow-2xl border border-[#E8E4DC] overflow-hidden">
           <div className="px-4 py-3 flex items-center gap-3">
-            <div className="text-xl shrink-0">⭐</div>
+            <div className="w-8 h-8 rounded-lg bg-yellow-50 flex items-center justify-center shrink-0">
+              <Star className="w-4 h-4 text-yellow-500" />
+            </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-[#004945]">Rate your meals</p>
               <p className="text-xs text-gray-400">
@@ -52,7 +54,9 @@ export function RatingPopup({ order }: RatingPopupProps) {
       {submitted && (
         <div className="fixed bottom-20 lg:bottom-6 left-4 lg:left-72 z-30 w-80 bg-white rounded-2xl shadow-2xl border border-[#E8E4DC] overflow-hidden">
           <div className="px-5 py-6 text-center">
-            <div className="text-3xl mb-2">🎉</div>
+            <div className="w-12 h-12 rounded-full bg-[#EAF7D9] flex items-center justify-center mx-auto mb-2">
+              <Star className="w-6 h-6 text-[#7ED22A]" />
+            </div>
             <p className="font-semibold text-[#004945]">Thanks for your feedback!</p>
             <p className="text-xs text-gray-400 mt-1">You earned 10 points</p>
           </div>

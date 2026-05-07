@@ -125,7 +125,7 @@ export function NextOrderCard() {
             {nextOrder.status === "customizable" ? (
               <Badge variant="green">Ready to customize</Badge>
             ) : (
-              <Badge variant="gray">🔒 Locked</Badge>
+              <Badge variant="gray">Locked</Badge>
             )}
           </div>
         </CardHeader>

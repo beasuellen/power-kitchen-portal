@@ -20,6 +20,7 @@ import {
   CalendarDays,
 } from "lucide-react";
 
+
 export default function DashboardPage() {
   const { firstName } = mockCustomer;
   const { planName, mealsPerWeek, streak, tier, storeCredit, points } = mockSubscription;
@@ -38,7 +39,7 @@ export default function DashboardPage() {
       {/* ─── Welcome (pure typography, no colored banner) ─── */}
       <div>
         <h1 className="text-3xl font-bold text-[#004945]">
-          Welcome back, {firstName}! 👋
+          Welcome back, {firstName}!
         </h1>
         <p className="text-gray-500 mt-1 text-sm">
           {planName} · {mealsPerWeek} meals/week
@@ -71,8 +72,8 @@ export default function DashboardPage() {
           <Card>
             <CardBody className="py-4">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center text-xl shrink-0">
-                  🔥
+                <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center shrink-0">
+                  <Flame className="w-5 h-5 text-orange-500" />
                 </div>
                 <div>
                   <p className="font-bold text-[#004945] text-lg leading-tight">{streak} weeks</p>
