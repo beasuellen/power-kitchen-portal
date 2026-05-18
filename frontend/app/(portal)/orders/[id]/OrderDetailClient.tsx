@@ -254,8 +254,8 @@ export function OrderDetailClient({ order }: { order: Order }) {
     });
 
     for (const { meal, qty, orderType } of entries) {
-      const label = orderType === 'one-time' ? 'apenas este pedido' : 'todos os pedidos';
-      addChange({ type: "add", description: `Adicionado ${qty}× ${meal.name} (${label})` });
+      const label = orderType === 'one-time' ? 'this order only' : 'all future orders';
+      addChange({ type: "add", description: `Added ${qty}× ${meal.name} (${label})` });
     }
     setShowAddPanel(false);
   };
@@ -720,7 +720,15 @@ export function OrderDetailClient({ order }: { order: Order }) {
                   </div>
                   <div className="flex-1 min-w-0 flex flex-col">
                     <p className="font-semibold text-sm text-[#1A1A1A] leading-snug">{item.meal.name}</p>
-                    <div className="mt-1.5"><PlanTypeTag planType={item.meal.planType} /></div>
+                    <div className="mt-1.5 flex items-center gap-1.5 flex-wrap">
+                      <PlanTypeTag planType={item.meal.planType} />
+                      {item.orderType === 'one-time' && (
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#F5F5F5] border border-[#E0E0E0] text-[#6B6B6B]">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#9E9E9E] shrink-0" />
+                          One-time
+                        </span>
+                      )}
+                    </div>
                     <DietaryPills tags={item.meal.dietaryTags} className="mt-2" onSeeAll={() => setSelectedItemId(item.id)} />
                     <div className="mt-3">
                       {item.quantity > 1 ? (
