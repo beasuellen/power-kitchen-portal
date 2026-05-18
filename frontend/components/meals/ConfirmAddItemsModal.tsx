@@ -37,9 +37,9 @@ function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void 
 }
 
 export function ConfirmAddItemsModal({ items, onConfirm, onCancel }: ConfirmAddItemsModalProps) {
-  // false = one-time (default), true = add to all orders
+  // false = one-time, true = add to all orders (default)
   const [allOrders, setAllOrders] = useState<Record<string, boolean>>(() =>
-    Object.fromEntries(items.map(({ meal }) => [meal.id, false]))
+    Object.fromEntries(items.map(({ meal }) => [meal.id, true]))
   );
 
   const setAllItems = (value: boolean) => {
