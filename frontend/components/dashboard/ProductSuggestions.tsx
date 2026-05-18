@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { mockMeals, mockOrders, type Meal } from "@/lib/mock-data";
 import { formatCurrency } from "@/lib/utils";
-import { useOrderStore } from "@/lib/useOrderStore";
+import { useOrderStore, type AddMealEntry } from "@/lib/useOrderStore";
 import { DietaryPills } from "@/components/ui/DietaryPills";
 import { AddSwapPanel } from "@/components/meals/AddSwapPanel";
 import { MealDetailModal } from "@/components/meals/MealDetailModal";
@@ -24,8 +24,8 @@ export function ProductSuggestions() {
 
   const nextOrder = mockOrders.find((o) => o.status === "customizable");
 
-  const handleAdd = (mealsToAdd: Meal[]) => {
-    addMeals(mealsToAdd);
+  const handleAdd = (entries: AddMealEntry[]) => {
+    addMeals(entries);
     setPanelOpen(false);
     setPreSelectedMeal(null);
   };
@@ -51,7 +51,8 @@ export function ProductSuggestions() {
           {sliderMeals.map((meal) => (
             <div
               key={meal.id}
-              className="shrink-0 w-40 bg-white rounded-2xl border border-[#E8E4DC] overflow-hidden flex flex-col"
+              onClick={() => setDetailMeal(meal)}
+              className="shrink-0 w-40 bg-white rounded-2xl border border-[#E8E4DC] overflow-hidden flex flex-col cursor-pointer hover:shadow-md hover:border-[#B9EA91] transition-all"
             >
               <div className="relative h-28 shrink-0">
                 <Image
@@ -88,7 +89,7 @@ export function ProductSuggestions() {
               <ChevronRight className="w-4 h-4 text-white" />
             </div>
             <p className="text-xs font-semibold text-[#004945] text-center">See all meals</p>
-            <p className="text-[10px] text-[#9E9E9E] text-center">Browse full menu</p>
+            <p className="text-[11px] text-[#9E9E9E] text-center">Browse full menu</p>
           </div>
         </div>
       </section>

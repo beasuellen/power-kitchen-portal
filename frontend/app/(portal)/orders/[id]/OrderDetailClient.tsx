@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { DietaryIcon } from "@/components/ui/DietaryIcon";
 import { AddSwapPanel } from "@/components/meals/AddSwapPanel";
+import type { AddMealEntry } from "@/lib/useOrderStore";
 import { MealDetailModal } from "@/components/meals/MealDetailModal";
 import { cn } from "@/lib/utils";
 import { useOrderStore } from "@/lib/useOrderStore";
@@ -38,7 +39,7 @@ const PLAN_TYPE_CONFIG: Record<string, { icon: React.ReactNode; color: string }>
 function PlanTypeTag({ planType }: { planType: string }) {
   const config = PLAN_TYPE_CONFIG[planType] ?? { icon: null, color: "bg-[#F0EBE0] text-[#6B6B6B] border-[#E8E4DC]" };
   return (
-    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold border ${config.color}`}>
+    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[11px] font-semibold border ${config.color}`}>
       {config.icon} {planType}
     </span>
   );
@@ -232,35 +233,29 @@ export function OrderDetailClient({ order }: { order: Order }) {
     setRemoveTarget(null);
   };
 
-  const handleAddMeals = (meals: Meal[]) => {
-    // AddSwapPanel sends [meal, meal, meal] for qty=3 — count occurrences per meal ID
-    const counts = new Map<string, { meal: Meal; count: number }>();
-    for (const meal of meals) {
-      const entry = counts.get(meal.id);
-      if (entry) entry.count++;
-      else counts.set(meal.id, { meal, count: 1 });
-    }
-
+  const handleAddMeals = (entries: AddMealEntry[]) => {
     setDraftItems((prev) => {
       const updated = prev.map((i) => ({ ...i }));
-      for (const { meal, count } of counts.values()) {
+      for (const { meal, qty, orderType } of entries) {
         const existing = updated.find((i) => i.meal.id === meal.id);
         if (existing) {
-          existing.quantity += count;
+          existing.quantity += qty;
         } else {
           updated.push({
             id: `draft_${Math.random().toString(36).slice(2)}`,
             meal,
-            quantity: count,
+            quantity: qty,
             unitPrice: meal.price,
+            orderType,
           });
         }
       }
       return updated;
     });
 
-    for (const { meal, count } of counts.values()) {
-      addChange({ type: "add", description: `Added ${count}× ${meal.name}` });
+    for (const { meal, qty, orderType } of entries) {
+      const label = orderType === 'one-time' ? 'apenas este pedido' : 'todos os pedidos';
+      addChange({ type: "add", description: `Adicionado ${qty}× ${meal.name} (${label})` });
     }
     setShowAddPanel(false);
   };
@@ -326,15 +321,14 @@ export function OrderDetailClient({ order }: { order: Order }) {
     return (
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-start gap-3">
-          <Link href="/orders" className="p-1.5 rounded-lg hover:bg-[#F0EBE0] transition-colors mt-0.5">
-            <ArrowLeft className="w-5 h-5 text-[#6B6B6B]" />
+        <div className="space-y-3">
+          <Link href="/orders" className="inline-flex items-center gap-1.5 text-xs font-medium text-[#9E9E9E] hover:text-[#004945] border border-[#E8E4DC] hover:border-[#B9EA91] hover:bg-[#EAF7D9]/50 rounded-lg px-3 py-1.5 transition-all group">
+            <ArrowLeft className="w-3 h-3 group-hover:-translate-x-0.5 transition-transform" />
+            View all orders
           </Link>
-          <div className="flex-1 min-w-0">
-            <h1 className="text-xl font-bold text-[#004945]">
-              {formatDate(order.deliveryDate, { weekday: "long", month: "long", day: "numeric" })}
-            </h1>
-          </div>
+          <h1 className="text-xl font-bold text-[#004945]">
+            {formatDate(order.deliveryDate, { weekday: "long", month: "long", day: "numeric" })}
+          </h1>
         </div>
 
         {/* Skipped notice */}
@@ -433,35 +427,41 @@ export function OrderDetailClient({ order }: { order: Order }) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-start gap-3">
+      <div className="space-y-3">
+        {/* Back link */}
         <button
           onClick={() => handleNavAttempt("/orders")}
-          className="p-1.5 rounded-lg hover:bg-[#F0EBE0] transition-colors mt-0.5"
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-[#9E9E9E] hover:text-[#004945] border border-[#E8E4DC] hover:border-[#B9EA91] hover:bg-[#EAF7D9]/50 rounded-lg px-3 py-1.5 transition-all group"
         >
-          <ArrowLeft className="w-5 h-5 text-[#6B6B6B]" />
+          <ArrowLeft className="w-3 h-3 group-hover:-translate-x-0.5 transition-transform" />
+          View all orders
         </button>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-xl font-bold text-[#004945]">
-              {formatDate(order.deliveryDate, { weekday: "long", month: "long", day: "numeric" })}
-            </h1>
-            {isEditable ? (
-              <Badge variant="green">Ready to customize</Badge>
-            ) : order.status === "locked" ? (
-              <Badge variant="gray"><Lock className="w-2.5 h-2.5 mr-1" /> Locked</Badge>
-            ) : (
-              <Badge variant="gray">Delivered</Badge>
-            )}
+
+        {/* Title row */}
+        <div className="flex items-start gap-3">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-xl font-bold text-[#004945]">
+                {formatDate(order.deliveryDate, { weekday: "long", month: "long", day: "numeric" })}
+              </h1>
+              {isEditable ? (
+                <Badge variant="green">Ready to customize</Badge>
+              ) : order.status === "locked" ? (
+                <Badge variant="gray"><Lock className="w-2.5 h-2.5 mr-1" /> Locked</Badge>
+              ) : (
+                <Badge variant="gray">Delivered</Badge>
+              )}
+            </div>
+            <p className="text-sm text-[#9E9E9E] mt-0.5">
+              Billed {formatShortDate(order.billingDate)} · Cutoff {formatShortDate(order.cutoffDate)}
+            </p>
           </div>
-          <p className="text-sm text-[#9E9E9E] mt-0.5">
-            Billed {formatShortDate(order.billingDate)} · Cutoff {formatShortDate(order.cutoffDate)}
-          </p>
+          {isEditable && (
+            <Button variant="destructive" size="sm" onClick={() => setShowSkipModal(true)} className="shrink-0">
+              <SkipForward className="w-3.5 h-3.5" /> Skip Order
+            </Button>
+          )}
         </div>
-        {isEditable && (
-          <Button variant="destructive" size="sm" onClick={() => setShowSkipModal(true)} className="shrink-0">
-            <SkipForward className="w-3.5 h-3.5" /> Skip Order
-          </Button>
-        )}
       </div>
 
       {/* Locked notice */}
@@ -489,7 +489,7 @@ export function OrderDetailClient({ order }: { order: Order }) {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-semibold text-[#004945]">Not sure what to order?</p>
-                <p className="text-[10px] text-[#6B6B6B] truncate">Our nutritionists can help you build the perfect plan</p>
+                <p className="text-[11px] text-[#6B6B6B] truncate">Our nutritionists can help you build the perfect plan</p>
               </div>
               <span className="text-xs font-semibold text-[#004945] whitespace-nowrap group-hover:underline shrink-0">
                 Talk to a nutritionist →
@@ -521,7 +521,7 @@ export function OrderDetailClient({ order }: { order: Order }) {
                     <SlidersHorizontal className="w-3 h-3" />
                     <span className="hidden sm:inline">Restrictions</span>
                     {currentRestrictions.length > 0 && (
-                      <span className="w-4 h-4 bg-[#004945] text-white text-[9px] font-bold rounded-full flex items-center justify-center leading-none">
+                      <span className="w-4 h-4 bg-[#004945] text-white text-[11px] font-bold rounded-full flex items-center justify-center leading-none">
                         {currentRestrictions.length}
                       </span>
                     )}
@@ -536,7 +536,7 @@ export function OrderDetailClient({ order }: { order: Order }) {
                         <div className="p-4 space-y-3">
                           <div>
                             <p className="text-xs font-semibold text-[#1A1A1A]">Dietary restrictions</p>
-                            <p className="text-[10px] text-[#9E9E9E] mt-0.5">Tap to toggle — no need to click edit first</p>
+                            <p className="text-[11px] text-[#9E9E9E] mt-0.5">Tap to toggle — no need to click edit first</p>
                           </div>
                           <div className="flex flex-wrap gap-2">
                             {RESTRICTION_OPTIONS.map(({ tag, label }) => {
@@ -579,7 +579,7 @@ export function OrderDetailClient({ order }: { order: Order }) {
                         <div className="p-4 space-y-3">
                           <div>
                             <p className="text-xs font-semibold text-[#1A1A1A]">Apply changes to:</p>
-                            <p className="text-[10px] text-[#9E9E9E] mt-0.5">Where should these restrictions apply?</p>
+                            <p className="text-[11px] text-[#9E9E9E] mt-0.5">Where should these restrictions apply?</p>
                           </div>
                           <div className="grid grid-cols-2 gap-2">
                             <button
@@ -591,7 +591,7 @@ export function OrderDetailClient({ order }: { order: Order }) {
                               </div>
                               <div>
                                 <p className="text-xs font-semibold text-[#1A1A1A]">This order only</p>
-                                <p className="text-[10px] text-[#9E9E9E] mt-0.5">Won't affect future orders</p>
+                                <p className="text-[11px] text-[#9E9E9E] mt-0.5">Won't affect future orders</p>
                               </div>
                             </button>
                             <button
@@ -603,7 +603,7 @@ export function OrderDetailClient({ order }: { order: Order }) {
                               </div>
                               <div>
                                 <p className="text-xs font-semibold text-[#1A1A1A]">All my orders</p>
-                                <p className="text-[10px] text-[#9E9E9E] mt-0.5">Updates your account preferences</p>
+                                <p className="text-[11px] text-[#9E9E9E] mt-0.5">Updates your account preferences</p>
                               </div>
                             </button>
                           </div>
@@ -639,14 +639,14 @@ export function OrderDetailClient({ order }: { order: Order }) {
                           <div className="p-4 space-y-3">
                             <div>
                               <p className="text-xs font-semibold text-[#1A1A1A]">Confirm your restrictions</p>
-                              <p className="text-[10px] text-[#9E9E9E] mt-0.5">
+                              <p className="text-[11px] text-[#9E9E9E] mt-0.5">
                                 {restrictionScope === "all"
                                   ? "This will update all your future orders"
                                   : "This will apply to this order only"}
                               </p>
                             </div>
                             <div className="bg-[#FDFBF7] border border-[#F0EBE0] rounded-xl p-3 space-y-2">
-                              <p className="text-[10px] text-[#9E9E9E] leading-relaxed">
+                              <p className="text-[11px] text-[#9E9E9E] leading-relaxed">
                                 Are you sure you want to{" "}
                                 <span className="font-semibold text-[#1A1A1A]">{actionText}</span>
                                 {scopeSuffix}?
@@ -657,7 +657,7 @@ export function OrderDetailClient({ order }: { order: Order }) {
                                   {added.map((tag) => {
                                     const opt = RESTRICTION_OPTIONS.find((o) => o.tag === tag);
                                     return opt ? (
-                                      <span key={tag} className="flex items-center gap-1 px-2 py-0.5 bg-[#EAF7D9] border border-[#7ED22A] rounded-full text-[10px] font-medium text-[#004945]">
+                                      <span key={tag} className="flex items-center gap-1 px-2 py-0.5 bg-[#EAF7D9] border border-[#7ED22A] rounded-full text-[11px] font-medium text-[#004945]">
                                         <DietaryIcon tag={opt.tag} size={12} /> {opt.label}
                                       </span>
                                     ) : null;
@@ -670,7 +670,7 @@ export function OrderDetailClient({ order }: { order: Order }) {
                                   {removed.map((tag) => {
                                     const opt = RESTRICTION_OPTIONS.find((o) => o.tag === tag);
                                     return opt ? (
-                                      <span key={tag} className="flex items-center gap-1 px-2 py-0.5 bg-red-50 border border-red-200 rounded-full text-[10px] font-medium text-red-500 line-through">
+                                      <span key={tag} className="flex items-center gap-1 px-2 py-0.5 bg-red-50 border border-red-200 rounded-full text-[11px] font-medium text-red-500 line-through">
                                         <DietaryIcon tag={opt.tag} size={12} /> {opt.label}
                                       </span>
                                     ) : null;
@@ -856,7 +856,7 @@ export function OrderDetailClient({ order }: { order: Order }) {
                   {/* Section header */}
                   <div>
                     <p className="text-xs font-semibold text-[#1A1A1A]">Savings & Credits</p>
-                    <p className="text-[10px] mt-0.5">
+                    <p className="text-[11px] mt-0.5">
                       {hasAppliedPromo
                         ? <span className="text-amber-600 font-medium">Remove the applied discount to use a different option.</span>
                         : <span className="text-[#9E9E9E]">Apply a discount code, store credit, or gift card to this order</span>
@@ -880,7 +880,7 @@ export function OrderDetailClient({ order }: { order: Order }) {
                           onClick={() => !isDisabled && setActivePromoTab(isActive ? null : id)}
                           title={isDisabled ? "Remove the current discount first" : undefined}
                           className={cn(
-                            "flex flex-col items-center gap-1 py-2.5 px-1 rounded-xl text-[10px] font-medium border-2 transition-all whitespace-nowrap",
+                            "flex flex-col items-center gap-1 py-2.5 px-1 rounded-xl text-[11px] font-medium border-2 transition-all whitespace-nowrap",
                             isDisabled
                               ? "bg-[#F7F5F0] text-[#C4BFB5] border-[#EDE8DF] opacity-50 cursor-not-allowed"
                               : isActive
@@ -901,7 +901,7 @@ export function OrderDetailClient({ order }: { order: Order }) {
                   {/* Discount code input */}
                   {activePromoTab === "discount" && (
                     <div className="space-y-1.5">
-                      <p className="text-[10px] text-[#9E9E9E]">Enter your promo or discount code below</p>
+                      <p className="text-[11px] text-[#9E9E9E]">Enter your promo or discount code below</p>
                       <div className="flex gap-2 min-w-0">
                         <input
                           type="text"
@@ -927,7 +927,7 @@ export function OrderDetailClient({ order }: { order: Order }) {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-xs font-semibold text-[#1A1A1A]">Your store credit</p>
-                          <p className="text-[10px] text-[#9E9E9E] mt-0.5">Earned from referrals & returns</p>
+                          <p className="text-[11px] text-[#9E9E9E] mt-0.5">Earned from referrals & returns</p>
                         </div>
                         <span className="text-lg font-bold text-[#004945]">{formatCurrency(MOCK_STORE_CREDIT)}</span>
                       </div>
@@ -949,7 +949,7 @@ export function OrderDetailClient({ order }: { order: Order }) {
                   {/* Gift card input */}
                   {activePromoTab === "gift" && (
                     <div className="space-y-1.5">
-                      <p className="text-[10px] text-[#9E9E9E]">Enter the code printed on your gift card</p>
+                      <p className="text-[11px] text-[#9E9E9E]">Enter the code printed on your gift card</p>
                       <div className="flex gap-2 min-w-0">
                         <input
                           type="text"

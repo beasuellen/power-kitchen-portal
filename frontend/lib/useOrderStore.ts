@@ -3,6 +3,12 @@ import { mockOrders, mockSubscription, type Meal, type OrderItem, type DietaryTa
 
 export interface DraftItem extends OrderItem {}
 
+export interface AddMealEntry {
+  meal: Meal;
+  qty: number;
+  orderType: 'one-time' | 'recurring';
+}
+
 interface OrderStore {
   /** Items of the next customizable order */
   draftItems: DraftItem[];
@@ -12,7 +18,7 @@ interface OrderStore {
   globalRestrictions: DietaryTag[];
 
   // ── Meal actions ──────────────────────────────────────────────────
-  addMeals: (meals: Meal[]) => void;
+  addMeals: (entries: AddMealEntry[]) => void;
   removeItem: (itemId: string) => void;
   updateQuantity: (itemId: string, delta: number) => void;
   swapMeal: (itemId: string, newMeal: Meal) => void;
@@ -38,27 +44,20 @@ export const useOrderStore = create<OrderStore>((set) => ({
   orderSkipped: false,
   globalRestrictions: initialRestrictions,
 
-  addMeals: (meals) =>
+  addMeals: (entries) =>
     set((state) => {
-      // Count occurrences per meal ID — AddSwapPanel sends [meal, meal, meal] for qty=3
-      const counts = new Map<string, { meal: Meal; count: number }>();
-      for (const meal of meals) {
-        const entry = counts.get(meal.id);
-        if (entry) entry.count++;
-        else counts.set(meal.id, { meal, count: 1 });
-      }
-
       const updated = state.draftItems.map((i) => ({ ...i }));
-      for (const { meal, count } of counts.values()) {
+      for (const { meal, qty, orderType } of entries) {
         const existing = updated.find((i) => i.meal.id === meal.id);
         if (existing) {
-          existing.quantity += count;
+          existing.quantity += qty;
         } else {
           updated.push({
             id: `draft_${Math.random().toString(36).slice(2)}`,
             meal,
-            quantity: count,
+            quantity: qty,
             unitPrice: meal.price,
+            orderType,
           });
         }
       }

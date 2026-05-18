@@ -9,9 +9,10 @@ import { DietaryPills } from "@/components/ui/DietaryPills";
 import Image from "next/image";
 import { X, Check, ChevronRight, Minus, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useOrderStore } from "@/lib/useOrderStore";
+import { useOrderStore, type AddMealEntry } from "@/lib/useOrderStore";
 import { MealDetailModal } from "@/components/meals/MealDetailModal";
 import { InOrderBadge } from "@/components/ui/InOrderBadge";
+import { ConfirmAddItemsModal } from "@/components/meals/ConfirmAddItemsModal";
 
 interface AddSwapPanelProps {
   mode: "add" | "swap";
@@ -21,7 +22,7 @@ interface AddSwapPanelProps {
   hideMealsTab?: boolean;
   cartItems?: OrderItem[];
   initialSelectedMeal?: Meal;
-  onAdd: (meals: Meal[]) => void;
+  onAdd: (entries: AddMealEntry[]) => void;
   onSwap: (meal: Meal) => void;
   /** Called when the user adjusts the quantity of an existing cart item */
   onEditInOrder?: (edits: { mealId: string; newQty: number }[]) => void;
@@ -91,7 +92,7 @@ export function AddSwapPanel({
   }, [initialSelectedMeal]);
 
   const [detailMeal, setDetailMeal] = useState<Meal | null>(null);
-  const [showBackConfirm, setShowBackConfirm] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   const { draftItems: storeDraftItems } = useOrderStore();
   const cartItems = cartItemsProp ?? storeDraftItems;
@@ -187,18 +188,23 @@ export function AddSwapPanel({
 
   // ── Done / Add ────────────────────────────────────────────────────────
   const handleDone = () => {
-    // Apply in-order qty edits first (doesn't close panel)
+    // Apply in-order qty edits immediately (no modal needed — just quantity changes)
     if (inOrderEdits.size > 0 && onEditInOrder) {
       const edits = Array.from(inOrderEdits.entries()).map(([mealId, newQty]) => ({ mealId, newQty }));
       onEditInOrder(edits);
+      setInOrderEdits(new Map());
     }
-    // Apply new meal additions (or just close)
+    // New meals: open confirmation modal to choose one-time vs recurring per item
     if (selected.length > 0) {
-      const meals: Meal[] = selected.flatMap((e) => Array(e.qty).fill(e.meal));
-      onAdd(meals);
+      setShowConfirmModal(true);
     } else {
       onClose();
     }
+  };
+
+  const handleConfirmAdd = (entries: AddMealEntry[]) => {
+    onAdd(entries);
+    setShowConfirmModal(false);
   };
 
   return (
@@ -228,6 +234,36 @@ export function AddSwapPanel({
           </button>
         </div>
 
+        {/* Plan type filter — primary filter, highlighted at top */}
+        <div className="px-5 py-3 border-b border-[#F0EBE0] bg-[#F7F3EC]/60 shrink-0">
+          <p className="text-[11px] font-bold text-[#004945] uppercase tracking-wider mb-2">Meal Plan</p>
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+            {availablePlanTypes.map((pt) => {
+              const isActive = activePlanTypes.has(pt);
+              return (
+                <button
+                  key={pt}
+                  onClick={() => togglePlanType(pt)}
+                  className={cn(
+                    "shrink-0 px-3 py-1.5 rounded-full text-sm font-semibold border-2 transition-colors",
+                    isActive
+                      ? "bg-[#004945] text-white border-[#004945] shadow-sm"
+                      : "border-[#D4C9B8] text-[#4A4A4A] bg-white hover:border-[#004945] hover:text-[#004945]"
+                  )}
+                >
+                  {pt}
+                  {isActive && <X className="inline w-3 h-3 ml-1.5" />}
+                </button>
+              );
+            })}
+            {activePlanTypes.size > 0 && (
+              <button onClick={() => setActivePlanTypes(new Set())} className="shrink-0 text-xs text-red-500 hover:underline self-center">
+                Clear
+              </button>
+            )}
+          </div>
+        </div>
+
         {/* Category tabs */}
         <div className="px-5 py-2 border-b border-[#F0EBE0] flex gap-1 overflow-x-auto scrollbar-hide shrink-0">
           <button
@@ -237,7 +273,7 @@ export function AddSwapPanel({
               isAllMeals ? "bg-[#004945] text-white" : "bg-[#F0EBE0] text-[#6B6B6B] hover:bg-[#E8E4DC]"
             )}
           >
-            See All <span className="ml-1 text-[10px] opacity-70">({mealCatalog.length})</span>
+            See All <span className="ml-1 text-[11px] opacity-70">({mealCatalog.length})</span>
           </button>
           {categories
             .filter(({ id }) => id !== "all")
@@ -253,38 +289,10 @@ export function AddSwapPanel({
                     isActive ? "bg-[#004945] text-white" : "bg-[#F0EBE0] text-[#6B6B6B] hover:bg-[#E8E4DC]"
                   )}
                 >
-                  {label} <span className="ml-1 text-[10px] opacity-70">({count})</span>
+                  {label} <span className="ml-1 text-[11px] opacity-70">({count})</span>
                 </button>
               );
             })}
-        </div>
-
-        {/* Plan type filter */}
-        <div className="px-5 py-2 border-b border-[#F0EBE0] flex items-center gap-2 overflow-x-auto scrollbar-hide shrink-0">
-          <span className="text-xs font-medium text-[#9E9E9E] shrink-0">Plan</span>
-          {availablePlanTypes.map((pt) => {
-            const isActive = activePlanTypes.has(pt);
-            return (
-              <button
-                key={pt}
-                onClick={() => togglePlanType(pt)}
-                className={cn(
-                  "shrink-0 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors",
-                  isActive
-                    ? "bg-[#004945] text-white border-[#004945]"
-                    : "border-[#E8E4DC] text-[#6B6B6B] hover:border-[#B9EA91] hover:text-[#004945]"
-                )}
-              >
-                {pt}
-                {isActive && <X className="inline w-2.5 h-2.5 ml-1" />}
-              </button>
-            );
-          })}
-          {activePlanTypes.size > 0 && (
-            <button onClick={() => setActivePlanTypes(new Set())} className="shrink-0 text-xs text-red-500 hover:underline">
-              Clear
-            </button>
-          )}
         </div>
 
         {/* Dietary filters */}
@@ -373,7 +381,7 @@ export function AddSwapPanel({
                         )}
                         {/* Editing active indicator */}
                         {isEditing && (
-                          <div className="absolute top-1.5 right-1.5 flex items-center gap-0.5 bg-[#004945] text-white rounded-full px-1.5 py-0.5 text-[10px] font-bold shadow">
+                          <div className="absolute top-1.5 right-1.5 flex items-center gap-0.5 bg-[#004945] text-white rounded-full px-1.5 py-0.5 text-[11px] font-bold shadow">
                             <Check className="w-2.5 h-2.5 shrink-0" />
                             <span>Editing</span>
                           </div>
@@ -391,7 +399,7 @@ export function AddSwapPanel({
                         )}
                         {/* Plan type badge */}
                         <div className="absolute bottom-1.5 left-1.5">
-                          <span className="bg-black/50 text-white text-[9px] font-medium px-1.5 py-0.5 rounded-full backdrop-blur-sm">
+                          <span className="bg-black/50 text-white text-[11px] font-medium px-1.5 py-0.5 rounded-full backdrop-blur-sm">
                             {meal.planType}
                           </span>
                         </div>
@@ -405,7 +413,7 @@ export function AddSwapPanel({
                         <DietaryPills tags={meal.dietaryTags} className="mt-1" onSeeAll={() => setDetailMeal(meal)} />
                         <div className="flex items-center justify-between mt-1.5">
                           <span className="text-xs font-bold text-[#004945]">{formatCurrency(meal.price)}</span>
-                          <span className="text-[10px] text-[#9E9E9E]">{meal.calories} cal</span>
+                          <span className="text-[11px] text-[#9E9E9E]">{meal.calories} cal</span>
                         </div>
                       </div>
                     </div>
@@ -419,10 +427,10 @@ export function AddSwapPanel({
                         {/* Top row: label + price */}
                         <div className="flex items-center gap-1 mb-1.5">
                           <Check className="w-2.5 h-2.5 text-[#004945] shrink-0" />
-                          <span className="text-[10px] font-semibold text-[#004945] shrink-0">
+                          <span className="text-[11px] font-semibold text-[#004945] shrink-0">
                             {editQty}× in your order
                           </span>
-                          <span className="text-[10px] text-[#9E9E9E] truncate">
+                          <span className="text-[11px] text-[#9E9E9E] truncate">
                             · {formatCurrency(editQty * meal.price)}
                           </span>
                         </div>
@@ -453,7 +461,7 @@ export function AddSwapPanel({
                     {/* ── NEW MEAL QTY STEPPER ── only for new selections */}
                     {issel && mode === "add" && cartQty === 0 && (
                       <div className="flex items-center justify-between px-2.5 py-2 border-t border-[#E8E4DC] bg-white">
-                        <span className="text-[10px] text-[#9E9E9E]">Qty</span>
+                        <span className="text-[11px] text-[#9E9E9E]">Qty</span>
                         <div className="flex items-center gap-1.5">
                           <button
                             onClick={(e) => changeNewQty(meal.id, -1, e)}
@@ -476,7 +484,7 @@ export function AddSwapPanel({
                     {issel && cartQty === 0 && (
                       <div className="bg-[#F7F3EC] border-t border-[#E8E4DC] px-3 py-2.5 space-y-2">
                         {meal.description && (
-                          <p className="text-[10px] text-[#6B6B6B] leading-relaxed">{meal.description}</p>
+                          <p className="text-[11px] text-[#6B6B6B] leading-relaxed">{meal.description}</p>
                         )}
                         <div className="grid grid-cols-3 gap-1">
                           {[
@@ -486,13 +494,13 @@ export function AddSwapPanel({
                           ].map(({ label, value }) => (
                             <div key={label} className="text-center">
                               <p className="font-bold text-sm text-[#004945]">{value}</p>
-                              <p className="text-[10px] text-[#9E9E9E]">{label}</p>
+                              <p className="text-[11px] text-[#9E9E9E]">{label}</p>
                             </div>
                           ))}
                         </div>
                         <button
                           onClick={() => setDetailMeal(meal)}
-                          className="w-full text-center text-[10px] font-semibold text-[#004945] hover:text-[#7ED22A] transition-colors py-0.5"
+                          className="w-full text-center text-[11px] font-semibold text-[#004945] hover:text-[#7ED22A] transition-colors py-0.5"
                         >
                           View all details →
                         </button>
@@ -527,7 +535,7 @@ export function AddSwapPanel({
               <Button
                 variant="ghost"
                 className="flex-1"
-                onClick={() => hasAnyPendingChange ? setShowBackConfirm(true) : onClose()}
+                onClick={() => hasAnyPendingChange ? handleDone() : onClose()}
               >
                 Back to my order
               </Button>
@@ -543,45 +551,13 @@ export function AddSwapPanel({
         )}
       </div>
 
-      {/* ── Back-to-order confirmation ── */}
-      {showBackConfirm && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl border border-[#E8E4DC] overflow-hidden">
-            <div className="px-6 pt-6 pb-4 text-center">
-              <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center mx-auto mb-3">
-                <span className="text-2xl">🛒</span>
-              </div>
-              <h3 className="font-bold text-[#004945] text-base">Add meals before leaving?</h3>
-              <p className="text-xs text-[#6B6B6B] mt-1.5 leading-relaxed">
-                You have{" "}
-                <span className="font-semibold text-[#1A1A1A]">
-                  {totalNewSelected} meal{totalNewSelected !== 1 ? "s" : ""}
-                </span>{" "}
-                selected. Do you want to add{" "}
-                {totalNewSelected === 1 ? "it" : "them"} to your order?
-              </p>
-            </div>
-            <div className="mx-6 mb-4 bg-[#FDFBF7] border border-[#F0EBE0] rounded-xl px-4 py-3 space-y-1.5">
-              {selected.map((entry) => (
-                <div key={entry.meal.id} className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-[#1A1A1A] truncate">{entry.meal.name}</span>
-                  <span className="text-xs text-[#9E9E9E] shrink-0 ml-2">×{entry.qty}</span>
-                </div>
-              ))}
-            </div>
-            <div className="px-6 pb-6 flex flex-col gap-2">
-              <Button className="w-full" onClick={() => { handleDone(); setShowBackConfirm(false); }}>
-                Yes, add {totalNewSelected} meal{totalNewSelected !== 1 ? "s" : ""} to my order
-              </Button>
-              <button
-                onClick={() => { setShowBackConfirm(false); onClose(); }}
-                className="w-full py-2.5 text-sm text-[#6B6B6B] hover:text-[#1A1A1A] transition-colors"
-              >
-                No, go back without adding
-              </button>
-            </div>
-          </div>
-        </div>
+      {/* ── Confirm add items modal (one-time vs recurring per item) ── */}
+      {showConfirmModal && (
+        <ConfirmAddItemsModal
+          items={selected}
+          onConfirm={handleConfirmAdd}
+          onCancel={() => setShowConfirmModal(false)}
+        />
       )}
 
       {/* ── Meal Detail Modal ── */}
