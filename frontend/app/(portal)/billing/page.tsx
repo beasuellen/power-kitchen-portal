@@ -77,7 +77,7 @@ export default function BillingPage() {
                     <div className="flex items-center gap-2">
                       <p className="text-sm font-medium text-[#1A1A1A]">{bill.orderNumber}</p>
                       {isRated && (
-                        <span className="inline-flex items-center gap-1 bg-[#EAF7D9] text-[#004945] border border-[#B9EA91] rounded-full px-2 py-0.5 text-[10px] font-semibold">
+                        <span className="inline-flex items-center gap-1 bg-[#EAF7D9] text-[#004945] border border-[#B9EA91] rounded-full px-2 py-0.5 text-[11px] font-semibold">
                           <Star className="w-2.5 h-2.5 fill-[#7ED22A] text-[#7ED22A]" />
                           Rated
                         </span>
@@ -130,7 +130,7 @@ export default function BillingPage() {
                   <div className="px-5 pb-4 bg-[#FDFBF7] border-t border-[#F0EBE0]">
                     {order && order.items.length > 0 ? (
                       <div className="pt-3 space-y-3">
-                        <p className="text-[10px] font-semibold text-[#9E9E9E] uppercase tracking-wider">Items in this order</p>
+                        <p className="text-[11px] font-semibold text-[#9E9E9E] uppercase tracking-wider">Items in this order</p>
                         <div className="space-y-2">
                           {order.items.map((item) => (
                             <div key={item.id} className="flex items-center gap-3">
@@ -139,14 +139,14 @@ export default function BillingPage() {
                               </div>
                               <div className="flex-1 min-w-0">
                                 <p className="text-xs font-medium text-[#1A1A1A] truncate">{item.meal.name}</p>
-                                <p className="text-[10px] text-[#9E9E9E]">×{item.quantity} · {formatCurrency(item.unitPrice)} each</p>
+                                <p className="text-[11px] text-[#9E9E9E]">×{item.quantity} · {formatCurrency(item.unitPrice)} each</p>
                               </div>
                               <div className="flex items-center gap-2 shrink-0">
                                 <span className="text-xs font-semibold text-[#1A1A1A]">
                                   {formatCurrency(item.unitPrice * item.quantity)}
                                 </span>
                                 {isRated && (
-                                  <span className="inline-flex items-center gap-1 bg-[#EAF7D9] text-[#004945] border border-[#B9EA91] rounded-full px-2 py-0.5 text-[10px] font-semibold">
+                                  <span className="inline-flex items-center gap-1 bg-[#EAF7D9] text-[#004945] border border-[#B9EA91] rounded-full px-2 py-0.5 text-[11px] font-semibold">
                                     <Star className="w-2.5 h-2.5 fill-[#7ED22A] text-[#7ED22A]" />
                                     Rated
                                   </span>

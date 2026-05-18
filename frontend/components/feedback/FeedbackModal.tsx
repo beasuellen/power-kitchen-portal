@@ -202,7 +202,7 @@ export function FeedbackModal({ order, onClose }: FeedbackModalProps) {
             <div>
               <p className="text-sm font-semibold text-[#004945]">Rate your delivery</p>
               {step !== "done" && (
-                <p className="text-[10px] text-[#9E9E9E] mt-0.5">
+                <p className="text-[11px] text-[#9E9E9E] mt-0.5">
                   Help us improve your next order — takes ~30 seconds
                 </p>
               )}
@@ -247,7 +247,7 @@ export function FeedbackModal({ order, onClose }: FeedbackModalProps) {
                     )}
                   >
                     <span className="text-2xl">{emoji}</span>
-                    <span className="text-[9px] font-medium text-[#6B6B6B] leading-tight text-center">{label}</span>
+                    <span className="text-[11px] font-medium text-[#6B6B6B] leading-tight text-center">{label}</span>
                   </button>
                 ))}
               </div>
@@ -341,7 +341,7 @@ export function FeedbackModal({ order, onClose }: FeedbackModalProps) {
                   <ArrowLeft className="w-4 h-4 text-[#9E9E9E]" />
                 </button>
                 <div>
-                  <p className="text-[10px] text-[#9E9E9E] font-medium uppercase tracking-wide">
+                  <p className="text-[11px] text-[#9E9E9E] font-medium uppercase tracking-wide">
                     Meal {mealIndex + 1} of {meals.length}
                   </p>
                   <h2 className="text-base font-bold text-[#004945]">Would you order this again?</h2>
@@ -444,7 +444,7 @@ export function FeedbackModal({ order, onClose }: FeedbackModalProps) {
                   <ArrowLeft className="w-4 h-4 text-[#9E9E9E]" />
                 </button>
                 <div>
-                  <p className="text-[10px] text-[#9E9E9E] font-semibold uppercase tracking-wide mb-1">
+                  <p className="text-[11px] text-[#9E9E9E] font-semibold uppercase tracking-wide mb-1">
                     This week's question
                   </p>
                   <h2 className="text-base font-bold text-[#004945]">{rotationalQ}</h2>
@@ -533,7 +533,7 @@ export function FeedbackModal({ order, onClose }: FeedbackModalProps) {
                 </div>
                 <div className="flex items-center gap-1.5">
                   <Flame className="w-3 h-3 text-orange-400" />
-                  <p className="text-[10px] text-[#6B6B6B]">Weekly feedback streak: 3 weeks in a row</p>
+                  <p className="text-[11px] text-[#6B6B6B]">Weekly feedback streak: 3 weeks in a row</p>
                 </div>
               </div>
               <button

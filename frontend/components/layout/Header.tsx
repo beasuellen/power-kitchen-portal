@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Bell, Settings, ChevronDown, User, CreditCard, LogOut, MapPin } from "lucide-react";
+import { Bell, ChevronDown, User, CreditCard, LogOut, MapPin } from "lucide-react";
 import { mockCustomer, mockSubscription } from "@/lib/mock-data";
 
 const notifications = [
@@ -37,7 +37,7 @@ export function Header() {
         <Image src="/logo-pk.svg" alt="Power Kitchen" width={62} height={24} />
       </Link>
 
-      {/* Desktop: empty left (pages have their own headings) */}
+      {/* Desktop: left spacer (subscription switcher lives in sidebar) */}
       <div className="hidden lg:block" />
 
       {/* Right: actions */}
@@ -96,9 +96,9 @@ export function Header() {
               </div>
               <div className="py-1">
                 {[
-                  { href: "/plan",         icon: User,       label: "Account Settings" },
-                  { href: "/plan/address", icon: MapPin,     label: "Address" },
-                  { href: "/billing",      icon: CreditCard, label: "Billing" },
+                  { href: "/plan",                   icon: User,       label: "Account Settings" },
+                  { href: "/plan#address-section",   icon: MapPin,     label: "Address" },
+                  { href: "/plan#payment-section",   icon: CreditCard, label: "Billing" },
                 ].map(({ href, icon: Icon, label }) => (
                   <Link
                     key={href}

@@ -85,7 +85,7 @@ export function MealDetailModal({ meal, onClose }: MealDetailModalProps) {
                   return (
                     <span
                       key={s}
-                      className={`inline-flex items-center gap-1 text-[10px] font-semibold border px-2 py-0.5 rounded-full ${colorClass}`}
+                      className={`inline-flex items-center gap-1 text-[11px] font-semibold border px-2 py-0.5 rounded-full ${colorClass}`}
                     >
                       <Flame className="w-2.5 h-2.5" />
                       {s}
@@ -152,8 +152,8 @@ export function MealDetailModal({ meal, onClose }: MealDetailModalProps) {
                       key={method}
                       className="bg-[#FDFBF7] border border-[#F0EBE0] rounded-xl px-3 py-2.5"
                     >
-                      <p className="text-[10px] font-bold text-[#7ED22A] mb-1">{method}</p>
-                      <p className="text-[10px] text-[#6B6B6B] leading-snug">{instructions}</p>
+                      <p className="text-[11px] font-bold text-[#7ED22A] mb-1">{method}</p>
+                      <p className="text-[11px] text-[#6B6B6B] leading-snug">{instructions}</p>
                     </div>
                   ))}
                 </div>

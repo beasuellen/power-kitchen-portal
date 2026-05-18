@@ -35,8 +35,8 @@ export default function OrdersPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-[#004945]">My Orders</h1>
-        <p className="text-sm text-[#6B6B6B] mt-0.5">Manage your upcoming deliveries</p>
+        <h1 className="text-2xl font-bold text-[#004945]">All Orders</h1>
+        <p className="text-sm text-[#6B6B6B] mt-0.5">Your upcoming and past deliveries</p>
       </div>
 
       {/* ── 70/30 grid: upcoming left, recent deliveries right ── */}
@@ -71,13 +71,13 @@ export default function OrdersPage() {
                 <div className="flex items-start gap-4">
                   {/* Date column */}
                   <div className="shrink-0 w-12 text-center">
-                    <p className="text-[10px] font-bold text-[#9E9E9E] uppercase">
+                    <p className="text-[11px] font-bold text-[#9E9E9E] uppercase">
                       {new Date(order.deliveryDate + "T12:00:00").toLocaleDateString("en-CA", { month: "short" })}
                     </p>
                     <p className="text-2xl font-bold text-[#004945] leading-tight">
                       {new Date(order.deliveryDate + "T12:00:00").getDate()}
                     </p>
-                    <p className="text-[10px] text-[#9E9E9E]">
+                    <p className="text-[11px] text-[#9E9E9E]">
                       {new Date(order.deliveryDate + "T12:00:00").toLocaleDateString("en-CA", { weekday: "short" })}
                     </p>
                   </div>
@@ -99,7 +99,7 @@ export default function OrdersPage() {
                           <div key={item.id} className="relative w-9 h-9 rounded-lg overflow-hidden bg-[#F0EBE0] shrink-0 border border-[#E8E4DC]">
                             <Image src={item.meal.imageUrl} alt={item.meal.name} fill className="object-cover" sizes="36px" />
                             {idx === 4 && items.length > 5 && (
-                              <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white text-[9px] font-bold">
+                              <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white text-[11px] font-bold">
                                 +{items.length - 5}
                               </div>
                             )}
@@ -184,7 +184,7 @@ export default function OrdersPage() {
                       >
                         <Image src={item.meal.imageUrl} alt={item.meal.name} fill className="object-cover" sizes="60px" />
                         {idx === 3 && order.items.length > 4 && (
-                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white text-[9px] font-bold">
+                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white text-[11px] font-bold">
                             +{order.items.length - 4}
                           </div>
                         )}
@@ -198,17 +198,17 @@ export default function OrdersPage() {
                     <p className="text-xs font-semibold text-[#1A1A1A]">
                       {formatDate(order.deliveryDate, { month: "short", day: "numeric" })}
                     </p>
-                    <p className="text-[10px] text-[#9E9E9E]">
+                    <p className="text-[11px] text-[#9E9E9E]">
                       {mealCount} meals · {formatCurrency(order.total)}
                     </p>
                   </div>
                   <div className="flex items-center justify-between">
                     {rated ? (
-                      <span className="text-[10px] text-[#9E9E9E] flex items-center gap-1">
+                      <span className="text-[11px] text-[#9E9E9E] flex items-center gap-1">
                         <CheckCircle2 className="w-3 h-3 text-[#7ED22A]" /> Rated
                       </span>
                     ) : (
-                      <span className="text-[10px] font-semibold text-[#004945] flex items-center gap-1">
+                      <span className="text-[11px] font-semibold text-[#004945] flex items-center gap-1">
                         <Star className="w-2.5 h-2.5 text-[#7ED22A]" /> Tap to rate
                       </span>
                     )}

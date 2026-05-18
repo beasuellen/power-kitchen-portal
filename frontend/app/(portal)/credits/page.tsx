@@ -54,7 +54,7 @@ export default function CreditsPage() {
             ].map(({ label, value }) => (
               <div key={label} className="bg-white/15 rounded-xl p-2.5">
                 <p className="font-bold text-white">{value}</p>
-                <p className="text-[10px] text-white/60">{label}</p>
+                <p className="text-[11px] text-white/60">{label}</p>
               </div>
             ))}
           </div>

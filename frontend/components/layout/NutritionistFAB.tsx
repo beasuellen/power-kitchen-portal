@@ -1,19 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Video, Mail, Salad, CalendarDays, ExternalLink } from "lucide-react";
+import { X, Phone, Mail, Salad, CalendarDays, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NUTRITIONISTS = [
-  {
-    id: "emily",
-    name: "Emily Meneses",
-    initials: "EM",
-    specialty: "Performance & Muscle Gain",
-    bgColor: "bg-[#004945]",
-    textColor: "text-white",
-    email: "emily@powerkitchen.ca",
-  },
   {
     id: "caroline",
     name: "Caroline Brancalion",
@@ -40,6 +31,11 @@ export function NutritionistFAB() {
   const handleAction = (type: "call" | "email", nutri: typeof NUTRITIONISTS[number]) => {
     setToast({ nutritionistName: nutri.name, type, email: nutri.email });
     setTimeout(() => setToast(null), 4000);
+    if (type === "call") {
+      window.open("https://calendly.com/powerkitchen", "_blank", "noopener,noreferrer");
+    } else {
+      window.open(`mailto:${nutri.email}?subject=Nutrition%20Question`, "_self");
+    }
   };
 
   return (
@@ -110,9 +106,9 @@ export function NutritionistFAB() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-[#1A1A1A]">{nutri.name}</p>
-                  <p className="text-[10px] text-[#9E9E9E] truncate">{nutri.specialty}</p>
+                  <p className="text-[11px] text-[#9E9E9E] truncate">{nutri.specialty}</p>
                 </div>
-                <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full px-2 py-0.5 text-[10px] font-semibold shrink-0">
+                <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full px-2 py-0.5 text-[11px] font-semibold shrink-0">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                   Online
                 </span>
@@ -123,8 +119,8 @@ export function NutritionistFAB() {
                   onClick={() => handleAction("call", nutri)}
                   className="flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium text-[#004945] hover:bg-[#EAF7D9] transition-colors border-r border-[#F0EBE0]"
                 >
-                  <Video className="w-3.5 h-3.5" />
-                  Video call
+                  <Phone className="w-3.5 h-3.5" />
+                  Phone call
                 </button>
                 <button
                   onClick={() => handleAction("email", nutri)}
@@ -153,7 +149,7 @@ export function NutritionistFAB() {
               </p>
               <p className="text-[11px] text-[#6B6B6B] mt-0.5 leading-relaxed">
                 {toast.type === "call"
-                  ? `You'll be redirected to schedule a video call with ${toast.nutritionistName}.`
+                  ? `You'll be redirected to schedule a phone call with ${toast.nutritionistName}.`
                   : `Your email client will open with ${toast.email} already set as the recipient.`
                 }
               </p>
@@ -163,8 +159,8 @@ export function NutritionistFAB() {
 
         {/* Footer */}
         <div className="px-4 pb-4 pt-1">
-          <p className="text-[10px] text-[#9E9E9E] text-center">
-            Available Mon–Fri · Video calls are free for active subscribers
+          <p className="text-[11px] text-[#9E9E9E] text-center">
+            Available Mon–Fri · Phone calls are free for active subscribers
           </p>
         </div>
       </div>

@@ -35,7 +35,7 @@ function Pill({ tag }: { tag: DietaryTag }) {
   return (
     <div className="inline-flex items-center gap-1 bg-white border border-[#E8E4DC] rounded-full px-2 py-0.5 shrink-0">
       <DietaryIcon tag={tag} size={12} />
-      <span className="text-[10px] font-medium text-[#6B6B6B] leading-none whitespace-nowrap">
+      <span className="text-[11px] font-medium text-[#6B6B6B] leading-none whitespace-nowrap">
         {cfg.label}
       </span>
     </div>
@@ -63,7 +63,7 @@ export function DietaryPills({
               className="inline-flex items-center gap-1.5 bg-white border border-[#E8E4DC] rounded-full px-2.5 py-1"
             >
               <DietaryIcon tag={tag} size={14} />
-              <span className="text-[10px] font-medium text-[#6B6B6B] leading-none">
+              <span className="text-[11px] font-medium text-[#6B6B6B] leading-none">
                 {cfg.label}
               </span>
             </div>
@@ -85,7 +85,7 @@ export function DietaryPills({
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); onSeeAll?.(); }}
-          className="text-[10px] text-[#9E9E9E] font-medium whitespace-nowrap shrink-0 hover:text-[#004945] transition-colors"
+          className="text-[11px] text-[#9E9E9E] font-medium whitespace-nowrap shrink-0 hover:text-[#004945] transition-colors"
         >
           See all
         </button>

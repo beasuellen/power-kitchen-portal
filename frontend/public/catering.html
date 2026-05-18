@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Twelve Catering — Elevated Office Dining</title>
+  <style>
+    /* ─── TOKENS ──────────────────────────────── */
+    :root {
+      --green-dark:  #1C3A1A;
+      --green-mid:   #2D5A28;
+      --green-light: #4A7C44;
+      --green-pale:  #E8F0E7;
+      --cream:       #F7F3EC;
+      --cream-dark:  #EAE3D5;
+      --text:        #1A1A1A;
+      --muted:       #6B6B6B;
+      --white:       #FFFFFF;
+      --radius:      16px;
+      --radius-sm:   10px;
+      --shadow:      0 2px 16px rgba(0,0,0,0.07);
+      --shadow-lg:   0 8px 40px rgba(0,0,0,0.16);
+      --ease:        0.2s ease;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      background: var(--cream);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    /* ─── HEADER ──────────────────────────────── */
+    header {
+      position: sticky; top: 0; z-index: 200;
+      background: var(--white);
+      border-bottom: 1px solid var(--cream-dark);
+      padding: 0 2.5rem;
+      height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .logo {
+      display: flex; align-items: center; gap: .75rem;
+      text-decoration: none;
+    }
+    .logo-mark {
+      width: 36px; height: 36px;
+      background: var(--green-dark); border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; color: var(--white);
+    }
+    .logo-text {
+      font-size: 1.1rem; font-weight: 800;
+      color: var(--green-dark); letter-spacing: -.5px;
+    }
+    .logo-text span {
+      display: block; font-size: .65rem; font-weight: 500;
+      color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase;
+      margin-top: -.1rem;
+    }
+
+    nav { display: flex; align-items: center; gap: 1.75rem; }
+    nav a {
+      text-decoration: none; color: var(--muted);
+      font-size: .875rem; font-weight: 500;
+      transition: color var(--ease);
+    }
+    nav a:hover { color: var(--green-dark); }
+    .btn-nav {
+      background: var(--green-dark) !important;
+      color: var(--white) !important;
+      padding: .5rem 1.25rem;
+      border-radius: 100px;
+      font-weight: 700 !important;
+      transition: background var(--ease) !important;
+    }
+    .btn-nav:hover { background: var(--green-mid) !important; }
+
+    /* ─── HERO ────────────────────────────────── */
+    .hero {
+      background: var(--green-dark); color: var(--white);
+      padding: 8rem 2rem 7rem;
+      text-align: center;
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: ""; position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse at 20% 60%, rgba(74,124,68,.35) 0%, transparent 55%),
+        radial-gradient(ellipse at 80% 20%, rgba(45,90,40,.4)  0%, transparent 50%);
+    }
+    .hero-inner { position: relative; max-width: 700px; margin: 0 auto; }
+    .hero-tag {
+      display: inline-block;
+      background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2);
+      color: rgba(255,255,255,.8);
+      padding: .3rem 1rem; border-radius: 100px;
+      font-size: .72rem; font-weight: 600; letter-spacing: 1.5px;
+      text-transform: uppercase; margin-bottom: 1.75rem;
+    }
+    .hero h1 {
+      font-size: clamp(2.4rem, 5.5vw, 4rem);
+      font-weight: 800; line-height: 1.08; letter-spacing: -2px;
+      margin-bottom: 1.25rem;
+    }
+    .hero p {
+      font-size: 1.05rem; color: rgba(255,255,255,.7);
+      margin-bottom: 2.75rem; max-width: 500px; margin-left: auto; margin-right: auto;
+    }
+    .hero-actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+    .btn-hero {
+      display: inline-block;
+      background: var(--white); color: var(--green-dark);
+      padding: .875rem 2.25rem; border-radius: 100px;
+      font-weight: 700; font-size: 1rem;
+      border: none; cursor: pointer; text-decoration: none;
+      box-shadow: 0 4px 24px rgba(0,0,0,.2);
+      transition: transform var(--ease), box-shadow var(--ease);
+    }
+    .btn-hero:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,.28); }
+    .btn-hero-ghost {
+      display: inline-block;
+      background: transparent; color: rgba(255,255,255,.85);
+      padding: .875rem 2.25rem; border-radius: 100px;
+      font-weight: 600; font-size: 1rem;
+      border: 1.5px solid rgba(255,255,255,.3); cursor: pointer; text-decoration: none;
+      transition: border-color var(--ease), color var(--ease);
+    }
+    .btn-hero-ghost:hover { border-color: rgba(255,255,255,.7); color: var(--white); }
+
+    /* ─── TRUST BAR ───────────────────────────── */
+    .trust-bar {
+      background: var(--white);
+      border-bottom: 1px solid var(--cream-dark);
+      padding: 1rem 2rem;
+      display: flex; align-items: center; justify-content: center; gap: 2.5rem;
+      flex-wrap: wrap;
+    }
+    .trust-item {
+      display: flex; align-items: center; gap: .5rem;
+      font-size: .8rem; color: var(--muted); font-weight: 500;
+    }
+    .trust-item strong { color: var(--green-dark); }
+
+    /* ─── SECTION ─────────────────────────────── */
+    .section { max-width: 1120px; margin: 0 auto; padding: 5rem 2rem; }
+    .section-label {
+      font-size: .72rem; font-weight: 700; letter-spacing: 2.5px;
+      text-transform: uppercase; color: var(--green-light); margin-bottom: .4rem;
+    }
+    .section-title {
+      font-size: 2rem; font-weight: 800;
+      color: var(--green-dark); margin-bottom: 2rem; letter-spacing: -.5px;
+    }
+
+    /* ─── CATEGORY TABS ───────────────────────── */
+    .tabs-row {
+      display: flex; gap: .5rem;
+      overflow-x: auto; padding-bottom: .25rem;
+      margin-bottom: 2.25rem; scrollbar-width: none;
+    }
+    .tabs-row::-webkit-scrollbar { display: none; }
+    .tab {
+      display: flex; align-items: center; gap: .45rem;
+      padding: .55rem 1.1rem; border-radius: 100px;
+      border: 1.5px solid var(--cream-dark);
+      background: var(--white); color: var(--muted);
+      font-size: .85rem; font-weight: 500;
+      cursor: pointer; white-space: nowrap;
+      transition: all var(--ease);
+    }
+    .tab:hover { border-color: var(--green-light); color: var(--green-dark); }
+    .tab.active { background: var(--green-dark); border-color: var(--green-dark); color: var(--white); }
+
+    /* ─── MENU GRID ───────────────────────────── */
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(295px, 1fr));
+      gap: 1.25rem;
+    }
+
+    /* ─── CARD ────────────────────────────────── */
+    .card {
+      background: var(--white); border-radius: var(--radius);
+      overflow: hidden; box-shadow: var(--shadow);
+      display: flex; flex-direction: column;
+      transition: transform var(--ease), box-shadow var(--ease);
+    }
+    .card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+
+    .card-img {
+      height: 145px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 3.6rem;
+    }
+    .card-img[data-cat="Wraps & Sandwiches"] { background: #EAF5E4; }
+    .card-img[data-cat="Fresh Salads"]       { background: #F0F8E8; }
+    .card-img[data-cat="Chicken & Beef"]     { background: #FDE8E0; }
+    .card-img[data-cat="Pasta & Sides"]      { background: #FDF5E6; }
+    .card-img[data-cat="Vegetarian"]         { background: #E8F5EF; }
+
+    .card-body { padding: 1.25rem; flex: 1; display: flex; flex-direction: column; }
+    .card-cat {
+      font-size: .68rem; font-weight: 700; letter-spacing: 1px;
+      text-transform: uppercase; color: var(--green-light); margin-bottom: .3rem;
+    }
+    .card-name { font-size: 1rem; font-weight: 700; margin-bottom: .35rem; color: var(--text); }
+    .card-desc { font-size: .82rem; color: var(--muted); line-height: 1.55; }
+
+    /* ─── HOW IT WORKS ────────────────────────── */
+    .how-section { background: var(--green-dark); color: var(--white); padding: 6rem 2rem; }
+    .how-inner { max-width: 900px; margin: 0 auto; text-align: center; }
+    .how-inner .section-label { color: rgba(255,255,255,.45); }
+    .how-inner .section-title { color: var(--white); margin-bottom: 3.5rem; }
+    .steps-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 2.5rem; }
+    .step { text-align: center; }
+    .step-num {
+      width: 52px; height: 52px; border-radius: 50%;
+      background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 1.15rem; margin: 0 auto 1.1rem;
+    }
+    .step h3 { font-size: 1rem; font-weight: 700; margin-bottom: .5rem; }
+    .step p   { font-size: .85rem; color: rgba(255,255,255,.55); line-height: 1.6; }
+
+    /* ─── CONTACT SECTION ─────────────────────── */
+    .contact-section { background: var(--cream-dark); padding: 6rem 2rem; }
+    .contact-inner   { max-width: 700px; margin: 0 auto; }
+    .contact-inner .section-label { color: var(--green-light); }
+    .contact-inner .section-title { margin-bottom: .5rem; }
+    .contact-intro { font-size: .95rem; color: var(--muted); margin-bottom: 2.5rem; line-height: 1.7; }
+
+    .form-card {
+      background: var(--white); border-radius: 24px;
+      padding: 2.5rem; box-shadow: var(--shadow-lg);
+    }
+
+    .field { margin-bottom: 1.2rem; }
+    .field label {
+      display: block; font-size: .82rem; font-weight: 600;
+      color: var(--text); margin-bottom: .4rem;
+    }
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%; padding: .75rem 1rem;
+      border: 1.5px solid var(--cream-dark);
+      border-radius: var(--radius-sm);
+      font-size: .9rem; color: var(--text);
+      background: var(--white); font-family: inherit;
+      outline: none;
+      transition: border-color var(--ease), box-shadow var(--ease);
+      appearance: none;
+    }
+    .field select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath fill='%236B6B6B' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 1rem center; padding-right: 2.5rem;
+    }
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      border-color: var(--green-light);
+      box-shadow: 0 0 0 3px rgba(74,124,68,.1);
+    }
+    .field textarea { resize: vertical; min-height: 120px; }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .field .hint { font-size: .75rem; color: var(--muted); margin-top: .3rem; }
+
+    .btn-submit {
+      width: 100%; padding: .9rem;
+      background: var(--green-dark); color: var(--white);
+      border: none; border-radius: var(--radius-sm);
+      font-size: .95rem; font-weight: 700;
+      cursor: pointer; font-family: inherit;
+      transition: background var(--ease), transform .1s;
+      margin-top: .5rem;
+    }
+    .btn-submit:hover { background: var(--green-mid); }
+    .btn-submit:active { transform: scale(.99); }
+
+    /* Success */
+    .form-success {
+      display: none; text-align: center; padding: 2rem 0;
+    }
+    .success-icon {
+      width: 68px; height: 68px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--green-light), var(--green-dark));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.9rem; color: var(--white); margin: 0 auto 1.5rem;
+    }
+    .form-success h3 { font-size: 1.35rem; font-weight: 800; color: var(--green-dark); margin-bottom: .5rem; }
+    .form-success p  { font-size: .9rem; color: var(--muted); max-width: 320px; margin: 0 auto; }
+
+    /* ─── FOOTER ──────────────────────────────── */
+    footer {
+      background: var(--text); color: rgba(255,255,255,.45);
+      padding: 3rem 2rem;
+    }
+    .footer-inner {
+      max-width: 1120px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+    }
+    .footer-brand strong { display: block; color: var(--white); font-size: 1rem; font-weight: 800; }
+    .footer-brand p { font-size: .8rem; margin-top: .2rem; }
+    .footer-links { display: flex; gap: 1.5rem; }
+    .footer-links a { color: rgba(255,255,255,.45); font-size: .82rem; text-decoration: none; transition: color var(--ease); }
+    .footer-links a:hover { color: rgba(255,255,255,.8); }
+
+    /* ─── RESPONSIVE ──────────────────────────── */
+    @media (max-width: 640px) {
+      header { padding: 0 1.25rem; }
+      nav .hide-sm { display: none; }
+      .section { padding: 3.5rem 1.25rem; }
+      .steps-row { grid-template-columns: 1fr; gap: 1.75rem; }
+      .field-row { grid-template-columns: 1fr; }
+      .form-card { padding: 1.5rem; }
+      .contact-section { padding: 3.5rem 1.25rem; }
+      .trust-bar { gap: 1.25rem; }
+      .hero-actions { flex-direction: column; align-items: center; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════
+     HEADER
+══════════════════════════════════ -->
+<header>
+  <a class="logo" href="#">
+    <div class="logo-mark">✕</div>
+    <div class="logo-text">
+      Twelve
+      <span>Catering</span>
+    </div>
+  </a>
+  <nav>
+    <a href="#menu" class="hide-sm">Menu</a>
+    <a href="#how-it-works" class="hide-sm">How It Works</a>
+    <a href="#contact" class="btn-nav">Get in Touch</a>
+  </nav>
+</header>
+
+<!-- ══════════════════════════════════
+     HERO
+══════════════════════════════════ -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-tag">🍽️ Corporate Catering · Toronto, GTA</div>
+    <h1>Elevated Flavors for the Modern Office.</h1>
+    <p>Fresh, made-to-order catering for meetings, events, and corporate lunches. Serving the GTA since 2014.</p>
+    <div class="hero-actions">
+      <a href="#contact" class="btn-hero">Get in Touch</a>
+      <a href="#menu" class="btn-hero-ghost">Explore the Menu</a>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════
+     TRUST BAR
+══════════════════════════════════ -->
+<div class="trust-bar">
+  <div class="trust-item">🗓️ <strong>Serving Toronto</strong> since 2014</div>
+  <div class="trust-item">🏢 <strong>500+</strong> corporate clients</div>
+  <div class="trust-item">🌿 <strong>Fresh</strong> ingredients daily</div>
+  <div class="trust-item">📍 <strong>GTA-wide</strong> delivery</div>
+</div>
+
+<!-- ══════════════════════════════════
+     MENU
+══════════════════════════════════ -->
+<div id="menu" class="section">
+  <p class="section-label">What We Serve</p>
+  <h2 class="section-title">Explore the Menu</h2>
+  <div class="tabs-row" id="tabsRow"></div>
+  <div class="menu-grid" id="menuGrid"></div>
+</div>
+
+<!-- ══════════════════════════════════
+     HOW IT WORKS
+══════════════════════════════════ -->
+<section id="how-it-works" class="how-section">
+  <div class="how-inner">
+    <p class="section-label">Simple as that</p>
+    <h2 class="section-title">How It Works</h2>
+    <div class="steps-row">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h3>Browse the Menu</h3>
+        <p>Explore our full menu by category and find what's right for your team and event.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h3>Get in Touch</h3>
+        <p>Share your event details, headcount, and preferences through the contact form.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3>We Handle the Rest</h3>
+        <p>Our team puts together a custom proposal and takes care of every detail until delivery.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════
+     CONTACT
+══════════════════════════════════ -->
+<section id="contact" class="contact-section">
+  <div class="contact-inner">
+    <p class="section-label">Let's Talk</p>
+    <h2 class="section-title">Get in Touch</h2>
+    <p class="contact-intro">
+      Interested in catering for your next meeting or event? Fill out the form below and we'll get back to you within 24 hours with a custom proposal tailored to your needs.
+    </p>
+
+    <div class="form-card">
+      <form id="contactForm" onsubmit="handleSubmit(event)" novalidate>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="fName">Full Name *</label>
+            <input type="text" id="fName" placeholder="Your name" required />
+          </div>
+          <div class="field">
+            <label for="fCompany">Company</label>
+            <input type="text" id="fCompany" placeholder="Company name" />
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="fEmail">Email *</label>
+            <input type="email" id="fEmail" placeholder="you@company.com" required />
+          </div>
+          <div class="field">
+            <label for="fPhone">Phone / WhatsApp</label>
+            <input type="tel" id="fPhone" placeholder="+1 (416) 000-0000" />
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="fType">Event Type</label>
+            <select id="fType">
+              <option value="">— Select —</option>
+              <option>Office Lunch</option>
+              <option>Executive Meeting</option>
+              <option>Corporate Event</option>
+              <option>Training / Workshop</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="fHeadcount">Headcount</label>
+            <select id="fHeadcount">
+              <option value="">— Select —</option>
+              <option>Up to 10</option>
+              <option>11 – 25</option>
+              <option>26 – 50</option>
+              <option>51 – 100</option>
+              <option>100+</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="fMsg">Message *</label>
+          <textarea id="fMsg"
+            placeholder="Tell us about your event — date, location, dietary restrictions, menu preferences, or anything else we should know."
+            required></textarea>
+          <p class="hint">We'll use this to put together a custom proposal just for you.</p>
+        </div>
+
+        <button type="submit" class="btn-submit">Send Message →</button>
+      </form>
+
+      <div class="form-success" id="formSuccess">
+        <div class="success-icon">✓</div>
+        <h3>Message received!</h3>
+        <p>Thanks for reaching out. We'll get back to you within 24 hours with a custom proposal.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════
+     FOOTER
+══════════════════════════════════ -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <strong>Twelve Catering</strong>
+      <p>46 Hollinger Road, Toronto, ON M4B 3G5 · hi@twelvecatering.ca</p>
+    </div>
+    <div class="footer-links">
+      <a href="#menu">Menu</a>
+      <a href="#how-it-works">How It Works</a>
+      <a href="#contact">Contact</a>
+    </div>
+  </div>
+</footer>
+
+<!-- ══════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════ -->
+<script>
+/* ── MENU DATA ──────────────────────────── */
+const MENU = {
+  "Wraps & Sandwiches": {
+    emoji: "🌯",
+    items: [
+      { name: "Chicken Caesar Wrap",   desc: "Crisp romaine, grilled chicken, parmesan, and creamy Caesar dressing." },
+      { name: "Turkey Club",           desc: "Smoked turkey breast, crispy bacon, lettuce, and tomato." },
+      { name: "Roast Beef Sandwich",   desc: "Premium sliced roast beef with horseradish aioli." },
+      { name: "Vegetarian Wrap",       desc: "Seasonal grilled vegetables with balsamic glaze and hummus." },
+      { name: "Tuna Sandwich",         desc: "Classic tuna salad with celery and fresh herbs." },
+      { name: "Falafel Wrap",          desc: "Crispy falafel, pickled cabbage, and tahini sauce." },
+    ]
+  },
+  "Fresh Salads": {
+    emoji: "🥗",
+    items: [
+      { name: "Caesar Salad",   desc: "Romaine, house-made croutons, parmesan, and classic Caesar dressing." },
+      { name: "Greek Salad",    desc: "Tomato, cucumber, kalamata olives, and feta cheese." },
+      { name: "Asian Slaw",     desc: "Purple cabbage, carrot, edamame, and sesame dressing." },
+      { name: "Caprese",        desc: "Heirloom tomato, fresh mozzarella, basil, and extra virgin olive oil." },
+    ]
+  },
+  "Chicken & Beef": {
+    emoji: "🍗",
+    items: [
+      { name: "Mediterranean Chicken", desc: "Marinated chicken breast with herbs, olive oil, and lemon." },
+      { name: "Steak Strips",          desc: "Sliced sirloin with chimichurri and cracked pepper." },
+      { name: "Teriyaki Chicken",      desc: "Glazed chicken with teriyaki sauce, sesame, and scallions." },
+    ]
+  },
+  "Pasta & Sides": {
+    emoji: "🍝",
+    items: [
+      { name: "Penne al Pesto",        desc: "Penne with fresh basil pesto and toasted pine nuts." },
+      { name: "Artisan Mac & Cheese",  desc: "Creamy macaroni with aged cheddar and smoked paprika." },
+      { name: "Quinoa Bowl",           desc: "Quinoa, roasted vegetables, avocado, and lemon vinaigrette." },
+      { name: "Roasted Potatoes",      desc: "Rustic potatoes roasted with rosemary, garlic, and olive oil." },
+    ]
+  },
+  "Vegetarian": {
+    emoji: "🌱",
+    items: [
+      { name: "Buddha Bowl",        desc: "Grains, roasted vegetables, avocado, and tahini dressing." },
+      { name: "Tofu Wrap",          desc: "Smoked tofu, sautéed vegetables, and peanut sauce." },
+      { name: "Mushroom Risotto",   desc: "Creamy risotto with a mixed mushroom blend and parmesan." },
+    ]
+  }
+};
+
+/* ── RENDER TABS ────────────────────────── */
+let activeCat = "all";
+
+function renderTabs() {
+  const row = document.getElementById("tabsRow");
+  const all = makeTab("All", "🍴", true);
+  all.onclick = () => filter("all", all);
+  row.appendChild(all);
+
+  Object.keys(MENU).forEach(cat => {
+    const t = makeTab(cat, MENU[cat].emoji, false);
+    t.onclick = () => filter(cat, t);
+    row.appendChild(t);
+  });
+}
+
+function makeTab(label, icon, active) {
+  const b = document.createElement("button");
+  b.className = "tab" + (active ? " active" : "");
+  b.innerHTML = `<span>${icon}</span> ${label}`;
+  return b;
+}
+
+function filter(cat, clicked) {
+  activeCat = cat;
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  clicked.classList.add("active");
+  renderCards();
+}
+
+/* ── RENDER CARDS ───────────────────────── */
+function renderCards() {
+  const grid = document.getElementById("menuGrid");
+  grid.innerHTML = "";
+  Object.keys(MENU).forEach(cat => {
+    if (activeCat !== "all" && activeCat !== cat) return;
+    MENU[cat].items.forEach(item => grid.appendChild(makeCard(cat, item)));
+  });
+}
+
+function makeCard(cat, item) {
+  const el = document.createElement("div");
+  el.className = "card";
+  el.innerHTML = `
+    <div class="card-img" data-cat="${cat}">${MENU[cat].emoji}</div>
+    <div class="card-body">
+      <div class="card-cat">${cat}</div>
+      <div class="card-name">${item.name}</div>
+      <div class="card-desc">${item.desc}</div>
+    </div>`;
+  return el;
+}
+
+/* ── FORM SUBMIT ────────────────────────── */
+function handleSubmit(e) {
+  e.preventDefault();
+  const name  = document.getElementById("fName").value.trim();
+  const email = document.getElementById("fEmail").value.trim();
+  const msg   = document.getElementById("fMsg").value.trim();
+
+  if (!name || !email || !msg) {
+    alert("Please fill in all required fields (*).");
+    return;
+  }
+
+  // Connect to your backend here:
+  // fetch("https://formspree.io/f/YOUR_ID", { method:"POST", body: new FormData(e.target) })
+
+  document.getElementById("contactForm").style.display = "none";
+  document.getElementById("formSuccess").style.display = "block";
+}
+
+/* ── INIT ───────────────────────────────── */
+renderTabs();
+renderCards();
+</script>
+</body>
+</html>

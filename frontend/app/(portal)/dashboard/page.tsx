@@ -39,22 +39,28 @@ export default function DashboardPage() {
       {/* ─── Welcome (pure typography, no colored banner) ─── */}
       <div>
         <h1 className="text-3xl font-bold text-[#004945]">
-          Welcome back, {firstName}!
+          Hey, {firstName}!
         </h1>
         <p className="text-gray-500 mt-1 text-sm">
           {planName} · {mealsPerWeek} meals/week
         </p>
         {nextOrder && (
-          <div className="flex items-center gap-2 mt-2">
-            <CalendarDays className="w-4 h-4 text-[#7ED22A]" />
+          <div className="flex items-center gap-2 mt-2 flex-wrap">
+            <CalendarDays className="w-4 h-4 text-[#7ED22A] shrink-0" />
             <span className="text-sm text-gray-600">
               Next delivery in{" "}
-              <span className="font-semibold text-[#004945]">
+              <span className="font-bold text-[#004945]">
                 {daysLeft} {daysLeft === 1 ? "day" : "days"}
               </span>{" "}
               —{" "}
               {formatDate(nextOrder.deliveryDate, { weekday: "long", month: "long", day: "numeric" })}
             </span>
+            <Link
+              href={`/orders/${nextOrder.id}`}
+              className="text-[11px] font-medium text-[#9E9E9E] border border-[#E8E4DC] rounded-full px-2.5 py-0.5 hover:border-[#7ED22A] hover:text-[#004945] transition-colors"
+            >
+              Edit
+            </Link>
           </div>
         )}
       </div>
@@ -86,7 +92,7 @@ export default function DashboardPage() {
                   style={{ width: `${Math.min(100, (streak / 26) * 100)}%` }}
                 />
               </div>
-              <p className="text-[10px] text-gray-400 mt-1.5 text-right">2 weeks to Platinum</p>
+              <p className="text-[11px] text-gray-400 mt-1.5 text-right">2 weeks to Platinum</p>
             </CardBody>
           </Card>
 
@@ -111,7 +117,7 @@ export default function DashboardPage() {
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded-full bg-[#004945] flex items-center justify-center text-white text-[8px] font-bold">P</div>
+                  <div className="w-4 h-4 rounded-full bg-[#004945] flex items-center justify-center text-white text-[11px] font-bold">P</div>
                   <span className="text-sm text-gray-600">Points</span>
                 </div>
                 <span className="font-bold text-[#004945]">{points}</span>

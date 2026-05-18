@@ -130,9 +130,9 @@ export function NextOrderCard() {
           </div>
         </CardHeader>
         <CardBody className="pt-0">
-          {/* Meal list — clickable rows navigate to order detail */}
-          <div className="space-y-2 mb-4">
-            {draftItems.slice(0, 5).map((item) => (
+          {/* Meal list — scrollable, shows all items */}
+          <div className="overflow-y-auto max-h-[272px] space-y-2 mb-4 pr-0.5 scrollbar-thin scrollbar-thumb-[#E8E4DC] scrollbar-track-transparent">
+            {draftItems.map((item) => (
               <div
                 key={item.id}
                 onClick={() => router.push(`/orders/${nextOrder.id}`)}
@@ -159,18 +159,6 @@ export function NextOrderCard() {
                 </span>
               </div>
             ))}
-
-            {draftItems.length > 5 && (
-              <div
-                onClick={() => router.push(`/orders/${nextOrder.id}`)}
-                className="flex items-center gap-2 px-2 py-1 cursor-pointer hover:opacity-70 transition-opacity"
-              >
-                <ShoppingCart className="w-3.5 h-3.5 text-[#9E9E9E]" />
-                <p className="text-xs text-[#9E9E9E]">
-                  +{draftItems.length - 5} more meal{draftItems.length - 5 !== 1 ? "s" : ""} in your order
-                </p>
-              </div>
-            )}
           </div>
 
           {/* Footer */}
