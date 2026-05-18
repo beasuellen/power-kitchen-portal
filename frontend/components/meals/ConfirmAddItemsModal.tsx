@@ -15,160 +15,121 @@ interface ConfirmAddItemsModalProps {
   onCancel: () => void;
 }
 
-type OrderType = 'one-time' | 'recurring';
-
-function RadioBullet({ selected }: { selected: boolean }) {
+function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }) {
   return (
-    <span className={cn(
-      "w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-all",
-      selected ? "border-[#004945]" : "border-[#C4C4C4]"
-    )}>
-      {selected && <span className="w-2 h-2 rounded-full bg-[#004945]" />}
-    </span>
+    <button
+      role="switch"
+      aria-checked={on}
+      onClick={() => onChange(!on)}
+      className={cn(
+        "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none",
+        on ? "bg-[#7ED22A]" : "bg-[#D4D4D4]"
+      )}
+    >
+      <span
+        className={cn(
+          "pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200",
+          on ? "translate-x-5" : "translate-x-0"
+        )}
+      />
+    </button>
   );
 }
 
 export function ConfirmAddItemsModal({ items, onConfirm, onCancel }: ConfirmAddItemsModalProps) {
-  const [orderTypes, setOrderTypes] = useState<Record<string, OrderType>>(() =>
-    Object.fromEntries(items.map(({ meal }) => [meal.id, 'one-time']))
+  // false = one-time (default), true = add to all orders
+  const [allOrders, setAllOrders] = useState<Record<string, boolean>>(() =>
+    Object.fromEntries(items.map(({ meal }) => [meal.id, false]))
   );
 
-  const setAll = (type: OrderType) => {
-    setOrderTypes(Object.fromEntries(items.map(({ meal }) => [meal.id, type])));
+  const setAllItems = (value: boolean) => {
+    setAllOrders(Object.fromEntries(items.map(({ meal }) => [meal.id, value])));
   };
 
-  const toggle = (mealId: string, type: OrderType) => {
-    setOrderTypes((prev) => ({ ...prev, [mealId]: type }));
+  const toggle = (mealId: string, value: boolean) => {
+    setAllOrders((prev) => ({ ...prev, [mealId]: value }));
   };
 
-  const recurringCount = Object.values(orderTypes).filter((t) => t === 'recurring').length;
-  const oneTimeCount = Object.values(orderTypes).filter((t) => t === 'one-time').length;
-  const allRecurring = recurringCount === items.length;
-  const allOneTime = oneTimeCount === items.length;
+  const recurringCount = Object.values(allOrders).filter(Boolean).length;
+  const oneTimeCount = items.length - recurringCount;
+  const allOn = recurringCount === items.length;
 
   const handleConfirm = () => {
     const entries: AddMealEntry[] = items.map(({ meal, qty }) => ({
       meal,
       qty,
-      orderType: orderTypes[meal.id] ?? 'one-time',
+      orderType: allOrders[meal.id] ? 'recurring' : 'one-time',
     }));
     onConfirm(entries);
   };
 
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/50 backdrop-blur-[2px]">
-      <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl border border-[#E8E4DC] flex flex-col max-h-[90vh]">
+      <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl border border-[#E8E4DC] flex flex-col max-h-[90vh]">
 
         {/* Header */}
-        <div className="px-6 pt-6 pb-5 flex items-start justify-between gap-3 shrink-0 border-b border-[#F0EBE0]">
+        <div className="px-6 pt-6 pb-5 flex items-start justify-between gap-3 shrink-0">
           <div>
-            <h3 className="font-bold text-[#004945] text-base">Review items before adding</h3>
-            <p className="text-xs text-[#9E9E9E] mt-0.5">
-              Choose whether each item applies to this order only or all future orders
+            <h3 className="font-bold text-[#1A1A1A] text-lg leading-snug">Review items before adding</h3>
+            <p className="text-sm text-[#9E9E9E] mt-1">
+              Toggle on to add an item to all future orders
             </p>
           </div>
           <button
             onClick={onCancel}
-            className="p-1.5 rounded-lg hover:bg-[#F0EBE0] transition-colors shrink-0"
+            className="p-1.5 rounded-lg hover:bg-[#F0EBE0] transition-colors shrink-0 mt-0.5"
           >
             <X className="w-4 h-4 text-[#9E9E9E]" />
           </button>
         </div>
 
-        {/* Global set-all bar */}
-        <div className="px-6 py-3 flex items-center justify-between shrink-0 border-b border-[#F0EBE0] bg-[#FDFBF7]">
-          <span className="text-xs text-[#9E9E9E] font-medium">Apply to all items:</span>
-          <div className="flex gap-1">
-            <button
-              onClick={() => setAll('one-time')}
-              className={cn(
-                "px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all",
-                allOneTime
-                  ? "bg-[#004945] text-white border-[#004945]"
-                  : "bg-white border-[#E8E4DC] text-[#6B6B6B] hover:border-[#004945] hover:text-[#004945]"
-              )}
-            >
-              One-time order
-            </button>
-            <button
-              onClick={() => setAll('recurring')}
-              className={cn(
-                "px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all",
-                allRecurring
-                  ? "bg-[#004945] text-white border-[#004945]"
-                  : "bg-white border-[#E8E4DC] text-[#6B6B6B] hover:border-[#004945] hover:text-[#004945]"
-              )}
-            >
-              Add to all orders
-            </button>
-          </div>
+        {/* "Add all orders" global action */}
+        <div className="px-6 pb-3 flex items-center justify-end shrink-0">
+          <button
+            onClick={() => setAllItems(!allOn)}
+            className="text-sm font-medium text-[#004945] hover:underline transition-all"
+          >
+            {allOn ? "Set all as one-time" : "Add all to future orders"}
+          </button>
         </div>
 
-        {/* Table header */}
-        <div className="px-6 py-2 grid grid-cols-[1fr_40px_64px_auto] gap-3 items-center shrink-0">
-          <span className="text-[11px] font-semibold text-[#9E9E9E] uppercase tracking-wider">Item</span>
-          <span className="text-[11px] font-semibold text-[#9E9E9E] uppercase tracking-wider text-center">Qty</span>
-          <span className="text-[11px] font-semibold text-[#9E9E9E] uppercase tracking-wider text-right">Price</span>
-          <span className="text-[11px] font-semibold text-[#9E9E9E] uppercase tracking-wider text-right pr-1">Delivery</span>
-        </div>
+        {/* Divider */}
+        <div className="border-t border-[#F0EBE0] shrink-0" />
 
         {/* Item rows */}
-        <div className="overflow-y-auto flex-1 min-h-0 px-6">
+        <div className="overflow-y-auto flex-1 min-h-0">
           <div className="divide-y divide-[#F0EBE0]">
             {items.map(({ meal, qty }) => {
-              const type = orderTypes[meal.id] ?? 'one-time';
+              const isOn = allOrders[meal.id] ?? false;
 
               return (
-                <div key={meal.id} className="py-3.5 grid grid-cols-[1fr_40px_64px_auto] gap-3 items-center">
+                <div key={meal.id} className="flex items-center gap-4 px-6 py-4">
 
-                  {/* Item info */}
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-[#F0EBE0] shrink-0">
-                      <Image
-                        src={meal.imageUrl}
-                        alt={meal.name}
-                        fill
-                        className="object-cover"
-                        sizes="40px"
-                      />
-                    </div>
-                    <p className="text-sm font-medium text-[#1A1A1A] truncate leading-snug">{meal.name}</p>
+                  {/* Thumbnail */}
+                  <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-[#F0EBE0] shrink-0">
+                    <Image
+                      src={meal.imageUrl}
+                      alt={meal.name}
+                      fill
+                      className="object-cover"
+                      sizes="56px"
+                    />
                   </div>
 
-                  {/* Qty */}
-                  <span className="text-sm text-[#6B6B6B] text-center">{qty}×</span>
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-[#1A1A1A] truncate">{meal.name}</p>
+                    <p className="text-sm text-[#9E9E9E] mt-0.5">
+                      {qty}× · {formatCurrency(qty * meal.price)}
+                    </p>
+                  </div>
 
-                  {/* Price */}
-                  <span className="text-sm font-semibold text-[#1A1A1A] text-right">
-                    {formatCurrency(qty * meal.price)}
-                  </span>
-
-                  {/* Radio selector */}
-                  <div className="flex flex-col gap-2 shrink-0">
-                    <button
-                      onClick={() => toggle(meal.id, 'one-time')}
-                      className="flex items-center gap-1.5 group"
-                    >
-                      <RadioBullet selected={type === 'one-time'} />
-                      <span className={cn(
-                        "text-xs whitespace-nowrap transition-colors",
-                        type === 'one-time' ? "font-semibold text-[#004945]" : "text-[#9E9E9E] group-hover:text-[#6B6B6B]"
-                      )}>
-                        One-time
-                      </span>
-                    </button>
-                    <button
-                      onClick={() => toggle(meal.id, 'recurring')}
-                      className="flex items-center gap-1.5 group"
-                    >
-                      <RadioBullet selected={type === 'recurring'} />
-                      <span className={cn(
-                        "text-xs whitespace-nowrap transition-colors",
-                        type === 'recurring' ? "font-semibold text-[#004945]" : "text-[#9E9E9E] group-hover:text-[#6B6B6B]"
-                      )}>
-                        Recurring
-                      </span>
-                    </button>
+                  {/* Toggle */}
+                  <div className="flex flex-col items-center gap-1 shrink-0">
+                    <Toggle on={isOn} onChange={(v) => toggle(meal.id, v)} />
+                    <span className="text-[10px] font-medium text-[#9E9E9E] whitespace-nowrap">
+                      {isOn ? "All orders" : "One-time"}
+                    </span>
                   </div>
                 </div>
               );
@@ -176,17 +137,15 @@ export function ConfirmAddItemsModal({ items, onConfirm, onCancel }: ConfirmAddI
           </div>
         </div>
 
+        {/* Divider */}
+        <div className="border-t border-[#F0EBE0] shrink-0" />
+
         {/* Footer */}
-        <div className="px-6 pt-4 pb-6 border-t border-[#F0EBE0] mt-2 shrink-0">
-          {/* Summary */}
-          <p className="text-xs text-[#9E9E9E] mb-4">
-            {oneTimeCount > 0 && (
-              <span className="font-semibold text-[#1A1A1A]">{oneTimeCount} one-time</span>
-            )}
+        <div className="px-6 pt-4 pb-6 shrink-0">
+          <p className="text-sm text-[#9E9E9E] mb-4">
+            {oneTimeCount > 0 && <span className="font-semibold text-[#1A1A1A]">{oneTimeCount} one-time</span>}
             {oneTimeCount > 0 && recurringCount > 0 && <span> · </span>}
-            {recurringCount > 0 && (
-              <span className="font-semibold text-[#1A1A1A]">{recurringCount} recurring</span>
-            )}
+            {recurringCount > 0 && <span className="font-semibold text-[#1A1A1A]">{recurringCount} recurring</span>}
             <span> will be added to your order</span>
           </p>
 
@@ -199,6 +158,7 @@ export function ConfirmAddItemsModal({ items, onConfirm, onCancel }: ConfirmAddI
             </Button>
           </div>
         </div>
+
       </div>
     </div>
   );
