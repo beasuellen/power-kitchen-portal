@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard,
-  CalendarDays,
-  SlidersHorizontal,
+  Home,
+  ShoppingBag,
+  FileText,
   Trophy,
   MessageCircle,
 } from "lucide-react";
@@ -19,11 +19,11 @@ export function MobileNav() {
   const nextOrderHref = nextOrder ? `/orders/${nextOrder.id}` : "/orders";
 
   const navItems = [
-    { href: "/dashboard",  label: "Home",       icon: LayoutDashboard, matchPrefix: "/dashboard" },
-    { href: nextOrderHref, label: "Next Order", icon: CalendarDays,    matchPrefix: "/orders" },
-    { href: "/plan",       label: "My Plan",    icon: SlidersHorizontal, matchPrefix: "/plan" },
-    { href: "/rewards",    label: "Rewards",    icon: Trophy,          matchPrefix: "/rewards" },
-    { href: "/help",       label: "Help",       icon: MessageCircle,   matchPrefix: "/help" },
+    { href: "/dashboard",  label: "Home",       icon: Home,        matchPrefix: "/dashboard" },
+    { href: nextOrderHref, label: "Next Order", icon: ShoppingBag, matchPrefix: "/orders" },
+    { href: "/plan",       label: "My Plan",    icon: FileText,    matchPrefix: "/plan" },
+    { href: "/rewards",    label: "Rewards",    icon: Trophy,      matchPrefix: "/rewards" },
+    { href: "/help",       label: "Help",       icon: MessageCircle, matchPrefix: "/help" },
   ];
 
   return (

@@ -48,7 +48,7 @@ export function SubscriptionSwitcher() {
         className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-[#E8E4DC] bg-white hover:bg-[#EAF7D9]/50 transition-colors"
       >
         <RefreshIcon className="w-4 h-4 text-[#004945] shrink-0" />
-        <div className="hidden sm:block text-left">
+        <div className="block text-left">
           <p className="text-xs font-semibold text-[#004945] leading-none">{active.label}</p>
           <p className={cn("text-[11px] leading-none mt-0.5", st.color)}>{st.label}</p>
         </div>

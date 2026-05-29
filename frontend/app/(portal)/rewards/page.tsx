@@ -207,37 +207,54 @@ export default function RewardsPage() {
         <p className="text-sm text-[#6B6B6B] mt-0.5">Track your progress and earn credits</p>
       </div>
 
-      {/* ── Stats (3 cols) ── */}
-      <div className="grid grid-cols-3 gap-3">
-        {/* Streak */}
-        <div
-          onClick={() => setSectionInfo("streak")}
-          className="bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-100 rounded-2xl p-5 flex flex-col items-center text-center cursor-pointer hover:shadow-md hover:border-orange-200 transition-all"
-        >
+      {/* ── Stats ── */}
+
+      {/* Mobile: unified compact card */}
+      <div className="sm:hidden bg-white rounded-2xl border border-[#E8E4DC] overflow-hidden">
+        <div className="grid grid-cols-3 divide-x divide-[#F0EBE0]">
+          <button onClick={() => setSectionInfo("streak")} className="flex flex-col items-center gap-2 py-5 px-2 active:bg-orange-50 transition-colors">
+            <div className="w-8 h-8 rounded-xl bg-orange-100 flex items-center justify-center">
+              <Flame className="w-4 h-4 text-orange-500" />
+            </div>
+            <p className="text-2xl font-bold text-orange-600 leading-none">{streak}</p>
+            <p className="text-[10px] font-semibold text-orange-400 uppercase tracking-wide text-center leading-tight">Week<br/>Streak</p>
+          </button>
+
+          <button onClick={() => setSectionInfo("credits")} className="flex flex-col items-center gap-2 py-5 px-2 bg-gradient-to-b from-[#EAF7D9]/50 to-transparent active:from-[#EAF7D9] transition-colors">
+            <div className="w-8 h-8 rounded-xl bg-[#004945] flex items-center justify-center">
+              <Wallet className="w-4 h-4 text-[#7ED22A]" />
+            </div>
+            <p className="text-2xl font-bold text-[#004945] leading-none">{formatCurrency(storeCredit)}</p>
+            <p className="text-[10px] font-semibold text-[#004945] uppercase tracking-wide text-center leading-tight">Store<br/>Credit</p>
+          </button>
+
+          <button onClick={() => setSectionInfo("points")} className="flex flex-col items-center gap-2 py-5 px-2 active:bg-yellow-50 transition-colors">
+            <div className="w-8 h-8 rounded-xl bg-yellow-100 flex items-center justify-center">
+              <Star className="w-4 h-4 text-yellow-500" />
+            </div>
+            <p className="text-2xl font-bold text-yellow-600 leading-none">{points}</p>
+            <p className="text-[10px] font-semibold text-yellow-500 uppercase tracking-wide text-center leading-tight">Points<br/>Earned</p>
+          </button>
+        </div>
+      </div>
+
+      {/* Desktop: 3 separate gradient cards */}
+      <div className="hidden sm:grid sm:grid-cols-3 gap-3">
+        <div onClick={() => setSectionInfo("streak")} className="bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-100 rounded-2xl p-5 flex flex-col items-center text-center cursor-pointer hover:shadow-md hover:border-orange-200 transition-all">
           <div className="w-12 h-12 rounded-2xl bg-orange-100 flex items-center justify-center mb-3">
             <Flame className="w-6 h-6 text-orange-500" />
           </div>
           <p className="text-4xl font-bold text-orange-600">{streak}</p>
           <p className="text-xs font-semibold text-orange-500 mt-1 uppercase tracking-wide">Week Streak</p>
         </div>
-
-        {/* Credits */}
-        <div
-          onClick={() => setSectionInfo("credits")}
-          className="bg-gradient-to-br from-[#EAF7D9] to-[#f4fcea] border border-[#B9EA91] rounded-2xl p-5 flex flex-col items-center text-center cursor-pointer hover:shadow-md hover:border-[#7ED22A] transition-all"
-        >
+        <div onClick={() => setSectionInfo("credits")} className="bg-gradient-to-br from-[#EAF7D9] to-[#f4fcea] border border-[#B9EA91] rounded-2xl p-5 flex flex-col items-center text-center cursor-pointer hover:shadow-md hover:border-[#7ED22A] transition-all">
           <div className="w-12 h-12 rounded-2xl bg-[#004945] flex items-center justify-center mb-3 shrink-0">
             <Wallet className="w-6 h-6 text-[#7ED22A]" />
           </div>
           <p className="text-4xl font-bold text-[#004945]">{formatCurrency(storeCredit)}</p>
           <p className="text-xs font-semibold text-[#004945] mt-1 uppercase tracking-wide">Store Credit</p>
         </div>
-
-        {/* Points */}
-        <div
-          onClick={() => setSectionInfo("points")}
-          className="bg-gradient-to-br from-yellow-50 to-amber-50 border border-yellow-100 rounded-2xl p-5 flex flex-col items-center text-center cursor-pointer hover:shadow-md hover:border-yellow-200 transition-all"
-        >
+        <div onClick={() => setSectionInfo("points")} className="bg-gradient-to-br from-yellow-50 to-amber-50 border border-yellow-100 rounded-2xl p-5 flex flex-col items-center text-center cursor-pointer hover:shadow-md hover:border-yellow-200 transition-all">
           <div className="w-12 h-12 rounded-2xl bg-yellow-100 flex items-center justify-center mb-3">
             <Star className="w-6 h-6 text-yellow-500" />
           </div>

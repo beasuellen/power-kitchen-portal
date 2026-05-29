@@ -19,46 +19,27 @@ export function RatingPopup({ order }: RatingPopupProps) {
 
   return (
     <>
-      {/* Collapsed toast pill */}
+      {/* Subtle pill — stacked above the nutritionist FAB on mobile */}
       {!submitted && (
-        <div className="fixed bottom-20 lg:bottom-6 left-4 lg:left-72 z-30 w-80 bg-white rounded-2xl shadow-2xl border border-[#E8E4DC] overflow-hidden">
-          <div className="px-4 py-3 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-yellow-50 flex items-center justify-center shrink-0">
-              <Star className="w-4 h-4 text-yellow-500" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-[#004945]">Rate your meals</p>
-              <p className="text-xs text-gray-400">
-                {formatShortDate(order.deliveryDate)} delivery · earn 10 pts
-              </p>
-            </div>
-            <div className="flex items-center gap-1 shrink-0">
-              <button
-                onClick={() => setFeedbackOpen(true)}
-                className="px-3 py-1.5 rounded-lg bg-[#004945] text-white text-xs font-medium hover:bg-[#003835] transition-colors"
-              >
-                Rate now
-              </button>
-              <button
-                onClick={() => setDismissed(true)}
-                className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 transition-colors"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            </div>
+        <div className="fixed bottom-[146px] lg:bottom-6 right-4 lg:left-72 lg:right-auto z-30">
+          <div className="flex items-center gap-2 bg-white/90 backdrop-blur-sm border border-[#E8E4DC] rounded-full shadow-lg px-4 py-2.5">
+            <Star className="w-4 h-4 text-yellow-500 shrink-0" />
+            <button
+              onClick={() => setFeedbackOpen(true)}
+              className="text-sm font-normal text-[#004945] hover:underline whitespace-nowrap"
+            >
+              Rate your meals · 10 pts
+            </button>
           </div>
         </div>
       )}
 
-      {/* Thank-you confirmation after feedback */}
+      {/* Thank-you pill after feedback */}
       {submitted && (
-        <div className="fixed bottom-20 lg:bottom-6 left-4 lg:left-72 z-30 w-80 bg-white rounded-2xl shadow-2xl border border-[#E8E4DC] overflow-hidden">
-          <div className="px-5 py-6 text-center">
-            <div className="w-12 h-12 rounded-full bg-[#EAF7D9] flex items-center justify-center mx-auto mb-2">
-              <Star className="w-6 h-6 text-[#7ED22A]" />
-            </div>
-            <p className="font-semibold text-[#004945]">Thanks for your feedback!</p>
-            <p className="text-xs text-gray-400 mt-1">You earned 10 points</p>
+        <div className="fixed bottom-[168px] lg:bottom-6 right-4 lg:left-72 lg:right-auto z-30">
+          <div className="flex items-center gap-2 bg-[#EAF7D9] border border-[#B9EA91] rounded-full shadow-md px-3 py-1.5">
+            <Star className="w-3.5 h-3.5 text-[#7ED22A] shrink-0" />
+            <p className="text-xs font-medium text-[#004945] whitespace-nowrap">Thanks! +10 pts earned</p>
           </div>
         </div>
       )}

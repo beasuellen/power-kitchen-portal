@@ -487,25 +487,22 @@ export default function PlanPage() {
       </div>
 
       {/* Subscription Management */}
-      <div className="bg-white rounded-2xl border border-[#E8E4DC] p-5 flex items-center justify-between gap-4">
-        {/* Label */}
-        <p className="text-xs text-[#6B6B6B] uppercase tracking-wider font-semibold shrink-0">
-          Subscription<br />Management
+      <div className="bg-white rounded-2xl border border-[#E8E4DC] p-5 space-y-4">
+        <p className="text-xs text-[#6B6B6B] tracking-wider font-semibold">
+          Subscription management
         </p>
-
-        {/* Actions card */}
-        <div className="flex flex-col items-start gap-2.5">
+        <div className="grid grid-cols-2 gap-3">
           <button
             onClick={() => { setPauseDuration(null); setShowPauseModal(true); }}
-            className="text-sm font-medium text-[#6B6B6B] border border-[#D4CFC5] rounded-lg px-4 py-2 hover:border-[#004945] hover:text-[#004945] transition-all"
+            className="text-sm font-medium text-[#6B6B6B] border border-[#D4CFC5] rounded-lg px-4 py-2.5 hover:border-[#004945] hover:text-[#004945] transition-all"
           >
-            Pause Subscription
+            Pause subscription
           </button>
           <button
             onClick={() => { setCancelStep(1); setShowCancelConfirm(true); }}
-            className="text-xs font-medium text-[#C4BFB5] hover:text-red-400 transition-colors px-1"
+            className="text-sm font-medium text-[#C4BFB5] border border-[#E8E4DC] rounded-lg px-4 py-2.5 hover:border-red-300 hover:text-red-400 transition-all"
           >
-            Cancel Subscription
+            Cancel subscription
           </button>
         </div>
       </div>

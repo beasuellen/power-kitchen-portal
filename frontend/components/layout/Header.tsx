@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Bell, ChevronDown, User, CreditCard, LogOut, MapPin } from "lucide-react";
 import { mockCustomer, mockSubscription } from "@/lib/mock-data";
+import { SubscriptionSwitcher } from "@/components/layout/SubscriptionSwitcher";
 
 const notifications = [
   { id: 1, text: "Your Apr 24 order is ready to customize", time: "2h ago", unread: true },
@@ -32,10 +33,13 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-30 bg-[#FDFBF7] border-b border-[#E8E4DC] px-4 lg:px-7 py-3 flex items-center justify-between">
-      {/* Mobile: logo */}
-      <Link href="/dashboard" className="lg:hidden">
-        <Image src="/logo-pk.svg" alt="Power Kitchen" width={62} height={24} />
-      </Link>
+      {/* Mobile: logo + subscription switcher */}
+      <div className="lg:hidden flex items-center gap-3">
+        <Link href="/dashboard">
+          <Image src="/logo-pk.svg" alt="Power Kitchen" width={62} height={24} />
+        </Link>
+        <SubscriptionSwitcher />
+      </div>
 
       {/* Desktop: left spacer (subscription switcher lives in sidebar) */}
       <div className="hidden lg:block" />

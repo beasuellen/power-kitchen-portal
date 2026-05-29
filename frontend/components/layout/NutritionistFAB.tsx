@@ -51,10 +51,8 @@ export function NutritionistFAB() {
           open && "opacity-0 pointer-events-none"
         )}
       >
-        <div className="w-5 h-5 rounded-full bg-[#7ED22A]/20 flex items-center justify-center shrink-0">
-          <Salad className="w-3 h-3 text-[#7ED22A]" />
-        </div>
-        <span className="text-sm font-semibold whitespace-nowrap">Ask a nutritionist</span>
+        <Salad className="w-4 h-4 text-white shrink-0" />
+        <span className="text-sm font-normal whitespace-nowrap">Ask a nutritionist</span>
         <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
       </button>
 

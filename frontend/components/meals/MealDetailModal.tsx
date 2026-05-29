@@ -39,22 +39,29 @@ export function MealDetailModal({ meal, onClose }: MealDetailModalProps) {
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl w-full shadow-2xl overflow-hidden flex"
-        style={{ maxWidth: 960, height: "88vh" }}
+        className="bg-white rounded-2xl w-full shadow-2xl overflow-hidden flex flex-col sm:flex-row"
+        style={{ maxWidth: 960, maxHeight: "92vh" }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* ── Left: image ── */}
-        <div className="relative w-1/2 shrink-0 bg-[#1A1A1A] hidden sm:block">
+        {/* ── Image: top on mobile, left column on desktop ── */}
+        <div className="relative w-full h-52 shrink-0 bg-[#1A1A1A] sm:w-1/2 sm:h-auto">
           <Image
             src={meal.imageUrl}
             alt={meal.name}
             fill
             className="object-cover"
-            sizes="50vw"
+            sizes="(max-width: 640px) 100vw, 50vw"
           />
+          {/* Mobile close button over image */}
+          <button
+            onClick={onClose}
+            className="sm:hidden absolute top-3 right-3 p-1.5 rounded-full bg-black/40 hover:bg-black/60 transition-colors"
+          >
+            <X className="w-4 h-4 text-white" />
+          </button>
         </div>
 
-        {/* ── Right: content column ── */}
+        {/* ── Content column ── */}
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
 
           {/* Fixed header */}
@@ -70,9 +77,10 @@ export function MealDetailModal({ meal, onClose }: MealDetailModalProps) {
                   </p>
                 )}
               </div>
+              {/* Desktop-only close button (mobile uses the one over the image) */}
               <button
                 onClick={onClose}
-                className="p-1.5 rounded-lg hover:bg-[#F0EBE0] transition-colors shrink-0"
+                className="hidden sm:block p-1.5 rounded-lg hover:bg-[#F0EBE0] transition-colors shrink-0"
               >
                 <X className="w-4 h-4 text-[#6B6B6B]" />
               </button>
