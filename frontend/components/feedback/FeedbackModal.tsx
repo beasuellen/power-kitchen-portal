@@ -5,7 +5,11 @@ import type { Order } from "@/lib/mock-data";
 import { formatCurrency } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
-import { X, ArrowLeft, Check, ChevronRight, Truck, Package, AlertCircle, UtensilsCrossed, Star, Flame } from "lucide-react";
+import { X, ArrowLeft, Check, ChevronRight, Truck, Package, AlertCircle, UtensilsCrossed, Star, Flame, ExternalLink, Heart } from "lucide-react";
+
+// ── Google review link ───────────────────────────────────────────────────────
+// Replace with Power Kitchen's real Google review URL (e.g. https://g.page/r/XXXX/review)
+const GOOGLE_REVIEW_URL = "https://search.google.com/local/writereview?placeid=YOUR_PLACE_ID";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 type FeedbackStep =
@@ -116,6 +120,16 @@ export function FeedbackModal({ order, onClose }: FeedbackModalProps) {
   const [mealIndex, setMealIndex]           = useState(0);
   const [rotationalAnswer, setRotationalAnswer] = useState<string | null>(null);
   const [finalNote, setFinalNote]           = useState("");
+  const [googlePromptOpen, setGooglePromptOpen] = useState(false);
+
+  // Positive ratings (Amazing / Good) trigger the Google review prompt
+  const isPositiveRating = orderRating === "amazing" || orderRating === "good";
+
+  // Call when the feedback flow finishes — shows the Google prompt for happy customers
+  const finishFeedback = () => {
+    setStep("done");
+    if (isPositiveRating) setGooglePromptOpen(true);
+  };
 
   const meals       = order.items;
   const currentItem = meals[mealIndex];
@@ -499,13 +513,13 @@ export function FeedbackModal({ order, onClose }: FeedbackModalProps) {
                 className="w-full text-sm px-4 py-3 border border-[#E8E4DC] rounded-2xl resize-none focus:outline-none focus:ring-2 focus:ring-[#7ED22A] bg-[#FDFBF7] placeholder:text-[#C4BFB8]"
               />
               <button
-                onClick={() => setStep("done")}
+                onClick={finishFeedback}
                 className="w-full py-3 bg-[#004945] text-white text-sm font-semibold rounded-xl hover:bg-[#003835] transition-colors"
               >
                 Submit feedback
               </button>
               <button
-                onClick={() => setStep("done")}
+                onClick={finishFeedback}
                 className="w-full text-center text-xs text-[#9E9E9E] hover:text-[#6B6B6B] transition-colors py-1"
               >
                 Skip & submit
@@ -546,6 +560,66 @@ export function FeedbackModal({ order, onClose }: FeedbackModalProps) {
           )}
         </div>
       </div>
+
+      {/* ── Google review prompt (Amazing / Good only) ───────────────────────
+          A popup-within-the-rating: thanks the happy customer and invites them
+          to share the same feedback on Power Kitchen's Google profile. */}
+      {googlePromptOpen && (
+        <div className="absolute inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-[2px] sm:p-4">
+          <div className="bg-white w-full sm:max-w-sm rounded-t-3xl sm:rounded-3xl overflow-hidden flex flex-col shadow-2xl animate-in slide-in-from-bottom sm:zoom-in-95 duration-300">
+            {/* Close */}
+            <div className="flex justify-end px-4 pt-4">
+              <button
+                onClick={() => setGooglePromptOpen(false)}
+                className="p-2 -m-2 rounded-xl hover:bg-[#F0EBE0] transition-colors"
+                aria-label="Close"
+              >
+                <X className="w-4 h-4 text-[#9E9E9E]" />
+              </button>
+            </div>
+
+            <div className="px-6 pb-6 pt-1 flex flex-col items-center text-center space-y-4">
+              {/* Heart badge */}
+              <div className="w-16 h-16 rounded-full bg-[#EAF7D9] flex items-center justify-center">
+                <Heart className="w-8 h-8 text-[#7ED22A] fill-[#7ED22A]" />
+              </div>
+
+              <div className="space-y-1.5">
+                <h2 className="text-lg font-bold text-[#004945]">Thank you for the love! 🎉</h2>
+                <p className="text-sm text-[#6B6B6B] leading-relaxed">
+                  We&apos;re so glad you enjoyed your meals. Would you share that same
+                  feedback on Google? It helps more people discover Power Kitchen.
+                </p>
+              </div>
+
+              {/* Google stars preview */}
+              <div className="flex items-center gap-1">
+                {[0, 1, 2, 3, 4].map((i) => (
+                  <Star key={i} className="w-6 h-6 text-[#FBBC05] fill-[#FBBC05]" />
+                ))}
+              </div>
+
+              {/* CTA — open Google review */}
+              <a
+                href={GOOGLE_REVIEW_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setGooglePromptOpen(false)}
+                className="w-full py-3 bg-[#004945] text-white text-sm font-semibold rounded-xl hover:bg-[#003835] transition-colors flex items-center justify-center gap-2"
+              >
+                Review us on Google
+                <ExternalLink className="w-4 h-4" />
+              </a>
+              <button
+                onClick={() => setGooglePromptOpen(false)}
+                className="w-full text-center text-xs text-[#9E9E9E] hover:text-[#6B6B6B] transition-colors py-1"
+              >
+                Maybe later
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
