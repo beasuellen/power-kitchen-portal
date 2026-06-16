@@ -319,7 +319,7 @@ export default function PlanPage() {
                   kind: "delivery",
                   run: saveDay,
                 })}
-                className="mt-2 w-full py-1.5 rounded-xl bg-[#004945] text-white text-xs font-semibold hover:bg-[#003835] transition-colors"
+                className="mt-2 ml-auto block w-fit px-4 py-1.5 rounded-xl bg-[#004945] text-white text-xs font-semibold hover:bg-[#003835] transition-colors"
               >
                 Save delivery day
               </button>
@@ -372,7 +372,7 @@ export default function PlanPage() {
                   kind: "method",
                   run: saveMethod,
                 })}
-                className="mt-2 w-full py-1.5 rounded-xl bg-[#004945] text-white text-xs font-semibold hover:bg-[#003835] transition-colors"
+                className="mt-2 ml-auto block w-fit px-4 py-1.5 rounded-xl bg-[#004945] text-white text-xs font-semibold hover:bg-[#003835] transition-colors"
               >
                 Save delivery method
               </button>
@@ -405,7 +405,7 @@ export default function PlanPage() {
                   confirmLabel: "Save instructions",
                   run: saveInstructions,
                 })}
-                className="mt-2 w-full py-1.5 rounded-xl bg-[#004945] text-white text-xs font-semibold hover:bg-[#003835] transition-colors"
+                className="mt-2 ml-auto block w-fit px-4 py-1.5 rounded-xl bg-[#004945] text-white text-xs font-semibold hover:bg-[#003835] transition-colors"
               >
                 Save instructions
               </button>
