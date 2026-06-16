@@ -16,7 +16,7 @@ import {
   ArrowLeft, Lock, SkipForward, Plus, Trash2,
   RefreshCw, Minus, AlertCircle, Check, Info, ShoppingCart, X, AlertTriangle, CalendarDays,
   Tag, Wallet, Gift, RotateCcw, SlidersHorizontal, Star, Zap, Trophy, Flame, Leaf, TrendingUp, Droplets, Heart, Package, Salad,
-  Truck, Sparkles,
+  Truck,
 } from "lucide-react";
 import { DietaryIcon } from "@/components/ui/DietaryIcon";
 import { AddSwapPanel } from "@/components/meals/AddSwapPanel";
@@ -46,7 +46,14 @@ function PlanTypeTag({ planType }: { planType: string }) {
   );
 }
 
-interface DraftChange { type: "add" | "remove" | "quantity" | "swap"; description: string; }
+interface DraftChange {
+  type: "add" | "remove" | "quantity" | "swap";
+  description: string;
+  /** For adds: which bucket this meal went into, so the summary can group them */
+  orderType?: "one-time" | "recurring";
+  /** For adds: the meal label without the type suffix, e.g. "1× Beef Bourguignon" */
+  itemLabel?: string;
+}
 interface DraftItem extends OrderItem { }
 type PromoTab = "discount" | "credit" | "gift";
 type RestrictionStep = "edit" | "scope" | "confirm";
@@ -259,7 +266,12 @@ export function OrderDetailClient({ order }: { order: Order }) {
 
     for (const { meal, qty, orderType } of entries) {
       const label = orderType === 'one-time' ? 'this order only' : 'all future orders';
-      addChange({ type: "add", description: `Added ${qty}× ${meal.name} (${label})` });
+      addChange({
+        type: "add",
+        orderType,
+        itemLabel: `${qty}× ${meal.name}`,
+        description: `Added ${qty}× ${meal.name} (${label})`,
+      });
     }
     setShowAddPanel(false);
   };
@@ -360,7 +372,7 @@ export function OrderDetailClient({ order }: { order: Order }) {
       {/* Bottom: actions — always pinned to bottom */}
       {isEditable && (
         <div
-          className="flex items-center justify-between px-5 py-4 border-t border-[#F0EBE0] bg-[#FDFBF7] rounded-b-xl"
+          className="flex items-center justify-between px-5 py-4 border-t border-[#F0EBE0] bg-[#FDFBF7] rounded-b-2xl"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex items-center gap-3">
@@ -384,6 +396,40 @@ export function OrderDetailClient({ order }: { order: Order }) {
       )}
     </Card>
   );
+
+  // ── Unsaved-changes summary — adds grouped by where they apply ──
+  const renderChangeSummary = () => {
+    const adds = changes.filter((c) => c.type === "add");
+    const recurringAdds = adds.filter((c) => c.orderType === "recurring");
+    const oneTimeAdds = adds.filter((c) => c.orderType === "one-time");
+    const otherChanges = changes.filter((c) => c.type !== "add");
+
+    const AddGroup = ({ title, items }: { title: string; items: DraftChange[] }) =>
+      items.length === 0 ? null : (
+        <div>
+          <p className="text-[11px] font-semibold text-amber-800">{title}</p>
+          <ul className="mt-0.5 space-y-0.5">
+            {items.map((c, i) => (
+              <li key={i} className="text-xs text-amber-700">· {c.itemLabel ?? c.description}</li>
+            ))}
+          </ul>
+        </div>
+      );
+
+    return (
+      <div className="space-y-2">
+        <AddGroup title="Added to future orders" items={recurringAdds} />
+        <AddGroup title="Added to this order only" items={oneTimeAdds} />
+        {otherChanges.length > 0 && (
+          <ul className="space-y-0.5">
+            {otherChanges.map((c, i) => (
+              <li key={i} className="text-xs text-amber-700">· {c.description}</li>
+            ))}
+          </ul>
+        )}
+      </div>
+    );
+  };
 
   // ── Skipped view — show next locked order ──
   if (isEditable && orderSkipped) {
@@ -804,16 +850,14 @@ export function OrderDetailClient({ order }: { order: Order }) {
                   </div>
                 )}
 
-                {/* ── Newly added meals — clearly separated so the change is obvious ── */}
+                {/* ── Newly added meals — left-aligned label with a full-width rule below ── */}
                 {newlyAdded.length > 0 && (
                   <div className="space-y-4">
-                    <div className="flex items-center gap-3" role="status" aria-live="polite">
-                      <div className="h-px flex-1 bg-[#B9EA91]" />
-                      <span className="flex items-center gap-1.5 text-xs font-semibold text-[#004945] whitespace-nowrap">
-                        <Sparkles className="w-3.5 h-3.5 text-[#7ED22A]" />
+                    <div role="status" aria-live="polite">
+                      <p className="text-sm font-semibold text-[#004945]">
                         {newCount} new meal{newCount !== 1 ? "s" : ""} added to your order
-                      </span>
-                      <div className="h-px flex-1 bg-[#B9EA91]" />
+                      </p>
+                      <div className="h-px w-full bg-[#B9EA91] mt-2" />
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
                       {newlyAdded.map((item) => renderMealCard(item, true))}
@@ -1031,17 +1075,13 @@ export function OrderDetailClient({ order }: { order: Order }) {
                 {/* Unsaved changes notice */}
                 {hasChanges && (
                   <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-                    <div className="flex items-center gap-1.5 mb-1">
+                    <div className="flex items-center gap-1.5 mb-1.5">
                       <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
                       <span className="text-xs font-semibold text-amber-800">
                         {changes.length} unsaved change{changes.length !== 1 ? "s" : ""}
                       </span>
                     </div>
-                    <ul className="space-y-0.5">
-                      {changes.slice(-4).map((c, i) => (
-                        <li key={i} className="text-xs text-amber-700">· {c.description}</li>
-                      ))}
-                    </ul>
+                    {renderChangeSummary()}
                   </div>
                 )}
 
@@ -1187,13 +1227,8 @@ export function OrderDetailClient({ order }: { order: Order }) {
 
             {/* Change list */}
             <div className="px-6 pb-2">
-              <div className="bg-amber-50 border border-amber-100 rounded-xl px-4 py-3 space-y-1">
-                {changes.slice(-4).map((c, i) => (
-                  <p key={i} className="text-xs text-amber-700">· {c.description}</p>
-                ))}
-                {changes.length > 4 && (
-                  <p className="text-xs text-amber-500">+{changes.length - 4} more…</p>
-                )}
+              <div className="bg-amber-50 border border-amber-100 rounded-xl px-4 py-3">
+                {renderChangeSummary()}
               </div>
             </div>
 
