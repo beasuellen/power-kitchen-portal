@@ -16,6 +16,7 @@ import {
   ArrowLeft, Lock, SkipForward, Plus, Trash2,
   RefreshCw, Minus, AlertCircle, Check, Info, ShoppingCart, X, AlertTriangle, CalendarDays,
   Tag, Wallet, Gift, RotateCcw, SlidersHorizontal, Star, Zap, Trophy, Flame, Leaf, TrendingUp, Droplets, Heart, Package, Salad,
+  Truck, Sparkles,
 } from "lucide-react";
 import { DietaryIcon } from "@/components/ui/DietaryIcon";
 import { AddSwapPanel } from "@/components/meals/AddSwapPanel";
@@ -78,6 +79,9 @@ export function OrderDetailClient({ order }: { order: Order }) {
   const [swappingItem, setSwappingItem] = useState<DraftItem | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  // Ids of meals just added this session — flagged with a divider so the customer
+  // can clearly see what was added after confirming (instead of a fleeting toast).
+  const [newItemIds, setNewItemIds] = useState<Set<string>>(new Set());
   const [showSkipModal, setShowSkipModal] = useState(false);
   const [removeTarget, setRemoveTarget] = useState<DraftItem | null>(null);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
@@ -234,24 +238,24 @@ export function OrderDetailClient({ order }: { order: Order }) {
   };
 
   const handleAddMeals = (entries: AddMealEntry[]) => {
+    const addedIds: string[] = [];
     setDraftItems((prev) => {
       const updated = prev.map((i) => ({ ...i }));
       for (const { meal, qty, orderType } of entries) {
         const existing = updated.find((i) => i.meal.id === meal.id);
         if (existing) {
           existing.quantity += qty;
+          addedIds.push(existing.id);
         } else {
-          updated.push({
-            id: `draft_${Math.random().toString(36).slice(2)}`,
-            meal,
-            quantity: qty,
-            unitPrice: meal.price,
-            orderType,
-          });
+          const id = `draft_${Math.random().toString(36).slice(2)}`;
+          updated.push({ id, meal, quantity: qty, unitPrice: meal.price, orderType });
+          addedIds.push(id);
         }
       }
       return updated;
     });
+
+    setNewItemIds((prev) => new Set([...prev, ...addedIds]));
 
     for (const { meal, qty, orderType } of entries) {
       const label = orderType === 'one-time' ? 'this order only' : 'all future orders';
@@ -292,6 +296,7 @@ export function OrderDetailClient({ order }: { order: Order }) {
     setSaving(false);
     setSaved(true);
     setChanges([]);
+    setNewItemIds(new Set());
     if (isEditable) syncItems(draftItems);
   };
 
@@ -303,6 +308,7 @@ export function OrderDetailClient({ order }: { order: Order }) {
         : order.items.map((i) => ({ ...i }))
     );
     setChanges([]);
+    setNewItemIds(new Set());
     setSaved(false);
   };
 
@@ -310,6 +316,74 @@ export function OrderDetailClient({ order }: { order: Order }) {
     skipOrder();           // global skip
     setShowSkipModal(false);
   };
+
+  // ── Single meal card renderer — `isNew` flags meals added this session ──
+  const renderMealCard = (item: DraftItem, isNew = false) => (
+    <Card
+      key={item.id}
+      className={cn(
+        "flex flex-col cursor-pointer hover:shadow-md transition-shadow",
+        isNew && "border-[#7ED22A] ring-2 ring-[#7ED22A]/30 bg-[#EAF7D9]/20"
+      )}
+      onClick={() => setSelectedItemId(item.id)}
+    >
+      {/* Top: image + info — grows to fill available space */}
+      <div className="flex gap-4 p-5 flex-1">
+        <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-[#F0EBE0] shrink-0">
+          <Image src={item.meal.imageUrl} alt={item.meal.name} fill className="object-cover" sizes="80px" />
+        </div>
+        <div className="flex-1 min-w-0 flex flex-col">
+          <p className="font-semibold text-sm text-[#1A1A1A] leading-snug">{item.meal.name}</p>
+          <div className="mt-1.5 flex items-center gap-1.5 flex-wrap">
+            <PlanTypeTag planType={item.meal.planType} />
+            {item.orderType === 'one-time' && (
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#F5F5F5] border border-[#E0E0E0] text-[#6B6B6B]">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#9E9E9E] shrink-0" />
+                One-time
+              </span>
+            )}
+          </div>
+          <DietaryPills tags={item.meal.dietaryTags} className="mt-2" onSeeAll={() => setSelectedItemId(item.id)} />
+          <div className="mt-3">
+            {item.quantity > 1 ? (
+              <div className="flex items-baseline gap-1.5">
+                <span className="font-bold text-base text-[#004945]">{formatCurrency(item.quantity * item.unitPrice)}</span>
+                <span className="text-xs text-[#9E9E9E]">{formatCurrency(item.unitPrice)} each</span>
+              </div>
+            ) : (
+              <span className="font-bold text-base text-[#004945]">{formatCurrency(item.unitPrice)}</span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom: actions — always pinned to bottom */}
+      {isEditable && (
+        <div
+          className="flex items-center justify-between px-5 py-4 border-t border-[#F0EBE0] bg-[#FDFBF7] rounded-b-xl"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex items-center gap-3">
+            <button onClick={() => handleQuantityChange(item.id, -1)} className="w-8 h-8 rounded-full border border-[#E8E4DC] flex items-center justify-center hover:bg-[#F0EBE0] transition-colors">
+              <Minus className="w-3.5 h-3.5 text-[#6B6B6B]" />
+            </button>
+            <span className="text-sm font-semibold w-4 text-center text-[#1A1A1A]">{item.quantity}</span>
+            <button onClick={() => handleQuantityChange(item.id, 1)} className="w-8 h-8 rounded-full border border-[#E8E4DC] flex items-center justify-center hover:bg-[#F0EBE0] transition-colors">
+              <Plus className="w-3.5 h-3.5 text-[#6B6B6B]" />
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            <button onClick={() => { setSwappingItem(item); setShowAddPanel(true); }} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-[#6B6B6B] hover:bg-[#EAF7D9] hover:text-[#004945] transition-colors border border-[#E8E4DC]">
+              <RefreshCw className="w-3 h-3" /> Swap
+            </button>
+            <button onClick={() => setRemoveTarget(item)} className="w-8 h-8 rounded-lg flex items-center justify-center text-[#9E9E9E] hover:text-red-500 hover:bg-red-50 transition-colors border border-[#E8E4DC]">
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
+    </Card>
+  );
 
   // ── Skipped view — show next locked order ──
   if (isEditable && orderSkipped) {
@@ -448,6 +522,8 @@ export function OrderDetailClient({ order }: { order: Order }) {
                 <Badge variant="green">Ready to customize</Badge>
               ) : order.status === "locked" ? (
                 <Badge variant="gray"><Lock className="w-2.5 h-2.5 mr-1" /> Locked</Badge>
+              ) : order.status === "processing" ? (
+                <Badge variant="blue"><Truck className="w-2.5 h-2.5 mr-1" /> Being prepared</Badge>
               ) : (
                 <Badge variant="gray">Delivered</Badge>
               )}
@@ -470,6 +546,16 @@ export function OrderDetailClient({ order }: { order: Order }) {
           <Info className="w-5 h-5 text-amber-600 shrink-0" />
           <p className="text-sm text-amber-800">
             This order is locked. Customization opens on <strong>{formatShortDate(order.cutoffDate)}</strong>.
+          </p>
+        </div>
+      )}
+
+      {/* Processing notice — order already paid and being prepared */}
+      {order.status === "processing" && (
+        <div className="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3">
+          <Truck className="w-5 h-5 text-blue-600 shrink-0" />
+          <p className="text-sm text-blue-800">
+            This order is paid and being prepared for delivery on <strong>{formatShortDate(order.deliveryDate)}</strong>. It can no longer be edited. Any changes you make apply to your next delivery.
           </p>
         </div>
       )}
@@ -706,71 +792,37 @@ export function OrderDetailClient({ order }: { order: Order }) {
             )}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
-            {draftItems.map((item) => (
-              <Card
-                key={item.id}
-                className="flex flex-col cursor-pointer hover:shadow-md transition-shadow"
-                onClick={() => setSelectedItemId(item.id)}
-              >
-                {/* Top: image + info — grows to fill available space */}
-                <div className="flex gap-4 p-5 flex-1">
-                  <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-[#F0EBE0] shrink-0">
-                    <Image src={item.meal.imageUrl} alt={item.meal.name} fill className="object-cover" sizes="80px" />
+          {(() => {
+            const existingItems = draftItems.filter((i) => !newItemIds.has(i.id));
+            const newlyAdded = draftItems.filter((i) => newItemIds.has(i.id));
+            const newCount = newlyAdded.reduce((s, i) => s + i.quantity, 0);
+            return (
+              <>
+                {existingItems.length > 0 && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+                    {existingItems.map((item) => renderMealCard(item))}
                   </div>
-                  <div className="flex-1 min-w-0 flex flex-col">
-                    <p className="font-semibold text-sm text-[#1A1A1A] leading-snug">{item.meal.name}</p>
-                    <div className="mt-1.5 flex items-center gap-1.5 flex-wrap">
-                      <PlanTypeTag planType={item.meal.planType} />
-                      {item.orderType === 'one-time' && (
-                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#F5F5F5] border border-[#E0E0E0] text-[#6B6B6B]">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#9E9E9E] shrink-0" />
-                          One-time
-                        </span>
-                      )}
-                    </div>
-                    <DietaryPills tags={item.meal.dietaryTags} className="mt-2" onSeeAll={() => setSelectedItemId(item.id)} />
-                    <div className="mt-3">
-                      {item.quantity > 1 ? (
-                        <div className="flex items-baseline gap-1.5">
-                          <span className="font-bold text-base text-[#004945]">{formatCurrency(item.quantity * item.unitPrice)}</span>
-                          <span className="text-xs text-[#9E9E9E]">{formatCurrency(item.unitPrice)} each</span>
-                        </div>
-                      ) : (
-                        <span className="font-bold text-base text-[#004945]">{formatCurrency(item.unitPrice)}</span>
-                      )}
-                    </div>
-                  </div>
-                </div>
+                )}
 
-                {/* Bottom: actions — always pinned to bottom */}
-                {isEditable && (
-                  <div
-                    className="flex items-center justify-between px-5 py-4 border-t border-[#F0EBE0] bg-[#FDFBF7] rounded-b-xl"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <div className="flex items-center gap-3">
-                      <button onClick={() => handleQuantityChange(item.id, -1)} className="w-8 h-8 rounded-full border border-[#E8E4DC] flex items-center justify-center hover:bg-[#F0EBE0] transition-colors">
-                        <Minus className="w-3.5 h-3.5 text-[#6B6B6B]" />
-                      </button>
-                      <span className="text-sm font-semibold w-4 text-center text-[#1A1A1A]">{item.quantity}</span>
-                      <button onClick={() => handleQuantityChange(item.id, 1)} className="w-8 h-8 rounded-full border border-[#E8E4DC] flex items-center justify-center hover:bg-[#F0EBE0] transition-colors">
-                        <Plus className="w-3.5 h-3.5 text-[#6B6B6B]" />
-                      </button>
+                {/* ── Newly added meals — clearly separated so the change is obvious ── */}
+                {newlyAdded.length > 0 && (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3" role="status" aria-live="polite">
+                      <div className="h-px flex-1 bg-[#B9EA91]" />
+                      <span className="flex items-center gap-1.5 text-xs font-semibold text-[#004945] whitespace-nowrap">
+                        <Sparkles className="w-3.5 h-3.5 text-[#7ED22A]" />
+                        {newCount} new meal{newCount !== 1 ? "s" : ""} added to your order
+                      </span>
+                      <div className="h-px flex-1 bg-[#B9EA91]" />
                     </div>
-                    <div className="flex items-center gap-2">
-                      <button onClick={() => { setSwappingItem(item); setShowAddPanel(true); }} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-[#6B6B6B] hover:bg-[#EAF7D9] hover:text-[#004945] transition-colors border border-[#E8E4DC]">
-                        <RefreshCw className="w-3 h-3" /> Swap
-                      </button>
-                      <button onClick={() => setRemoveTarget(item)} className="w-8 h-8 rounded-lg flex items-center justify-center text-[#9E9E9E] hover:text-red-500 hover:bg-red-50 transition-colors border border-[#E8E4DC]">
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+                      {newlyAdded.map((item) => renderMealCard(item, true))}
                     </div>
                   </div>
                 )}
-              </Card>
-            ))}
-          </div>
+              </>
+            );
+          })()}
 
           {isEditable && (
             <button
@@ -804,13 +856,6 @@ export function OrderDetailClient({ order }: { order: Order }) {
             </div>
           )}
 
-          {/* ── Product suggestions — always visible to upsell ── */}
-          {isEditable && (
-            <div className="pt-8">
-              <div className="border-t border-[#F0EBE0] mb-8" />
-              <ProductSuggestions />
-            </div>
-          )}
         </div>
 
         {/* Order summary sidebar */}
@@ -1023,6 +1068,16 @@ export function OrderDetailClient({ order }: { order: Order }) {
             </Card>
           </div>
         </div>
+
+        {/* ── Product suggestions — upsell. On mobile this falls AFTER the order
+            summary so customers see their list and total first; on desktop it sits
+            under the meals (left column). ── */}
+        {isEditable && (
+          <div className="lg:col-span-2">
+            <div className="border-t border-[#F0EBE0] mb-8" />
+            <ProductSuggestions />
+          </div>
+        )}
       </div>
 
       {/* Mobile save bar */}

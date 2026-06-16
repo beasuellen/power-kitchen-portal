@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { mockSubscription, type DietaryTag } from "@/lib/mock-data";
+import { mockSubscription, mockOrders, type DietaryTag } from "@/lib/mock-data";
 import { useSubscriptionStore, getActiveSubscription } from "@/lib/useSubscriptionStore";
 import { formatDate, formatCurrency } from "@/lib/utils";
 import { cn } from "@/lib/utils";
@@ -14,6 +14,7 @@ import {
   Trophy, Flame, Gift, Lock,
 } from "lucide-react";
 import { DietaryIcon } from "@/components/ui/DietaryIcon";
+import { PlanChangeNote, ConfirmChangeModal, type ChangeConfirm } from "@/components/plan/PlanChangeNote";
 
 const dietaryOptions: { tag: DietaryTag; label: string; desc: string }[] = [
   { tag: "DF",  label: "Dairy Free",  desc: "No milk, cheese, butter" },
@@ -81,6 +82,13 @@ export default function PlanPage() {
     setMethodSaved(true);
     setTimeout(() => setMethodSaved(false), 3000);
   };
+
+  // ── One confirmation flow for every plan change ──────────────────
+  // Any modification (day, method, restrictions, instructions, address, payment,
+  // pause/cancel) confirms first and reassures the customer that the order already
+  // on its way won't change — the change only applies from their next delivery.
+  const inProgressOrder = mockOrders.find((o) => o.status === "processing");
+  const [confirmAction, setConfirmAction] = useState<ChangeConfirm | null>(null);
 
   // ── Delivery instructions (with explicit save) ───────────────────
   const [instructions, setInstructions] = useState("Leave at door");
@@ -193,7 +201,13 @@ export default function PlanPage() {
               <h2 className="font-semibold text-[#004945] text-sm">Dietary Restrictions</h2>
             </div>
             <button
-              onClick={saveDietary}
+              onClick={() => dietaryHasChanges && setConfirmAction({
+                title: "Update your dietary restrictions?",
+                summary: "We'll match your meals to these from now on.",
+                kind: "delivery",
+                confirmLabel: "Save restrictions",
+                run: saveDietary,
+              })}
               disabled={!dietaryHasChanges}
               className={cn(
                 "text-xs font-semibold px-3 py-1.5 rounded-xl transition-all",
@@ -246,9 +260,18 @@ export default function PlanPage() {
 
         {/* Delivery Preferences */}
         <div className="bg-white rounded-2xl border border-[#E8E4DC] p-5">
-          <div className="flex items-center gap-2 mb-4">
+          <div className="flex items-center gap-2 mb-3">
             <Truck className="w-4 h-4 text-[#004945]" />
             <h2 className="font-semibold text-[#004945] text-sm">Delivery Preferences</h2>
+          </div>
+
+          {/* Timing note — changes apply from the next order, not the one in prep */}
+          <div className="flex items-start gap-1.5 bg-[#FDFBF7] border border-[#F0EBE0] rounded-xl px-3 py-2 mb-4">
+            <Info className="w-3.5 h-3.5 text-[#9E9E9E] shrink-0 mt-0.5" />
+            <p className="text-[11px] text-[#6B6B6B] leading-relaxed">
+              Changes apply from your <span className="font-semibold text-[#004945]">next delivery</span>.
+              {inProgressOrder && <> Your order arriving {formatDate(inProgressOrder.deliveryDate, { month: "short", day: "numeric" })} is already confirmed.</>}
+            </p>
           </div>
 
           {/* Delivery day */}
@@ -290,7 +313,12 @@ export default function PlanPage() {
             </div>
             {dayHasChanges && (
               <button
-                onClick={saveDay}
+                onClick={() => pendingDay && setConfirmAction({
+                  title: "Apply from your next delivery?",
+                  summary: <>New delivery day: <span className="font-semibold text-[#1A1A1A]">{pendingDay}</span></>,
+                  kind: "delivery",
+                  run: saveDay,
+                })}
                 className="mt-2 w-full py-1.5 rounded-xl bg-[#004945] text-white text-xs font-semibold hover:bg-[#003835] transition-colors"
               >
                 Save delivery day
@@ -338,7 +366,12 @@ export default function PlanPage() {
             )}
             {methodHasChanges && (
               <button
-                onClick={saveMethod}
+                onClick={() => pendingMethod && setConfirmAction({
+                  title: "Apply from your next delivery?",
+                  summary: <>New method: <span className="font-semibold text-[#1A1A1A]">{pendingMethod === "pickup" ? "Pickup" : "Local Delivery"}</span></>,
+                  kind: "method",
+                  run: saveMethod,
+                })}
                 className="mt-2 w-full py-1.5 rounded-xl bg-[#004945] text-white text-xs font-semibold hover:bg-[#003835] transition-colors"
               >
                 Save delivery method
@@ -365,7 +398,13 @@ export default function PlanPage() {
             />
             {instructionsChanged && (
               <button
-                onClick={saveInstructions}
+                onClick={() => setConfirmAction({
+                  title: "Save delivery instructions?",
+                  summary: "We'll share these with your driver.",
+                  kind: "delivery",
+                  confirmLabel: "Save instructions",
+                  run: saveInstructions,
+                })}
                 className="mt-2 w-full py-1.5 rounded-xl bg-[#004945] text-white text-xs font-semibold hover:bg-[#003835] transition-colors"
               >
                 Save instructions
@@ -514,6 +553,15 @@ export default function PlanPage() {
         <a href="#" className="text-[#004945] hover:underline font-medium">Switch to Classic Portal</a>
       </p>
 
+      {/* ── Plan change confirmation (day, method, restrictions, instructions) ── */}
+      {confirmAction && (
+        <ConfirmChangeModal
+          confirm={confirmAction}
+          date={inProgressOrder?.deliveryDate}
+          onClose={() => setConfirmAction(null)}
+        />
+      )}
+
       {/* ── Set Default Address Confirm ── */}
       {setDefaultAddressId && (() => {
         const addr = savedAddresses.find(a => a.id === setDefaultAddressId);
@@ -528,7 +576,8 @@ export default function PlanPage() {
                   <p className="text-xs text-[#9E9E9E]">{addr.city}, {addr.province} {addr.postal}</p>
                 </div>
               )}
-              <p className="text-sm text-[#6B6B6B] mb-5">This address will be used for all future deliveries.</p>
+              <p className="text-sm text-[#6B6B6B] mb-3">This becomes your default delivery address.</p>
+              <div className="mb-5"><PlanChangeNote kind="delivery" date={inProgressOrder?.deliveryDate} /></div>
               <div className="flex gap-2">
                 <Button variant="ghost" className="flex-1" onClick={() => setSetDefaultAddressId(null)}>Cancel</Button>
                 <Button className="flex-1" onClick={() => {
@@ -555,7 +604,8 @@ export default function PlanPage() {
                   <p className="text-xs text-[#9E9E9E]">{addr.city}, {addr.province} {addr.postal}</p>
                 </div>
               )}
-              <p className="text-sm text-[#6B6B6B] mb-5">This address will be permanently removed from your account.</p>
+              <p className="text-sm text-[#6B6B6B] mb-3">This address will be permanently removed from your account.</p>
+              <div className="mb-5"><PlanChangeNote kind="delivery" date={inProgressOrder?.deliveryDate} /></div>
               <div className="flex gap-2">
                 <Button variant="ghost" className="flex-1" onClick={() => setDeleteAddressId(null)}>Cancel</Button>
                 <Button variant="destructive" className="flex-1" onClick={() => {
@@ -667,7 +717,8 @@ export default function PlanPage() {
                   </div>
                 </div>
               )}
-              <p className="text-sm text-[#6B6B6B] mb-5">This card will be used for all future billing.</p>
+              <p className="text-sm text-[#6B6B6B] mb-3">This becomes your default card.</p>
+              <div className="mb-5"><PlanChangeNote kind="payment" date={inProgressOrder?.deliveryDate} /></div>
               <div className="flex gap-2">
                 <Button variant="ghost" className="flex-1" onClick={() => setSetDefaultCardId(null)}>Cancel</Button>
                 <Button className="flex-1" onClick={() => {
@@ -698,7 +749,8 @@ export default function PlanPage() {
                   </div>
                 </div>
               )}
-              <p className="text-sm text-[#6B6B6B] mb-5">This card will be permanently removed from your account.</p>
+              <p className="text-sm text-[#6B6B6B] mb-3">This card will be permanently removed from your account.</p>
+              <div className="mb-5"><PlanChangeNote kind="payment" date={inProgressOrder?.deliveryDate} /></div>
               <div className="flex gap-2">
                 <Button variant="ghost" className="flex-1" onClick={() => setDeleteCardId(null)}>Cancel</Button>
                 <Button variant="destructive" className="flex-1" onClick={() => {
@@ -939,6 +991,8 @@ export default function PlanPage() {
               ))}
             </div>
 
+            <div className="mb-4"><PlanChangeNote kind="subscription" date={inProgressOrder?.deliveryDate} /></div>
+
             <div className="space-y-2">
               <Button className="w-full" disabled={!pauseDuration} onClick={() => setShowPauseModal(false)}>
                 Confirm Pause
@@ -959,9 +1013,10 @@ export default function PlanPage() {
             {cancelStep === 1 && (
               <>
                 <h3 className="font-bold text-lg text-[#004945] mb-2">Cancel your subscription?</h3>
-                <p className="text-sm text-[#6B6B6B] mb-5">
+                <p className="text-sm text-[#6B6B6B] mb-3">
                   You&apos;ll lose your <span className="font-semibold text-orange-500">{streak}-week streak</span> and all the perks that come with your current plan.
                 </p>
+                <div className="mb-5"><PlanChangeNote kind="subscription" date={inProgressOrder?.deliveryDate} /></div>
                 <div className="space-y-2">
                   <Button className="w-full" onClick={() => setShowCancelConfirm(false)}>
                     Keep My Subscription

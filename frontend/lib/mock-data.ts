@@ -181,6 +181,8 @@ export interface OrderItem {
 
 export interface Order {
   id: string;
+  /** Human-friendly order number (shown to the customer, e.g. on the "on its way" banner) */
+  orderNumber?: string;
   deliveryDate: string;
   cutoffDate: string;
   billingDate: string;
@@ -866,6 +868,23 @@ export const mockMeals: Meal[] = [
 ];
 
 export const mockOrders: Order[] = [
+  // The order the customer most recently placed/renewed — already paid and being
+  // prepared for delivery. It is NOT editable and is shown separately so customers
+  // don't confuse it with their next (editable) order.
+  {
+    id: "ord_000",
+    orderNumber: "PK-10428",
+    deliveryDate: "2026-04-22",
+    cutoffDate: "2026-04-18",
+    billingDate: "2026-04-18",
+    status: "processing",
+    items: [
+      { id: "oi_p01", meal: mockMeals[0], quantity: 2, unitPrice: 24.37 },
+      { id: "oi_p02", meal: mockMeals[3], quantity: 2, unitPrice: 22.86 },
+      { id: "oi_p03", meal: mockMeals[6], quantity: 1, unitPrice: 22.27 },
+    ],
+    total: 116.83,
+  },
   {
     id: "ord_001",
     deliveryDate: "2026-04-26",

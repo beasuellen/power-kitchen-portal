@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/Badge";
 import { RatingPopup } from "@/components/dashboard/RatingPopup";
 import { ProductSuggestions } from "@/components/dashboard/ProductSuggestions";
 import { NextOrderCard } from "@/components/dashboard/NextOrderCard";
+import { InProgressOrderBanner } from "@/components/dashboard/InProgressOrderBanner";
 import Link from "next/link";
 import {
   Trophy,
@@ -64,6 +65,9 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
+
+      {/* ─── In-progress order (already paid, being prepared) ─── */}
+      <InProgressOrderBanner />
 
       {/* ─── Main grid ─── */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
