@@ -2,6 +2,7 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { NutritionistFAB } from "@/components/layout/NutritionistFAB";
+import { SubscriptionSwitchToast } from "@/components/layout/SubscriptionSwitchToast";
 
 export default function PortalLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -15,6 +16,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
       </div>
       <MobileNav />
       <NutritionistFAB />
+      <SubscriptionSwitchToast />
     </div>
   );
 }
